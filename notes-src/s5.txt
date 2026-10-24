@@ -1,0 +1,514 @@
+@ c5 | 5회차 · 클래스 더 쓰기 | Ch 15
+
+# p5-1 | 오늘 배울 도구 5개 | Ch 15
+sum: 4회차 Student 에 **this · 소멸자 · static · 템플릿 · friend** 를 붙인다. 비중은 소멸자와 템플릿이 가장 크다.
+ana: 🧰 지난 시간에 만든 집(Student)에 공구 5개로 설비를 추가하는 시간.
+h: 지난 시간 Student
+code:
+class Student {
+    std::string m_name {};
+    int m_score {};
+public:
+    Student() = default;
+    Student(std::string_view n, int s) : m_name { n }, m_score { s } { }
+    const std::string& getName() const { return m_name; }
+    void setScore(int v) { if (v >= 0 && v <= 100) m_score = v; }
+};
+:end
+h: 도구 5개
+tbl: 도구 | 한 줄 | 비중
+r: this | “나를 부른 객체”를 가리키는 포인터 | 짧게
+r: 소멸자 | 사라질 때 자동으로 불리는 뒷정리 함수 | ⭐ 크게
+r: static 멤버 | 클래스 전체에 **하나**만 있는 변수 | 보통
+r: 템플릿 | 타입을 빈칸으로 둔 함수·클래스 | ⭐ 크게
+r: friend | 바깥 함수 하나에게만 private 공개 | 짧게
+h: 끝나면 할 수 있어야 할 것
+li: 뒷정리가 **자동**으로 되게 만들기
+li: 객체 수·다음 번호처럼 **모두가 공유하는 값** 다루기
+li: **타입만 다른** 함수·클래스를 하나로 합치기
+trap: 모든 클래스에 소멸자를 습관처럼 작성 > 시작한 게 있을 때만 > 멤버가 알아서 정리함 (5-4)
+trap: static 을 “상수”로 오해 > static = 클래스에 하나 > 값은 얼마든지 바뀜
+star: 5회차 핵심 = **소멸자(자동 뒷정리)** 와 **템플릿(타입 일반화)**.
+mem: **티·소·스·템·프** (this · 소멸자 · static · 템플릿 · friend)
+key: 도구 5개: this · 소멸자 · static · 템플릿 · friend
+key: 비중: 소멸자·템플릿
+key: 목표: 자동 뒷정리, 공유 값, 타입 일반화
+
+# p5-2 | this 포인터 | Ch 15.1
+sum: **this** = 이 함수를 **부른 객체**의 주소. 멤버 함수 안의 `name` 은 사실 `this->name`.
+ana: 🙋 this = 멤버 함수가 “**지금 나를 부른 사람 누구야?**” 하고 볼 수 있는 명찰.
+h: 어떻게 누구인지 알까
+code:
+class Student {
+public:
+    std::string name {};
+    void whoAmI() { std::cout << this << ' ' << this->name; }
+};
+Student a {}; a.name = "홍길동";
+a.whoAmI();     // this == &a
+:end
+out: 실제 실행 결과 (주소는 매번 다름)
+a 의 주소: 0x7ffddba106f0   b 의 주소: 0x7ffddba10710
+  부른 객체의 주소: 0x7ffddba106f0  이름: 홍길동
+  부른 객체의 주소: 0x7ffddba10710  이름: 김철수
+:end
+li: `a.whoAmI()` 를 부르면 **a 의 주소**가 몰래 함께 넘어감
+li: 멤버 이름 `name` 은 컴파일러가 `this->name` 으로 바꿔 줌
+h: 쓸모: 이름이 같을 때
+vs: ❌ this 없이 | ✅ this 로 구분
+void setAll(std::string_view name,
+            int score)
+{
+    name = name;    // 자기 자신에게
+    score = score;  // 멤버는 그대로
+}
+// 결과: " (0점)"
+--
+void setAll(std::string_view name,
+            int score)
+{
+    this->name = name;
+    this->score = score;
+}
+// 결과: "홍길동 (90점)"
+:end
+warn: `name = name;` 은 문법상 정상이라 **오류가 안 남**. GCC 기본은 조용, VS `/W4` 는 C4458 경고.
+tip: 가장 안전한 습관 = 매개변수 이름을 멤버와 **다르게** (그래서 `m_` 접두어).
+trap: 매개변수와 멤버 이름이 같은데 `name = name;` > `this->name = name;` 또는 이름을 다르게 > 경고 없이 아무 일도 안 일어남
+star: this = **부른 객체의 주소**. `name = name;` 은 **아무 일도 안 한다**.
+mem: this = **명찰** (“나를 부른 게 누구?”)
+key: this = 부른 객체 주소
+key: 멤버 이름 = `this->멤버`
+key: 같은 이름이면 `this->` 로 구분
+
+# p5-3 | 소멸자 | Ch 15.4
+sum: 소멸자 **`~이름()`** = 객체가 사라질 때 **자동으로 불리는** 뒷정리 함수. 인자 X, 반환형 X, 딱 하나.
+ana: 🧹 생성자가 입주 청소라면, 소멸자는 이사 나갈 때 청소. 퇴실(블록 끝)하면 저절로 함.
+h: 언제 불리나
+code:
+class Guard {
+    std::string m_name {};
+public:
+    Guard(std::string_view n) : m_name { n } { std::cout << m_name << " 생성\n"; }
+    ~Guard() { std::cout << m_name << " 소멸\n"; }   // 소멸자
+};
+int main()
+{
+    Guard a { "첫째" };
+    { Guard b { "둘째" }; }   // 블록 끝 → b 소멸
+    std::cout << "main 끝\n";
+}                             // main 끝 → a 소멸
+:end
+out: 실제 실행 결과
+첫째 생성
+둘째 생성
+둘째 소멸      ← 부르지 않았는데 불림
+main 끝
+첫째 소멸
+:end
+h: 생성자 vs 소멸자
+tbl:  | 생성자 | 소멸자
+r: 언제 | 만들어질 때 | 사라질 때
+r: 이름 | `Student()` | `~Student()`
+r: 인자 | 받을 수 있음 | **못 받음**
+r: 개수 | 여러 개 | **딱 하나**
+r: 일 | 준비 | 뒷정리
+h: 순서: 쌓고 거꾸로 허물기
+out: Machine 안에 엔진·바퀴 멤버가 있을 때
+엔진 생성 → 바퀴 생성 → 기계 생성     ← 멤버 먼저(선언 순), 그다음 자신
+기계 소멸 → 바퀴 소멸 → 엔진 소멸     ← 자신 먼저, 멤버는 역순
+:end
+tip: 멤버(string, vector)는 각자 소멸자가 알아서 정리 → 대부분 클래스는 소멸자를 **안 써도 됨**.
+trap: 소멸자에 인자나 반환형을 적음 > 항상 `~Student()` 한 모양 > 컴파일 오류
+star: 생성은 **멤버 → 자신**, 소멸은 **자신 → 멤버(역순)**.
+mem: `~` = **물결** — 파도에 쓸려 사라질 때 불림
+key: `~T()`: 인자·반환형 없음, 하나뿐, 자동
+key: 블록 끝에서 생성의 역순으로 소멸
+key: 멤버 소멸자는 자동 → 대부분 소멸자 불필요
+
+# p5-4 | Timer 로 배우는 RAII | Ch 15.4
+sum: **생성자에서 시작, 소멸자에서 끝.** 중괄호로 감싸기만 하면 뒷정리가 저절로 된다 — 이게 **RAII**.
+ana: ⏱️ 스톱워치를 방 문에 달아 둔 것. 방에 들어가면(생성) 시작, 나오면(소멸) 자동으로 멈추고 시간 출력.
+h: Timer
+code:
+class Timer {
+    std::string m_label {};
+    std::chrono::steady_clock::time_point m_start {};
+public:
+    Timer(std::string_view label)
+        : m_label { label }, m_start { std::chrono::steady_clock::now() } { }   // 시작 시각 기록
+    ~Timer()                                                                      // 걸린 시간 출력
+    {
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::steady_clock::now() - m_start).count();
+        std::cout << "[" << m_label << "] " << ms << " ms\n";
+    }
+};
+:end
+ref: std::chrono 문법은 외울 필요 없음 — “now() 로 지금 시각, 차이를 ms 로”만.
+code:
+int main()
+{
+    Timer whole { "전체" };
+    { Timer part { "1단계" }; work(120); }   // 블록 끝 → 1단계 시간 출력
+    { Timer part { "2단계" }; work(80);  }
+}                                            // main 끝 → 전체 시간 출력
+:end
+out: 실제 실행 결과
+[1단계] 끝 - 120 ms
+[2단계] 끝 - 80 ms
+[전체] 끝 - 200 ms
+:end
+h: RAII
+flow: 만든다 > 생성자에서 시작 || 쓴다 > 중간에 무슨 일이 있어도 || 사라진다 > 소멸자에서 뒷정리 — **자동**
+term: RAII | Resource Acquisition Is Initialization | 뒷정리를 **객체의 수명**에 맡기는 방식
+li: return 이 몇 개든, 어디로 빠져나가든 **소멸자는 반드시 불림** → “깜빡함”이 사라짐
+li: string·vector 가 메모리를 알아서 돌려주는 것도 RAII 덕분
+ref: 진짜 쓸모는 9회차(메모리)·11회차(파일 닫기)에서.
+h: 소멸자를 쓸까?
+tbl: 상황 | 소멸자
+r: 멤버가 int·string·vector 뿐 | ❌ 안 씀
+r: 생성자에서 뭔가 **시작**함 (Timer) | ✅ 끝내는 코드
+r: 파일·메모리를 직접 잡음 | ✅ 닫고 돌려주기
+trap: `a.~Student();` 직접 호출 > 컴파일러에 맡김 > 나중에 자동으로 또 불려 **두 번 소멸**
+star: 판단 기준 = “생성자에서 **시작한 게** 있나?” 있으면 소멸자에서 끝내고, 없으면 쓰지 않는다.
+mem: RAII = **문에 단 스톱워치** (들어가면 시작, 나오면 자동 정지)
+key: RAII = 시작은 생성자, 끝은 소멸자
+key: 어떻게 빠져나가든 소멸자는 불림
+key: 소멸자 직접 호출 금지
+
+# p5-5 | static 멤버 | Ch 15.6~15.7
+sum: **static 멤버 변수** = 객체마다가 아니라 **클래스에 하나**. **static 멤버 함수** = 객체 없이 부르고 **this 가 없다**.
+ana: 🏫 일반 멤버 = 학생 각자의 공책, static 멤버 = 교실 앞 칠판(반 전체에 하나).
+h: 왜 필요해?
+tbl: 방법 | 문제
+r: 일반 멤버 `int m_count` | 객체마다 따로 → 전체를 못 셈
+r: 전역 변수 `g_count` | 누구나 건드림, 이름 오염
+r: **static 멤버** | ✅ 클래스 안에 있으면서 전체에 하나
+h: static 멤버 변수 · 함수
+code:
+class Student {
+    inline static int s_count { 0 };      // 클래스 전체에 하나
+    std::string m_name {};                // 객체마다 하나
+public:
+    Student(std::string_view n) : m_name { n } { ++s_count; }   // 태어나면 +1
+    ~Student() { --s_count; }                                   // 사라지면 -1
+    static int count() { return s_count; }                      // static 함수
+};
+Student::count();   // 0 — 객체 없이 호출
+:end
+tbl: 알아 둘 것 | 내용
+r: `inline static` | 헤더에 써도 정의가 하나로 (C++17). 없으면 .cpp 에 따로 정의
+r: `s_` 접두어 | static 표시 관습
+r: 객체가 0개여도 | static 변수는 존재
+r: static 함수 | **this 없음** → `m_name` 같은 객체 멤버 ❌, `const` 도 ❌
+h: 수명 비교
+tbl:  | 지역 변수 | static 멤버 | 전역 변수
+r: 수명 | 블록 안 | 프로그램 전체 | 프로그램 전체
+r: 누가 쓰나 | 그 블록 | 클래스가 정함 (private 가능) | 아무나
+trap: static 함수 안에서 `m_name` 사용 > static 멤버나 인자로 받은 객체만 > this 가 없어 컴파일 오류
+star: static 함수엔 **this 가 없다** → 객체 멤버 못 씀, const 못 붙임.
+mem: static = **칠판**(하나), 일반 멤버 = **공책**(각자). 칠판 담당은 누구 공책인지 몰라서 못 봄
+key: static 멤버 변수 = 클래스에 하나, `inline static`
+key: static 함수 = `클래스::함수()`, this 없음
+key: 수명은 프로그램 전체
+
+# p5-6 | 학번 자동 부여 · 인원 세기 | Ch 15.6~15.7
+sum: `m_id { s_nextId++ }` 로 **겹치지 않는 학번**, 생성자 `++` / 소멸자 `--` 로 **인원 수가 자동**으로 맞는다.
+ana: 🎫 은행 번호표 기계. 한 번 뽑힌 번호는 손님이 떠나도 다시 안 나옴.
+h: 코드
+code:
+class Student {
+    inline static int s_count { 0 };            // 지금 인원
+    inline static int s_nextId { 20250001 };    // 다음 학번
+    std::string m_name {};
+    int m_id {};
+public:
+    Student(std::string_view n) : m_name { n }, m_id { s_nextId++ } { ++s_count; }
+    ~Student() { --s_count; }
+    int id() const { return m_id; }
+    static int count() { return s_count; }
+};
+int main()
+{
+    Student a { "홍길동" };
+    Student b { "김철수" };
+    { Student c { "이영희" }; }   // 블록 끝 → c 소멸, 인원 -1
+}
+:end
+out: 실제 실행 결과
+시작: 0명
+홍길동 학번 20250001, 지금 2명
+이영희 학번 20250003, 블록 안 3명
+블록 밖 2명
+:end
+tbl: 무엇 | 왜
+r: 이영희가 **20250003** | 김철수가 20250002 를 가져감
+r: 블록 밖 **2명** | c 의 소멸자가 `--s_count`
+r: 학번은 다시 안 줄어듦 | s_nextId 는 소멸자에서 안 건드림
+trap: `m_id { ++s_nextId }` (전위) > `m_id { s_nextId++ }` (후위) > 첫 학번이 20250002 부터 시작
+star: 출력 예측 — **학번은 계속 증가**, **인원은 소멸하면 감소**.
+mem: 학번 = **번호표**(다시 안 나옴), 인원 = **현재 대기 인원**(나가면 줄어듦)
+key: `m_id { s_nextId++ }` — 현재 값 주고 증가
+key: 생성자 ++, 소멸자 --
+key: 블록 끝 → 소멸 → 인원 감소
+
+# p5-7 | 함수 템플릿 | Ch 11.6~11.7
+sum: **`template <typename T>`** — 타입을 빈칸 T 로 두면 컴파일러가 **쓰는 타입마다 함수를 찍어낸다**.
+ana: 🍪 쿠키 틀. 반죽(타입)만 바꿔 넣으면 같은 모양 쿠키(함수)가 나옴.
+h: 문제: 타입만 다른 복붙
+code:
+int         larger(int a, int b)                 { return a > b ? a : b; }
+double      larger(double a, double b)           { return a > b ? a : b; }
+std::string larger(std::string a, std::string b) { return a > b ? a : b; }
+// 본문은 똑같고 타입만 다름
+:end
+fix: PPT 에 “**4회차**의 오버로드”라고 되어 있지만 함수 오버로딩은 **3회차**에서 배움.
+h: 템플릿으로 하나로
+code:
+template <typename T>
+T larger(T a, T b)
+{
+    return a > b ? a : b;
+}
+larger(3, 7);       // 7       — T = int
+larger(2.5, 1.5);   // 2.5     — T = double
+larger(s1, s2);     // 홍길동  — T = std::string
+:end
+tbl: 알아 둘 것 | 내용
+r: `template <typename T>` | “T 는 타입이다” 선언. 함수 바로 앞
+r: T 는 누가 정하나 | 컴파일러가 **인자를 보고**
+r: 실제로는 | int용·double용·string용 함수를 각각 찍어냄
+h: T 가 안 정해지면
+code:
+larger(3, 7.5);     // ❌ T 가 int? double?
+larger(3.0, 7.5);   // ✅ 타입을 맞춤
+:end
+out: GCC 13 실제 출력
+error: no matching function for call to 'larger(int, double)'
+note:   deduced conflicting types for parameter 'T' ('int' and 'double')
+:end
+tip: 템플릿 오류는 **둘째 줄**(`deduced conflicting types`)이 진짜 이유.
+trap: `larger(3, 7.5)` > `larger(3.0, 7.5)` > T 를 하나로 정할 수 없음
+star: 템플릿은 함수가 아니라 **함수를 찍어내는 틀**. 인자 타입이 다르면 T 충돌 오류.
+mem: 템플릿 = **쿠키 틀**, T = **반죽 자리**
+key: `template <typename T>` + 타입 자리에 T
+key: 함수 템플릿은 인자로 T 추론
+key: `larger(3, 7.5)` → T 충돌
+
+# p5-8 | 클래스 템플릿 | Ch 15.5
+sum: 클래스도 `template <typename T>`. 다만 보통 **`Pair<int>`** 처럼 타입을 직접 적는다. 정의는 **헤더에 전부**.
+ana: 📦 크기는 같고 내용물만 다른 택배 상자. `상자<사과>`, `상자<책>` — 상자 설계는 하나.
+h: 함수 템플릿 vs 클래스 템플릿
+tbl:  | 함수 템플릿 | 클래스 템플릿
+r: T 정하기 | 인자를 보고 **자동** | 보통 `< >` 에 **직접**
+r: 예 | `larger(3, 7)` | `Pair<int> p { 3, 7 };`
+r: 표준 예 | `std::max` | `std::vector<int>`
+code:
+template <typename T>
+class Pair {
+    T m_first {}, m_second {};
+public:
+    Pair(const T& a, const T& b) : m_first { a }, m_second { b } { }
+    const T& larger() const { return m_first > m_second ? m_first : m_second; }
+};
+Pair<int> nums { 3, 7 };                       // nums.larger() → 7
+Pair<std::string> names { "홍길동", "김철수" };   // names.larger() → 홍길동
+:end
+li: `Pair<int>` 와 `Pair<std::string>` 은 **완전히 다른 타입** (서로 대입 불가)
+li: std::string, std::vector 도 전부 클래스 템플릿
+tip: 템플릿 오류가 20줄이어도 **첫 줄과 마지막 줄**만 보면 됨.
+h: 함정: 정의를 .cpp 에 두면
+vs: ❌ .h 선언 + .cpp 정의 | ✅ .h 에 전부
+// pair.h
+template <typename T>
+class Pair {
+    const T& larger() const;
+};
+// pair.cpp
+template <typename T>
+const T& Pair<T>::larger() const
+{ ... }
+--
+// pair.h
+template <typename T>
+class Pair {
+    const T& larger() const
+    { ... }
+};
+// pair.cpp 없음
+:end
+out: GCC 13 실제 출력
+undefined reference to 'Pair<int>::larger() const'
+:end
+li: 이유: `Pair<int>` 를 찍어내려면 **정의를 봐야** 하는데, main.cpp 를 컴파일할 땐 pair.cpp 를 못 봄
+trap: 템플릿 정의를 .cpp 에 분리 > 헤더에 정의까지 > 링크 오류 (undefined reference)
+star: 템플릿은 **헤더에 정의까지** — “긴 함수는 .cpp” 규칙의 **유일한 예외**.
+mem: 틀(템플릿)은 **찍는 곳(헤더)** 옆에 둬야 찍을 수 있음
+key: 클래스 템플릿은 `Pair<int>` 처럼 타입을 적음
+key: `Pair<int>` ≠ `Pair<string>`
+key: 템플릿 정의는 헤더에
+
+# p5-9 | friend | Ch 15.8
+sum: friend = 클래스가 **고른 바깥 함수 하나에게만** private 을 보여 준다. 기본은 getter, friend 는 마지막 수단.
+ana: 🔑 집주인이 친구 한 명에게만 열쇠를 줌. 친구가 스스로 열쇠를 만들 수는 없음.
+h: 문제: 둘을 대등하게 비교
+code:
+bool isHigher(const Student& a, const Student& b)
+{
+    return a.m_score > b.m_score;   // ❌ private 이라 막힘
+}
+:end
+out: GCC 13 실제 출력
+error: 'int Student::m_score' is private within this context
+:end
+li: “a 가 b 보다 높나”는 둘이 **대등** → 멤버(`a.isHigher(b)`)보다 바깥 함수가 자연스러움
+h: 해결 2가지
+vs: ① getter (기본) | ② friend
+class Student {
+public:
+    int getScore() const
+    { return m_score; }
+};
+bool isHigher(const Student& a,
+              const Student& b)
+{ return a.getScore() > b.getScore(); }
+--
+class Student {
+    friend bool isHigher(const Student& a,
+                         const Student& b);
+};
+bool isHigher(const Student& a,
+              const Student& b)
+{ return a.m_score > b.m_score; }
+:end
+tbl: friend 특징 | 내용
+r: 멤버인가? | ❌ 바깥의 평범한 함수 → **this 없음**, `a.m_score` 처럼 객체를 적어야 함
+r: friend 줄 위치 | public·private 어디든 상관없음
+r: 누가 정하나 | **클래스가** 고름
+h: 언제 쓰나
+tbl: friend 가 맞을 때 | getter 면 충분할 때
+r: 두 객체 내부를 동시에 보는 비교 | 값 하나 읽기
+r: `std::cout << a` 같은 연산자 (12회차) | 이미 getter 가 있음
+r: 밖에 getter 를 두기 싫은 내부 값 | 나머지 대부분
+warn: friend 가 늘수록 캡슐화에 구멍 — “내부를 바꿔도 밖이 안 깨진다”는 장점이 사라짐.
+trap: 바깥 함수에서 private 직접 접근 > getter 또는 friend 선언 > is private within this context 오류
+star: friend 는 **멤버가 아니다** → this 없음, 선언 위치 무관. 기본은 **getter**.
+mem: friend = **열쇠 받은 친구** (집주인이 줌)
+key: friend 선언은 클래스 안, 정의는 바깥
+key: friend 는 멤버 아님 → this 없음
+key: 기본 getter, friend 는 최후
+
+# p5-10 | 파일 나누기 · 클래스 안 타입 · 완성 Student | Ch 15.2~15.3
+sum: 클래스 정의·짧은 함수·`inline static`·**템플릿은 헤더**, 긴 함수는 .cpp. 클래스 전용 타입은 **클래스 안에**.
+ana: 🗄️ 헤더 = 매장 진열대(손님이 봐야 하는 것), .cpp = 창고(긴 작업).
+h: 어디에 둘까
+tbl: 무엇 | 어디 | 이유
+r: 클래스 정의 | .h | 쓰는 쪽이 크기·멤버를 알아야 함
+r: 짧은 멤버 함수 | .h (클래스 안) | 자동 inline
+r: 긴 멤버 함수 | .cpp | 고칠 때 그 파일만 다시 컴파일
+r: static 멤버 변수 | .h 에 `inline static` | C++17 한 줄
+r: 템플릿 | **전부 .h** | .cpp 면 링크 오류
+tip: 헤더 맨 위 `#pragma once` — 같은 헤더 두 번 포함 방지 (표준은 아니지만 주요 컴파일러 모두 지원).
+h: 클래스 안에 타입 두기
+code:
+class Student {
+public:
+    enum class Grade { A, B, C, D, F };   // 클래스 안
+    Grade grade() const { return m_score >= 90 ? Grade::A : Grade::B; }
+};
+Student::Grade g = a.grade();            // 밖에서는 Student:: 붙임
+if (g == Student::Grade::A) { }
+:end
+h: 두 회차 동안 자란 Student
+code:
+class Student {
+    inline static int s_count { 0 };                       // 5회차 static
+    std::string m_name {};
+    int m_score {};
+public:
+    Student(std::string_view n, int s) : m_name { n } { setScore(s); ++s_count; }
+    ~Student() { --s_count; }                              // 5회차 소멸자
+    const std::string& getName() const { return m_name; }  // 4회차 const
+    void setScore(int v) { if (v >= 0 && v <= 100) m_score = v; }   // 4회차 검사
+    static int count() { return s_count; }                 // 5회차 static 함수
+    friend bool isHigher(const Student& a, const Student& b);       // 5회차 friend
+};
+:end
+tip: 소멸자가 `--s_count` 하나뿐인 이유 — m_name 은 string 이 알아서 정리. 이 클래스가 **직접 시작한 것**(인원 세기)만 되돌림.
+trap: 템플릿을 .cpp 로 분리 > 헤더에 전부 > 링크 오류
+star: 밖에서 클래스 안 타입을 쓸 땐 **`Student::Grade::A`**.
+mem: 헤더 = **진열대**, .cpp = **창고**
+key: 템플릿·inline static·짧은 함수는 헤더
+key: 클래스 안 타입은 `Student::Grade`
+key: 소멸자는 내가 시작한 것만 되돌림
+
+# p5-11 | 5회차 함정 · 표준 라이브러리 · 8단계 | Ch 15
+sum: 함정 6개 중 **this 누락·소멸자 직접 호출은 컴파일러가 못 잡는다**. 표준 라이브러리도 오늘 도구로 만들어져 있다.
+ana: 🔍 이제 cppreference 의 std::vector 페이지에 나오는 말(member function, static member, destructor, template)이 다 읽힘.
+h: 언제 걸리나
+tbl: 함정 | 걸리는 때
+r: `name = name;` (this 없이) | 😶 **안 걸림** (조용히 틀림)
+r: 소멸자 직접 호출 | 😶 **안 걸림** (두 번 소멸)
+r: static 함수에서 `m_name` | 컴파일
+r: `larger(3, 7.5)` | 컴파일
+r: 바깥 함수에서 private | 컴파일
+r: 템플릿 정의를 .cpp 에 | **링크**
+h: 표준 라이브러리 다시 보기
+tbl: 써 본 것 | 정체
+r: `std::vector<int>` | 클래스 템플릿
+r: `std::max(3, 7)` | 함수 템플릿 (larger 와 같음)
+r: string 의 자동 메모리 정리 | 소멸자 (RAII)
+r: `std::string::npos` (8회차) | static 멤버 변수
+r: `steady_clock::now()` | static 멤버 함수
+h: 클래스 만드는 8단계 (갱신판)
+flow: 1 규칙 > 무엇을 막을지 || 2 동작 public > 매개변수 이름은 멤버와 다르게 || 3 데이터 private > 필요한 것만 || 4 생성자 > 인자 하나면 explicit || 5 시작했으면 끝내기 ★ > 시작한 게 없으면 소멸자 안 씀 || 6 const > 안 바꾸는 함수 전부 || 7 공유 값은 static ★ > 개수, 다음 번호 || 8 friend 는 최후 ★ > getter 로 되면 getter
+h: 용어
+tbl: 한국어 | 영어 | 한 줄
+r: this 포인터 | this pointer | 부른 객체를 가리킴
+r: 소멸자 | destructor | 사라질 때 자동 호출
+r: RAII | Resource Acquisition Is Initialization | 뒷정리를 수명에 맡김
+r: 정적 멤버 변수·함수 | static member | 클래스에 하나 / 객체 없이 호출
+r: 함수·클래스 템플릿 | function / class template | 타입을 빈칸으로
+r: 프렌드 함수 | friend function | private 에 접근하는 바깥 함수
+trap: `name = name;` > `this->name = name;` > 경고 없이 아무 일도 안 함
+trap: 소멸자 직접 호출 > 컴파일러에 맡김 > 두 번 소멸
+trap: static 함수에서 `m_name` > static 멤버나 인자 객체만 > this 없음
+trap: `larger(3, 7.5)` > `larger(3.0, 7.5)` > T 를 못 정함
+trap: 템플릿 정의를 .cpp 에 > 헤더에 > undefined reference
+trap: 바깥 함수에서 private > getter 또는 friend > is private within this context
+star: **조용히 깨지는 것 2개**(this 누락, 소멸자 직접 호출)와 **링크 오류 1개**(템플릿 .cpp)를 구분하기.
+mem: 8단계 **규·동·데·생·끝·콘·정·친**
+key: 조용: this 누락, 소멸자 직접 호출
+key: 링크: 템플릿 .cpp 분리
+key: 8단계: 규·동·데·생·끝·콘·정·친
+
+# p5-12 | 5회차 실습 과제 | Ch 15
+sum: this 눈으로 보기 → Timer 만들기 → static·friend → **Stack<T> 제출**.
+ana: 🧗 계단 4칸. 하나씩 올라가면 마지막에 템플릿 스택이 완성됨.
+h: 과제 4개
+flow: 1 this 보기 > whoAmI() 로 this == &a 확인, `name = name` 버그 재현 후 수정 || 2 Timer > 생성자 시각 기록, 소멸자 경과 시간 출력, 블록 2개 재기 || 3 static·friend > 인원 수 + 학번 자동, isHigher friend || 4 Stack<T> 제출 > 크기 10 배열, push·pop·top·size·empty·print
+code:
+template <typename T>
+class Stack {
+    T m_data[10] {};            // 크기 10 배열
+    int m_size { 0 };
+public:
+    bool push(const T& v);      // 꽉 차면 false
+    void pop();                 // 비었으면 아무것도 안 함
+    const T& top() const;
+    int size() const { return m_size; }
+    bool empty() const { return m_size == 0; }
+    void print() const;
+};
+// Stack<int> 와 Stack<std::string> 둘 다로 시험
+:end
+fix: 과제 설명의 “4회차 Roster 의 그 배열”은 크기 **100** 이었음 (과제는 10). 구조가 같다는 뜻.
+ref: 6회차는 이 Stack 을 vector 로 다시 쓰며 시작 — 코드 지우지 말 것.
+trap: Stack 템플릿을 .h / .cpp 로 나눔 > 헤더 하나에 전부 > 링크 오류
+trap: 빈 스택에서 top() > empty() 먼저 확인 > 범위 밖 접근
+star: Stack<T> 는 **템플릿 → 헤더에 전부**, **int 와 string 둘 다** 테스트.
+mem: 과제 순서 **this → Timer → static·friend → Stack**
+key: 과제 4개를 순서대로
+key: Stack<T> 는 헤더에 전부
+key: 두 타입으로 테스트

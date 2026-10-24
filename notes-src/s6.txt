@@ -1,0 +1,344 @@
+@ c6 | 6회차 · 여러 개를 담기 | Ch 16~17
+
+# p6-1 | std::vector 시작하기 | Ch 16.1~16.3, 16.6
+sum: 몇 개가 올지 모르면 **std::vector**. 필요한 만큼 늘어나고, **자기 크기를 스스로 안다**.
+ana: 🎒 vector = 늘어나는 가방. 물건이 많아지면 알아서 커지고, 몇 개 들었는지도 기억함.
+h: 배열의 문제
+code:
+int scores[100] {};       // 3명만 오면 97칸 낭비, 101명이면 넘침
+average(scores, 5);       // 개수를 잘못 넘겨도 아무도 모름
+:end
+fix: PPT 주석의 “397칸 낭비”는 100칸 배열이므로 **97칸**.
+term: 컨테이너 | container | 같은 타입 값을 여러 개 담는 타입 (vector 가 대표)
+h: 기본 사용법
+code:
+#include <vector>
+std::vector<int> scores { 90, 75, 84 };
+scores.size();          // 3
+scores[0];              // 90 (0부터 셈)
+scores.push_back(68);   // 뒤에 추가
+scores.back();          // 68 (마지막)
+:end
+tbl: 함수 | 하는 일
+r: `size()` | 지금 몇 개
+r: `v[i]` | i 번째 (0부터)
+r: `push_back(x)` | 뒤에 추가
+r: `back()` | 마지막 원소
+h: 개수 몰라도 그냥 담기
+code:
+std::vector<int> scores {};
+int x {};
+while (std::cin >> x && x >= 0)
+    scores.push_back(x);          // 들어오는 대로
+// 입력 90 75 84 68 -1 → 4개 담김
+:end
+tip: vector 를 쓰는 가장 큰 이유 = “최대 몇 개?”, “넘치면?” 고민이 **통째로 사라짐**.
+trap: 크기를 넉넉히 잡은 배열 + 개수 변수 > `std::vector` > 개수를 잘못 넘겨도 조용히 틀림
+star: `< >` 안 = 담을 타입. `vector<int>`, `vector<Student>` — 5회차 **클래스 템플릿**.
+mem: vector = **늘어나는 가방**
+key: 개수 모르면 vector
+key: size · [i] · push_back · back
+key: 인덱스는 0부터
+
+# p6-2 | { } 와 ( ) · [] 와 at() · size() 함정 | Ch 16.2~16.3
+sum: **`{3}` = 원소 3 하나, `(3)` = 0 이 세 칸.** `[]` 는 검사 안 함, `at()` 은 검사함. `size()` 는 부호 없음.
+ana: 🛒 `{3}` = 장바구니에 “3”이라는 물건 하나, `(3)` = 빈 칸 세 개짜리 장바구니.
+h: 괄호에 따라 완전히 다름
+tbl: 코드 | 크기 | 내용
+r: `vector<int> a { 3 };` | 1 | 3
+r: `vector<int> b ( 3 );` | 3 | 0 0 0
+r: `vector<int> c { 3, 5 };` | 2 | 3 5
+r: `vector<int> d ( 3, 5 );` | 3 | 5 5 5
+li: 값을 **나열** → `{ }`, “**몇 칸짜리**” → `( )`
+li: “초기화는 중괄호” 규칙의 **유일한 예외 지대**
+h: [] vs at()
+tbl:  | `v[10]` | `v.at(10)`
+r: 범위 검사 | ❌ 없음 | ✅ 있음
+r: 범위 밖이면 | 쓰레기 값, 계속 실행 (UB) | 예외 던지고 멈춤
+r: 결과 | 종료 코드 0 (몰래 틀림) | 종료 코드 134 (`out_of_range`)
+r: 언제 | 범위가 확실할 때 | **배우는 동안**
+h: size() 는 부호 없음
+code:
+std::vector<int> v {};
+v.size() - 1;                      // 18446744073709551615 (−1 아님!)
+for (int i = 0; i < v.size(); ++i) // ⚠️ 부호 섞기 경고
+:end
+tbl: 해결 | 코드
+r: ① range-for (가장 좋음) | `for (int x : v)`
+r: ② size_t 로 세기 | `for (std::size_t i = 0; i < v.size(); ++i)`
+r: ③ int 로 바꾸기 | `static_cast<int>(v.size())`
+trap: `vector<int> v { 3 };` 로 3칸을 기대 > `vector<int> v ( 3 );` > 원소 3 하나짜리가 됨
+trap: `v[10]` (범위 밖) > `v.at(10)` > 검사 없이 쓰레기 값 = UB
+trap: 빈 vector 에서 `v.size() - 1` > `v.empty()` 먼저 확인 > 0 − 1 이 거대한 수
+star: `{3}` **원소 하나**, `(3)` **세 칸**. `[]` 는 검사 X, `at()` 은 검사 O.
+mem: **소**괄호 = **수**량(칸 수), **중**괄호 = **줄**줄이 값
+key: `{3}` 원소 하나 vs `(3)` 세 칸
+key: `[]` 검사 X(UB), `at()` 검사 O
+key: size() 는 unsigned → range-for
+
+# p6-3 | 크기 바꾸기 · range-for | Ch 16.6~16.8
+sum: 추가·삭제는 `push_back` `pop_back` `resize` `clear`. 훑을 땐 **range-for** — 읽기는 **`const T&`**, 고치기는 **`T&`**.
+ana: 📸 `for (T x : v)` = 사진을 복사해서 낙서(원본 그대로). `for (T& x : v)` = 원본 사진에 직접 낙서.
+h: 크기 바꾸기
+tbl: 함수 | 하는 일
+r: `push_back(x)` | 뒤에 추가 (가장 많이 씀)
+r: `pop_back()` | 뒤에서 하나 빼기
+r: `resize(10)` | 길이를 10으로 (늘어난 칸은 0)
+r: `clear()` | 전부 비우기
+r: `empty()` | 비었나? (`size() == 0` 보다 읽기 쉬움)
+h: range-for 3가지
+code:
+for (const std::string& s : names) std::cout << s;   // 읽기만 → const&
+for (int& x : scores) x += 5;                         // 고치기 → &
+for (int x : scores) std::cout << x;                  // 작은 타입 읽기 → 값
+:end
+tbl: 쓰는 법 | 언제 | 복사
+r: `for (const T& x : v)` | 읽기만 — **기본** | 없음
+r: `for (T& x : v)` | 원소를 고칠 때 | 없음
+r: `for (T x : v)` | int·double 같은 작은 타입만 | 매번
+h: 함정: & 를 빠뜨리면
+code:
+for (std::string s : names) s += "님";    // 사본만 바뀜
+std::cout << names[0];                     // 홍길동     ← 그대로
+for (std::string& s : names) s += "님";   // 원본이 바뀜
+std::cout << names[0];                     // 홍길동님
+:end
+tip: range-for 는 인덱스가 없어서 **부호 함정·범위 이탈이 원천 차단**. Python `for x in list` 와 같음.
+trap: 원소를 고치려는데 `for (T x : v)` > `for (T& x : v)` > 사본만 바뀌고 원본 그대로 (오류도 없음)
+trap: 큰 타입을 `for (std::string s : v)` 로 읽기 > `const std::string&` > 매번 복사
+star: 고칠 땐 **`&`**, 읽기만 할 땐 **`const&`**.
+mem: & 없음 = **복사본에 낙서**, & 있음 = **원본에 낙서**
+key: push_back · pop_back · resize · clear · empty
+key: 읽기 `const T&`, 고치기 `T&`
+key: & 없이 고치면 원본 안 바뀜
+
+# p6-4 | vector 의 메모리 · 넘기기 · 클래스 담기 | Ch 16.2, 16.5
+sum: vector 객체는 **관리 정보 24바이트**뿐, 원소는 **힙**에. 함수엔 **const&** 로, 반환은 **값**으로. 내 클래스도 담을 수 있다.
+ana: 🗺️ vector 객체 = 창고 위치가 적힌 지도 한 장(24바이트). 물건(원소)은 멀리 있는 창고(힙)에 있음.
+h: 메모리 위치
+out: 실제 실행 결과
+sizeof(std::array<int,1000>) = 4000 바이트
+sizeof(std::vector<int>)     = 24 바이트   ← 원소 수와 무관
+&v    = 0x7ffd863a7840 (스택)
+&v[0] = 0x55a5c864f2b0 (힙 — 멀리 있음)
+:end
+li: vector 안엔 **포인터 3개쯤**(시작·끝·용량 끝)만 → 원소 백만 개여도 24바이트
+li: 원소를 힙에 둬서 크기를 늘릴 수 있음
+h: 함수에 넘기기
+tbl: 원소 10만 개 | 무슨 일
+r: 값으로 `f(std::vector<int> v)` | ❌ 약 400KB 통째로 복사
+r: `f(const std::vector<int>& v)` | ✅ 복사 0
+r: 값으로 반환 `std::vector<int> make()` | ✅ 만들 때 한 번뿐 (C++17 복사 생략)
+h: 내 클래스 담기
+code:
+std::vector<Student> roster {};
+roster.push_back(Student { "홍길동", 90 });   // 만든 객체를 넣음
+roster.push_back(Student { "김철수", 75 });
+roster.emplace_back("이영희", 84);            // 생성자 인자로 안에서 바로 만듦
+:end
+fix: PPT 코드엔 김철수 줄이 없는데 출력엔 있어서 보충함.
+tbl: 함수 | 차이
+r: `push_back` | 이미 만든 객체를 넣음
+r: `emplace_back` | **생성자 인자**를 받아 안에서 직접 만듦 → 복사 한 번 덜
+out: vector 가 블록 끝에서 사라질 때
+  가 생성
+  나 생성
+  (블록 끝)
+  가 소멸    ← vector 의 소멸자가 원소 소멸자를 불러 줌
+  나 소멸
+:end
+trap: 큰 vector 를 값으로 넘김 > `const std::vector<int>&` > 통째로 복사
+trap: 큰 걸 반환하면 느릴까 봐 out 매개변수 사용 > 값으로 반환 > C++17 부터 반환 복사는 생략됨
+star: `sizeof(vector)` 는 원소 수와 **무관**. vector 가 사라지면 원소도 **자동 소멸** (RAII).
+mem: vector = **창고 지도** (지도는 작고 물건은 창고에)
+key: 원소는 힙, vector 객체는 24바이트
+key: 인자 const&, 반환은 값
+key: emplace_back = 안에서 바로 생성
+
+# p6-5 | 지우기 · 용량 · 무효화 | Ch 16.6~16.7
+sum: 가운데를 지우면 뒤가 당겨진다. **size(원소 수) ≠ capacity(의자 수)**. 의자가 모자라면 **통째로 이사** → 옛 주소는 무효.
+ana: 🪑 size = 앉은 사람, capacity = 의자 수. 의자가 모자라면 더 큰 방으로 **전원 이사** — 옛 방 주소로 찾아가면 아무도 없음.
+h: 지우기 · 복사 · 비교
+code:
+v.erase(v.begin() + 1);    // 두 번째 지움 — 뒤를 한 칸씩 당김 (비쌈)
+v.pop_back();              // 마지막 지움 — 쌈
+std::vector<int> a { 1, 2, 3 };
+std::vector<int> b { a };  // 통째로 복사 — 서로 남남
+std::vector<int> c { 1, 2, 3 };
+a == c;                    // true — 원소를 하나씩 비교
+:end
+fix: PPT 코드에서 `c` 가 선언 없이 쓰여 `std::vector<int> c { 1, 2, 3 };` 를 보충함.
+h: size 와 capacity
+tbl: 몇 번째 추가 | size | capacity | 무슨 일
+r: 1 | 1 | 1 | 새 자리로 이사
+r: 3 | 3 | 4 | 두 배 (2 → 4)
+r: 9 | 9 | 16 | 두 배 (8 → 16)
+r: 17 | 17 | 32 | 20개 담는 동안 총 6번 이사
+tip: 대충 개수를 알면 `v.reserve(20);` → 이사 0번. 몰라도 두 배씩 늘어서 크게 느리진 않음.
+h: 함정: 이사 후 옛 주소
+code:
+std::vector<int> v { 1, 2, 3 };
+int* p = &v[0];      // 첫 원소 주소 기억
+v.push_back(4);      // 의자 부족 → 이사
+std::cout << *p;     // ❌ 옛 주소 — UB
+:end
+out: 실제 실행 결과
+추가 전 주소: 0x5577f28452b0, 값 1
+추가 후 주소: 0x5577f28462e0     ← 바뀜
+옛 주소로 읽으면: 1467951173      ← 쓰레기
+:end
+trap: `push_back` 뒤 옛 포인터·참조·반복자 사용 > 추가한 뒤 다시 얻기 > 이사(재할당)로 무효 = UB
+trap: 훑는 반복문 안에서 push_back > 훑는 중엔 크기를 바꾸지 않기 > 반복 대상이 이사가 버림
+trap: 앞쪽에서 자주 erase > 가능하면 pop_back > 뒤를 전부 당겨서 느림
+star: **훑는 중엔 크기를 바꾸지 마라.** Java 는 예외, C++ 은 **조용히** 망가짐.
+mem: size = **앉은 사람**, capacity = **의자 수**, 의자 모자라면 **전원 이사**
+key: erase 는 비쌈, pop_back 은 쌈
+key: size ≠ capacity, reserve 로 미리
+key: 추가 후 옛 주소·반복자는 무효
+
+# p6-6 | std::array | Ch 17.1
+sum: 개수가 **딱 정해져 있으면** std::array. 쓰는 법은 vector 와 같고 **크기만 못 바꾼다**.
+ana: 🥚 array = 계란판. 12칸이면 영원히 12칸. vector = 늘어나는 가방.
+h: 기본
+code:
+#include <array>
+std::array<int, 3> a { 90, 75, 84 };   // 3 이 타입의 일부
+a.size();      // 3 (항상)
+a.at(1);       // 75 — vector 와 같은 사용법
+// a.push_back(1);   // ❌ 없음
+:end
+li: size, at, [], range-for 가 vector 와 똑같이 동작
+li: `std::array<int,3>` 과 `std::array<int,4>` 는 **다른 타입**
+h: vector vs array
+tbl:  | std::vector | std::array
+r: 크기 | 실행 중 변함 | 컴파일 때 고정
+r: 원소 위치 | 힙 | 객체 안 (스택 가능)
+r: 속도 | 거의 같음 | 아주 조금 빠름
+r: 언제 | **대부분** | 개수가 확실히 고정
+r: 예 | 학생 명단 | 요일 7개, RGB 3채널
+trap: 나중에 크기가 바뀔 수도 있는데 array > 확실하지 않으면 vector > 바뀌면 전부 고쳐야 함
+star: 크기가 **타입의 일부** — `array<int,3>` ≠ `array<int,4>`. 고민되면 **vector**.
+mem: array = **계란판** (칸 수 고정)
+key: `std::array<T, N>` — N 고정
+key: 크기가 타입의 일부
+key: 고민되면 vector
+
+# p6-7 | C 배열 · 배열 감쇠 · C 문자열 | Ch 17.7~17.10
+sum: C 배열은 멤버 함수도 범위 검사도 없고, **함수에 넘기면 포인터로 바뀌어 크기를 잃는다**(배열 감쇠).
+ana: 🧳 C 배열이 함수 문을 지나면 짐(크기 정보)은 두고 **주소 쪽지만** 들고 들어감.
+h: C 배열
+code:
+int arr[5] { 1, 2, 3, 4, 5 };
+sizeof(arr) / sizeof(arr[0]);   // 5 — 크기는 이렇게 구함
+// arr.size();                  // ❌ 멤버 함수 없음
+:end
+tbl:  | C 배열 | std::array
+r: 크기 | `sizeof(arr)/sizeof(arr[0])` | `a.size()`
+r: 범위 검사 | 없음 | `at()`
+r: 함수에 넘기면 | **크기 잃음** | 크기 유지
+li: 새로 쓸 일은 거의 없지만 **읽을 줄은** 알아야 함 (옛 코드, 문자열 리터럴)
+h: 배열 감쇠
+code:
+void byCArray(int arr[])   // 사실은 int* 로 받음
+{
+    sizeof(arr);           // 8 — 포인터 크기
+}
+int arr[5] {};
+sizeof(arr);               // 20 — 배열 전체
+:end
+out: 실제 실행 결과 + 경고
+main 안 sizeof(arr) = 20 바이트
+함수 안 sizeof(arr) = 8 바이트  ← 크기 잃음
+warning: 'sizeof' on array function parameter 'arr' will return size of 'int*'
+:end
+term: 배열 감쇠 | array decay | C 배열이 함수로 넘어가면 첫 원소 포인터로 바뀌는 것
+h: C 문자열
+code:
+const char* name { "홍길동" };   // 첫 글자를 가리키는 포인터
+char buf[10] { "hello" };        // h e l l o \0 — 끝에 널 문자
+std::strlen(buf);                // 5 — \0 까지 하나씩 셈
+std::string s { buf };           // string 으로 바꾸면 편함
+:end
+tbl: 알아 둘 것 | 내용
+r: 리터럴 `"안녕"` 의 정체 | const char 배열
+r: 끝 표시 | `\0` 한 글자
+r: 길이 | 매번 세야 함 (strlen) — string 은 기억함
+trap: 함수 안에서 `sizeof(arr)` 로 개수 구하기 > 개수를 따로 넘기거나 array/vector > 포인터 크기(8)가 나옴
+trap: C 문자열 끝 `\0` 누락 > std::string > 끝을 몰라 계속 읽음 (버퍼 오버런)
+star: main 에선 **20**, 함수 안에선 **8** — 배열 감쇠.
+mem: 감쇠 = 함수 문 통과하며 **크기 기억 상실**
+key: C 배열 크기 = `sizeof(arr)/sizeof(arr[0])`
+key: 함수로 넘기면 포인터로 감쇠
+key: C 문자열은 `\0` 으로 끝남
+
+# p6-8 | 2차원 vector · 무엇을 쓸까 | Ch 17.12
+sum: 행렬은 **vector 안에 vector**. 결론: 모르면 **vector**, 고정이면 **array**, C 배열은 어쩔 수 없을 때만.
+ana: 🏢 2차원 vector = 아파트. `grid[층][호]` — 바깥 vector 가 층, 안쪽 vector 가 그 층의 호실.
+h: 2차원 vector
+code:
+std::vector<std::vector<int>> grid(3, std::vector<int>(4, 0));   // 3행 4열, 전부 0
+grid[1][2] = 7;          // 2행 3열 (0부터)
+grid.size();             // 3 — 행 수
+grid[0].size();          // 4 — 열 수
+for (const std::vector<int>& row : grid)
+    for (int x : row) std::cout << x << ' ';
+:end
+out: 실제 실행 결과
+0 0 0 0
+0 0 7 0
+0 0 0 0
+:end
+tip: 읽기 쉬운 대신 조금 느림. 속도가 중요하면 1차원 vector + `grid[y * 열수 + x]`.
+h: 결론표
+tbl: 상황 | 쓸 것
+r: 개수를 모름 | **std::vector**
+r: 개수가 확실히 고정 | std::array
+r: 옛 코드·C 라이브러리 | C 배열 (어쩔 수 없을 때만)
+r: 문자열 | std::string
+r: 고민된다 | **std::vector**
+ref: 다른 언어도 같은 구분 — Java 배열/ArrayList, Python tuple/list.
+trap: `grid[1][2]` 를 1행 2열로 읽음 > 0부터 세서 2행 3열 > 인덱스가 하나씩 밀림
+star: `grid.size()` = **행 수**, `grid[0].size()` = **열 수**.
+mem: 2차원 vector = **아파트** `grid[층][호]`
+key: `vector<vector<int>> g(행, vector<int>(열, 0))`
+key: 행 수 `g.size()`, 열 수 `g[0].size()`
+key: 모르면 vector, 고정이면 array
+
+# p6-9 | Roster 다시 쓰기 · 6회차 함정 모음 | Ch 16~17
+sum: 배열 두 개 + 개수 → **vector 하나**. 개수를 따로 들고 다닐 일이 없어 **49.8 버그는 만들 수가 없다**.
+ana: ✅ 4회차의 “개수 잘못 넘기기” 사고를 vector 가 구조적으로 막아 줌.
+h: vector 로 다시 쓴 Roster
+code:
+class Roster {
+    std::vector<Student> m_list {};
+public:
+    void add(std::string_view n, int s) { m_list.emplace_back(n, s); }
+    double average() const
+    {
+        if (m_list.empty()) return 0.0;
+        int sum { 0 };
+        for (const Student& st : m_list) sum += st.getScore();
+        return static_cast<double>(sum) / static_cast<double>(m_list.size());
+    }
+};
+:end
+h: 다른 컨테이너 (이름만)
+tbl: 컨테이너 | 쓰임 | 다른 언어
+r: std::vector | 순서대로 여러 개 — 기본 | Python list
+r: std::array | 개수 고정 | Python tuple
+r: std::map | 키로 값 찾기 (학번 → 학생) | Python dict
+r: std::set | 중복 없이 모으기 | Python set
+ref: map·set 은 8회차. 넷 다 range-for 가 그대로 통함.
+fix: 장 표지엔 “오늘 나온 함정”이 있지만 모음 슬라이드가 없어 아래에 모음.
+trap: `vector<int> v { 3 };` 로 3칸 기대 > `( 3 )` > 원소 3 하나
+trap: `v[10]` 범위 밖 > `at()` > UB
+trap: `i < v.size()` > range-for 또는 size_t > 부호 섞기, 빈 벡터에서 거대한 수
+trap: `for (std::string s : v) s += "님";` > `std::string&` > 사본만 바뀜
+trap: push_back 뒤 옛 포인터·반복자 > 다시 얻기 > 재할당으로 무효
+trap: C 배열을 함수에 넘기고 sizeof > 개수 따로 넘기기 > 포인터 크기 8
+trap: C 문자열 `\0` 누락 > std::string > 버퍼 오버런
+star: 4회차 49.8 버그는 vector 가 **자기 크기를 알아서** 생길 수 없다.
+mem: 6회차 함정 **괄·범·부·복·이·감·널** ({}/(), 범위, 부호, 복사, 이사, 감쇠, \0)
+key: vector 가 개수를 들고 있어 개수 실수 불가
+key: 함정 7개는 이 카드로 복습
+key: map(키→값), set(중복 X)은 이름만

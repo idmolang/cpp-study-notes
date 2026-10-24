@@ -1,0 +1,413 @@
+@ c3 | 3회차 · 타입 시스템과 복합 타입 | Ch 10~13
+
+# p3-1 | 자동 형변환과 부호 섞기 | Ch 10.1~10.3, 10.5
+sum: 타입 변환은 **자동으로, 조용히** 일어난다. 특히 부호 있는 값과 없는 값을 섞으면 **−1 이 42억**이 된다.
+ana: 💱 환전소. 작은 돈 → 큰 지갑(승격)은 안전하지만, 큰 돈 → 작은 지갑(축소)은 넘치는 만큼 버려짐.
+h: 변환 3종류
+tbl: 종류 | 예 | 안전?
+r: 승격 | char·short·bool → int, float → double | ✅ 값 안 잃음
+r: 수치 변환 | double → int, int → short | ⚠️ 값을 잃을 수 있음
+r: 산술 변환 | `a + b` 에서 두 타입을 맞춤 | ⚠️ 부호 섞기가 여기서 터짐
+code:
+int    i { };
+i = 3.7;               // 3 — 0.7 사라짐
+int n { 'A' + 1 };     // 66 — char 가 int 로 승격
+short a { 1 }, b { 2 };
+auto s { a + b };      // short + short 도 int 가 됨
+:end
+fix: PPT 코드가 `short a { 1 }, b { 2 };` 에서 끝나 있어 마지막 줄을 보충함 — “short 끼리 더해도 결과는 int”.
+h: 부호 섞기 함정
+code:
+int x { -1 };
+unsigned int y { 1 };
+std::cout << (x < y);   // 0 (false!) — -1 이 4294967295 로 바뀜
+
+std::vector<int> v { 1, 2, 3 };
+for (int i { 0 }; i < v.size(); ++i)   // ⚠️ 경고: v.size() 는 unsigned
+:end
+tip: `-Wconversion -Wsign-conversion` 을 켜면 값을 잃는 변환을 경고해 줌.
+trap: `int` 와 `unsigned` 를 비교 > 부호를 한 식에 섞지 않기 > signed 가 unsigned 로 바뀌어 −1 이 42억
+star: signed 와 unsigned 를 섞으면 **signed 가 unsigned 로** 바뀐다 → `-1 < 1u` 은 **false**.
+mem: unsigned 랑 만나면 signed 가 **져서** unsigned 옷으로 갈아입음
+key: 승격(안전) · 수치 변환(손실 가능) · 산술 변환(맞추기)
+key: `-1 < 1u` 은 false
+key: `i < v.size()` 는 부호 섞기 경고
+
+# p3-2 | static_cast 와 타입 별칭 | Ch 10.4, 10.6~10.7
+sum: 변환은 **`static_cast<타입>(값)`** 으로 드러내 쓴다. `using` 별칭은 새 타입이 아니라 **별명**일 뿐.
+ana: 🏷️ using 별칭 = 닉네임. “철수”를 “쭈니”라고 불러도 같은 사람 — 다른 사람 취급해 주지 않음.
+h: 캐스트 비교
+vs: ❌ C 스타일 | ✅ static_cast
+double r = (double)a / b;
+// 무슨 변환인지 안 보임
+// 위험한 변환도 조용히 함
+// 검색하기 어려움
+--
+double r = static_cast<double>(a) / b;
+// 값 변환만 허용
+// 위험하면 컴파일 오류
+// 눈에 띄고 검색 쉬움
+:end
+tip: 일부러 자를 때도 `int n { static_cast<int>(4.9) };` 처럼 써서 “알고 자른 것”을 드러냄.
+h: 타입 별칭
+code:
+typedef std::vector<int> Scores;   // 옛 방식
+using Scores = std::vector<int>;   // ✅ 요즘 방식
+
+using Meter  = double;
+using Second = double;
+Meter m { 10 }; Second t { 2 };
+double v = m + t;                  // ⚠️ 통과 — 단위가 달라도 못 막음
+:end
+h: 형변환 한눈에
+tbl: 변환 | 값 잃나 | 대응
+r: 승격 | 없음 | 신경 안 써도 됨
+r: 수치 변환 | 있을 수 있음 | `-Wconversion`
+r: 축소 변환 | 있음 | `{ }` 초기화가 막음
+r: 산술 변환 | 부호 섞을 때 | 부호 섞지 말기
+r: 명시적 변환 | 의도대로 | `static_cast`
+fix: 3회차 표지에 “타입 추론(auto)·함수 템플릿”이 있지만 본문엔 없음. 템플릿은 **5회차**에서. auto 는 “초기값을 보고 타입을 정한다”(`auto x { 5 };` → int)만 알면 됨.
+trap: `(double)a / b` > `static_cast<double>(a) / b` > 어떤 변환인지 안 드러남
+trap: `using Meter = double;` 로 단위 구분을 기대 > 별칭은 구분 못 한다는 걸 알기 > Meter + Second 도 그냥 double + double
+star: 3회차 형변환 3원칙 — ① `{ }` 가 축소를 잡는다 ② 부호를 섞지 않는다 ③ 변환은 `static_cast` 로.
+mem: 별칭 = **닉네임** (같은 사람)
+key: 변환은 static_cast, `(double)a` 금지
+key: using/typedef = 별명, 새 타입 X
+key: 축소는 `{}` 가 막고, 부호는 섞지 않기
+
+# p3-3 | 함수 오버로딩 | Ch 11.1~11.4
+sum: **이름은 같고 매개변수(개수·타입)가 다른** 함수 여러 개. 반환 타입만 다른 건 안 된다.
+ana: 👨‍🍳 “요리해 줘” 한마디에 재료(인자)를 보고 셰프가 레시피를 고름. 같은 재료면 고를 수 없음.
+h: 되는 것 / 안 되는 것
+code:
+int    add(int a, int b);          // ✅
+double add(double a, double b);    // ✅ 타입이 다름
+int    add(int a, int b, int c);   // ✅ 개수가 다름
+// double add(int a, int b);       // ❌ 반환형만 다름
+// int add(int x, int y);          // ❌ 이름만 다름
+:end
+tbl: 구분 기준 ✅ | 구분 기준 ❌
+r: 매개변수 **개수** | 반환 타입
+r: 매개변수 **타입** | 매개변수 이름
+r:  | 값 매개변수의 const
+li: 반환형으로 못 고르는 이유: `add(1, 2);` 처럼 반환값을 안 쓰고 부를 수 있어서
+h: 컴파일러가 고르는 순서
+flow: ① 정확히 일치 > 그대로 맞음 || ② 승격 > char → int 등 || ③ 표준 변환 > int → double 등 || ④ 사용자 정의 > 변환 생성자 등 || ⑤ 가변 인자 > `...`
+code:
+void print(int);  void print(double);
+print('a');       // char → int 승격이 먼저 → print(int)
+
+void f(int);  void f(long);
+f(3.0);           // ❌ 둘 다 같은 등급 → 모호함(ambiguous)
+:end
+trap: 반환형만 바꿔 오버로드 > 매개변수를 다르게 > 호출만으로는 구분 불가 → 컴파일 오류
+trap: 같은 등급 후보가 둘 (`f(int)`, `f(long)` 에 `f(3.0)`) > 인자 타입을 맞춰 호출 > 모호함 오류
+star: 오버로드는 **매개변수 개수·타입**으로만 구분. 고르는 순서 **정·승·표·사·가**.
+mem: **정·승·표·사·가** (정확 → 승격 → 표준 → 사용자 → 가변)
+key: 오버로드 = 매개변수 개수·타입 (반환형 X)
+key: 순서: 정확 → 승격 → 표준 → 사용자 → 가변
+key: 같은 등급 둘 = 모호함 오류
+
+# p3-4 | 기본 인자 | Ch 11.5
+sum: 기본값은 **오른쪽부터** 채우고, **선언(헤더)에 한 번만** 적는다.
+ana: 🍔 세트 메뉴: 음료(마지막 칸)는 기본 콜라. 앞 칸(버거)을 비워 두고 뒤만 고를 순 없음.
+h: 규칙
+code:
+void print(int value, int base = 10);   // 헤더의 선언에만
+
+void print(int value, int base) { }     // 정의엔 다시 안 씀
+
+print(15);       // base = 10
+print(15, 16);   // base = 16
+// void f(int a = 1, int b);            // ❌ 오른쪽부터 채워야 함
+:end
+tbl: 규칙 | 내용
+r: 위치 | 기본값 있는 매개변수는 **오른쪽에 몰기**
+r: 적는 곳 | 선언·정의 중 **한 곳** (보통 헤더)
+trap: `void f(int);` 와 `void f(int, int = 0);` 을 같이 둠 > 하나로 합치기 > `f(1)` 이 모호해져 오류
+star: 기본 인자는 **오른쪽부터**, **선언에 한 번만**.
+mem: 기본값은 **꼬리**부터 (오른쪽 끝)
+key: 오른쪽부터
+key: 선언(헤더)에 한 번만
+key: 오버로드와 섞으면 모호함 주의
+
+# p3-5 | lvalue/rvalue 와 값·참조·포인터 그림 | Ch 12.1~12.2
+sum: **lvalue** = 이름·주소가 있는 것, **rvalue** = 잠깐 생긴 임시 값. 값·참조·포인터는 “**별개 객체인가? 널이 될 수 있나?**”로 구분.
+ana: 🏠 lvalue = 주소 있는 집, rvalue = 잠깐 지나가는 택배 상자. 상자엔 주소를 못 붙임.
+h: lvalue vs rvalue
+tbl:  | lvalue | rvalue
+r: 뜻 | 이름 있고 주소 있음 | 임시 값
+r: 수명 | 식이 끝나도 남음 | 식이 끝나면 사라짐
+r: 예 | `x`, `arr[0]`, `*ptr` | `5`, `x + 1`, `"abc"`
+r: `=` 왼쪽에 | ✅ | ❌
+r: `&` 로 주소 | ✅ | ❌
+code:
+int x { 5 };
+x = 10;          // ✅ x 는 lvalue
+// 5 = x;        // ❌ 5 는 rvalue
+int* p { &x };   // ✅ 주소 있음
+// &5            // ❌ 임시 값엔 주소 없음
+:end
+h: 값 · 참조 · 포인터
+tbl: 전달 | 모양 | 함수 안에 생기는 것 | 별개 객체? | 널 가능?
+r: 값 | `f(int p)` | **복사본** | ✅ | ❌
+r: 참조 | `f(int& r)` | 원본의 **다른 이름** | ❌ | ❌
+r: 포인터 | `f(int* q)` | 원본 **주소를 담은 변수** | ✅ | ✅
+trap: `5 = x;` 처럼 임시 값에 대입 > `x = 5;` > rvalue 는 `=` 왼쪽에 못 옴
+trap: `&5` 로 리터럴 주소를 얻으려 함 > 변수에 담고 `&x` > rvalue 엔 주소가 없음
+star: 값 = **사본**, 참조 = **별명**, 포인터 = **주소 쪽지**.
+mem: **l**value = **l**ocation(위치) 있음
+key: lvalue = 주소 있음, rvalue = 임시
+key: `=` 왼쪽엔 lvalue 만
+key: 값(사본) · 참조(별명) · 포인터(주소 쪽지)
+
+# p3-6 | 참조 | Ch 12.3~12.6
+sum: 참조 = 원본의 **다른 이름**. 반드시 초기화, 바꿔 달 수 없음, 널 불가. 큰 건 **const&** 로 받기.
+ana: 📛 참조 = 별명. “철수”를 “반장”이라 불러도 같은 사람이고, 반장이라는 별명을 다른 사람에게 옮길 수 없음.
+h: 참조 3규칙
+code:
+int x { 5 };
+int& ref { x };    // ref = x 의 별명
+ref = 10;          // x 도 10
+
+// int& r2;        // ❌ 초기화 필수
+// ref = y;        // ⚠️ "y 를 가리켜라"가 아니라 x 에 y 값을 대입
+// int& r3 { 5 };  // ❌ 임시 값에 붙을 수 없음
+const int& cr { 5 };  // ✅ const 참조는 됨 (임시 값 수명 연장)
+:end
+tbl: 규칙 | 내용
+r: ① | 반드시 초기화
+r: ② | 한 번 정하면 다른 대상으로 못 바꿈
+r: ③ | 널이 될 수 없음
+r: 보너스 | **const&** 는 임시 값에도 붙고, 그 수명을 늘려 줌
+h: 함수에 넘길 때
+code:
+void byValue(std::string s)           { s += "!"; }  // 사본 수정 → 원본 그대로
+void byRef(std::string& s)            { s += "!"; }  // 원본 수정
+void byConstRef(const std::string& s) { std::cout << s; }  // 복사 없이 읽기
+byConstRef("리터럴도 OK");             // const& 라서 가능
+:end
+tbl: 무엇을 | 이렇게 받기
+r: int, double, char, bool, enum | **값**
+r: string, vector 를 읽기만 | **const&**
+r: 문자열 읽기만 | **string_view**
+r: 원본을 고쳐야 함 | **&**
+r: 어차피 사본이 필요 | **값**
+trap: `ref = y;` 로 ref 를 y 에 다시 연결하려 함 > 참조는 재지정 불가임을 기억 > x 에 y 값이 대입될 뿐
+warn: 호출 코드 `byRef(msg);` 만 봐선 msg 가 바뀌는지 안 보임 → 함수 이름으로 드러내기.
+star: 참조 = **초기화 필수 · 재지정 불가 · 널 불가**. const& 는 임시 값도 받음.
+mem: **작은 건 값, 큰 건 const&**
+key: 참조 3규칙: 초기화, 재지정 X, 널 X
+key: const& 는 임시 값도 받음
+key: 기본 자료형은 값, 그 외는 const&
+
+# p3-7 | 포인터 | Ch 12.7~12.11
+sum: 포인터 = **주소를 담는 변수**. `&` 로 주소를 얻고 `*` 로 따라간다. 없으면 **nullptr**, 쓰기 전엔 **널 검사**.
+ana: 📍 포인터 = 주소가 적힌 쪽지. `*` = 쪽지에 적힌 집에 찾아가기. 빈 쪽지(nullptr)로 찾아가면 사고.
+h: 기본
+code:
+int x { 5 };
+int* ptr { &x };    // & : x 의 주소
+*ptr = 10;          // * : 따라가서 x 를 10 으로
+int* p2 { };        // nullptr (아무것도 안 가리킴)
+if (p2)             // 널 검사
+    std::cout << *p2;
+:end
+tbl: 기호 | 위치 | 뜻
+r: `&x` | 변수 앞 | x 의 **주소**
+r: `*p` | 포인터 앞 | p 가 가리키는 **값**
+r: `int*` | 타입 | int 를 가리키는 포인터
+warn: 초기화 안 한 포인터는 **널보다 더 위험**. 널은 바로 크래시라 찾기 쉽지만, 쓰레기 주소는 엉뚱한 메모리를 조용히 망가뜨림.
+h: const 와 포인터 4조합
+tbl: 선언 | 값 바꾸기 | 포인터 바꾸기
+r: `int* p` | ✅ | ✅
+r: `const int* p` | ❌ | ✅
+r: `int* const p` | ✅ | ❌
+r: `const int* const p` | ❌ | ❌
+h: 주소로 넘기기
+code:
+void update(int* p)
+{
+    if (!p) return;   // 널 검사 필수
+    *p = 100;
+}
+update(&x);           // 호출에 & 가 보임 → "바뀔 수 있음" 신호
+update(nullptr);      // "값 없음" 표현 가능
+:end
+tbl: 장점 | 비용
+r: nullptr 로 “없음” 표현 | 매번 널 검사
+r: 호출에 `&` 가 보임 | 문법이 지저분
+r: 가리키는 대상을 바꿀 수 있음 | 널 역참조 위험
+trap: `int* p;` (초기화 안 함) > `int* p { nullptr };` > 쓰레기 주소를 따라가 메모리 망가뜨림
+trap: 널 검사 없이 `*p` > `if (p) *p = ...;` > 널 역참조 = UB
+star: const 가 `*` **왼쪽이면 값**, **오른쪽이면 포인터**를 잠근다.
+mem: `*` 를 벽이라 치면 — const 가 **왼쪽**이면 값 잠금, **오른쪽**이면 포인터 잠금
+key: `&x` 주소, `*p` 따라가기, 없으면 nullptr
+key: const 위치: `*` 왼쪽 = 값, 오른쪽 = 포인터
+key: 포인터 매개변수는 널 검사
+
+# p3-8 | 댕글링 · out 매개변수 · 참조 vs 포인터 | Ch 12.12~12.15
+sum: **지역 변수의 참조·주소를 반환하지 마라** (3회차 최중요). 결과는 값으로 돌려주고, 기본은 참조·“없음”이 필요할 때만 포인터.
+ana: 🏚️ 댕글링 = 이사 간 집 주소 쪽지. 찾아가 보면 빈집이거나 남의 집.
+h: 댕글링
+code:
+int& getBad()
+{
+    int x { 5 };
+    return x;              // ❌ x 는 함수 끝나면 사라짐
+}
+const std::string& getBad2()
+{
+    return "임시 문자열";   // ❌ 임시 string 이 바로 사라짐
+}
+int& getOK(int& value)     // ✅ 받은 걸 그대로 돌려주면 안전
+{
+    value *= 2;
+    return value;
+}
+:end
+tbl: 반환 | 안전?
+r: 지역 변수의 참조·주소 | ❌ 댕글링
+r: 인자로 받은 참조 | ✅
+r: static·전역 객체의 참조 | ✅
+r: 값 | ✅ 가장 안전
+h: out 매개변수보다 값 반환
+vs: out 매개변수 | struct 로 값 반환
+void getStats(const std::vector<int>& d,
+              int& outMin, int& outMax);
+int mn{}, mx{};
+getStats(v, mn, mx);
+// mn, mx 가 바뀌는지
+// 호출만 봐선 모름
+--
+struct Stats { int min; int max; };
+Stats getStats2(const std::vector<int>& d);
+auto [lo, hi] = getStats2(v);
+// 결과가 분명히 보임
+:end
+h: 참조 vs 포인터 고르기
+tbl: 상황 | 쓸 것
+r: 반드시 있는 객체 | **참조**
+r: 없을 수도 있음 | 포인터 (nullptr)
+r: 가리키는 대상을 바꿔야 함 | 포인터
+r: 읽기만 하는 큰 객체 | **const 참조**
+r: 배열·동적 메모리 | 일단 **std::vector**
+trap: 지역 변수 참조 반환 `int& f() { int x; return x; }` > 값으로 반환 `int f()` > 함수가 끝나면 x 가 사라져 댕글링
+trap: 결과를 out 매개변수로 돌려줌 > struct 로 묶어 값 반환 > 무엇이 바뀌는지 안 보임
+star: **지역 변수의 참조·주소 반환 = 댕글링 UB.** 기본은 참조, “없음”이 필요하면 포인터.
+mem: 댕글링 = **이사 간 집 주소**
+key: 지역 변수 참조·주소 반환 금지
+key: 여러 결과는 struct 로 값 반환
+key: 기본 참조, 없을 수 있으면 포인터
+
+# p3-9 | enum 과 enum class | Ch 13.1~13.6
+sum: 숫자에 이름을 주려면 enum. 그런데 그냥 **enum 은 이름이 새고 숫자로 변한다** → **enum class** 를 쓴다.
+ana: 🏫 enum = 교실 문이 없는 반. 학생 이름이 복도로 새어 나와 옆 반 학생과 이름이 부딪힘. enum class = 문 달린 반.
+h: 왜 타입을 만드나
+vs: 숫자만 쓰면 | 의미에 타입을 주면
+int color { 2 };   // 2가 뭐지?
+draw(10, 20, 30, 40);
+// 순서를 바꿔도 못 막음
+--
+enum class Color { red, green, blue };
+Color c { Color::green };
+struct Rect { int x, y, w, h; };
+draw(Rect{ 10, 20, 30, 40 });
+:end
+li: 타입 정의는 헤더에 둬도 됨 (같은 정의면 여러 파일 OK)
+li: 타입 이름은 대문자로 시작 (Color, Rect)
+li: 정의 끝 **`};` 세미콜론** 잊지 말기
+h: 그냥 enum 의 문제 2가지
+code:
+enum Color { red, green, blue };       // 0, 1, 2
+enum Fruit { apple, banana, cherry };
+// enum Feeling { red };               // ❌ red 가 이미 있음 (이름이 샘)
+int n = red;                           // 숫자로 바로 변함
+if (red == apple) { }                  // ⚠️ 통과! 둘 다 0
+:end
+tbl: 문제 | 내용
+r: ① 이름 오염 | 열거자가 바깥으로 새서 다른 enum 과 충돌
+r: ② 숫자 변환 | 다른 enum 끼리 비교·정수 대입이 됨
+h: enum class
+code:
+enum class Color { red, green, blue };
+enum class Fruit { apple, banana, red };   // ✅ red 겹쳐도 OK
+Color c { Color::red };                    // 반드시 Color::
+// if (c == Fruit::red)                    // ❌ 타입 달라 오류 (좋은 것!)
+// int n = c;                              // ❌ 자동 변환 없음
+int n { static_cast<int>(c) };             // 필요하면 명시적으로
+enum class Status : std::uint8_t { ok, fail };  // 바탕 타입 지정
+:end
+trap: `enum Color { red };` > `enum class Color { red };` > 이름 오염 + 의도치 않은 정수 비교
+trap: enum·struct 정의 끝 `;` 누락 > `};` > 엉뚱한 줄에서 오류
+star: enum class = **이름 안 샘 + 숫자로 안 변함**. 정수가 필요하면 `static_cast<int>`.
+mem: **class** 가 붙으면 **문 달린 교실** → `Color::` 로 문 열고 들어감
+key: 그냥 enum: 이름 샘, `red == apple` 통과
+key: enum class: `Color::red` 필수, 다른 타입 비교 오류
+key: 정의 뒤 `;`
+
+# p3-10 | struct | Ch 13.7~13.12
+sum: 관련 값을 **한 덩어리**로. 초기화는 **선언 순서대로**, 큰 struct 는 **const&** 로 넘기고, 포인터면 **`->`**.
+ana: 🗂️ struct = 서류철. 이름·번호·월급을 한 파일에 묶어 들고 다님.
+h: 만들고 쓰기
+code:
+struct Employee
+{
+    int id { };                // 기본값을 붙여 두면 안전
+    std::string name { };
+    double salary { 0.0 };
+};                             // ; 잊지 말기
+
+Employee e1 { 1, "홍길동", 5000 };            // 선언 순서대로
+Employee e2 { 2, "김철수" };                  // 빠진 건 기본값
+Employee e3 { };                              // 전부 기본값
+Employee e4 { .id = 3, .name = "이영희" };    // C++20 지정 초기화
+e1.salary = 6000;                             // . 으로 멤버 접근
+:end
+h: 넘기기 · 포인터
+tbl: 상황 | 이렇게
+r: 함수에 넘김 | `const Employee&`
+r: 반환 | 값으로 OK: `return { id, "신입", 3000 };`
+r: 포인터로 멤버 접근 | `p->name` (= `(*p).name`)
+r: struct 안의 struct | `c.ceo.name`
+h: 메모리 여백 (패딩)
+tbl: struct | 멤버 순서 | sizeof
+r: BadOrder | char, double, char | **24**
+r: GoodOrder | double, char, char | **16**
+li: CPU 가 빨리 읽게 컴파일러가 빈칸(패딩)을 끼워 넣음
+li: 그래서 크기 ≥ 멤버 크기 합. **큰 멤버부터** 쓰면 줄어듦
+trap: struct 멤버 순서를 바꿈 > C++20 지정 초기화 `{ .id = 1 }` > 기존 `{ 1, "홍" }` 초기화가 조용히 다른 뜻
+trap: `(*p).name` 에서 괄호 생략 > `p->name` > `*p.name` 은 다른 뜻
+star: `p->name` = `(*p).name`. struct 크기는 **패딩** 때문에 멤버 합보다 클 수 있다.
+mem: 화살표 `->` = 포인터가 **가리키는 쪽의** 멤버
+key: 초기화는 선언 순서대로 (지정 초기화가 안전)
+key: 넘길 땐 const&, 포인터면 `->`
+key: 패딩 → 큰 멤버부터
+
+# p3-11 | 매개변수 고르기 + 3회차 함정 총정리 | Ch 10~13
+sum: 매개변수는 **바꾸나? → 없을 수 있나? → 비싼가? → 문자열인가?** 순서로 정한다.
+ana: 🧭 4갈래 길 안내판. 위에서부터 “예”가 나오는 첫 칸에서 멈추면 됨.
+h: 4단계 결정
+flow: ① 값을 바꿔야 하나? > 예 → `&` (참조) || ② 없을 수도 있나? > 예 → `*` (포인터) || ③ 복사가 비싼가? > 기본 자료형 → 값, 그 외 → `const&` || ④ 문자열인가? > 읽기만 → `string_view`
+code:
+void tick(int count);                     // 작은 값, 읽기만 → 값
+void normalize(std::vector<double>& v);   // 바꿈 → &
+void print(const Employee& e);            // 큰 객체 읽기 → const&
+void log(std::string_view msg);           // 문자열 읽기 → view
+void attach(Node* parent);                // 없을 수 있음 → *
+:end
+tip: 왜 이렇게 받았는지 주석 한 줄 남기기 → 나중에 고칠 때 안전.
+trap: `i < v.size()` > `std::ssize(v)` 나 range-for > 부호 섞기
+trap: `for (auto e : v)` > `for (const auto& e : v)` > 원소마다 복사
+trap: 지역 변수 참조·주소 반환 > 값으로 반환 > 댕글링 UB
+trap: 템플릿 정의를 .cpp 에 > 정의까지 헤더에 > 링크 오류
+trap: `enum Color { red };` > enum class > 이름 오염·정수 비교
+trap: 널 검사 없이 역참조 > 먼저 검사 > 크래시
+trap: `(double)a / b` > `static_cast<double>(a) / b` > 변환이 안 보임
+trap: struct 멤버 순서 변경 > 지정 초기화 > 초기화 뜻이 조용히 바뀜
+trap: struct 끝 `;` 누락 > `};` > 엉뚱한 곳에서 오류
+star: 결정 순서 **바꾸나 → 없나 → 비싼가 → 문자열**.
+mem: **변·없·비·문** (변경? 없음? 비싼가? 문자열?)
+key: 바꾸면 &, 없으면 *, 크면 const&, 문자열은 view
+key: `for (const auto& e : v)` 로 복사 피하기
+key: 함정 9개는 이 카드로 복습

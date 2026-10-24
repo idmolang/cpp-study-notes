@@ -1,0 +1,320 @@
+@ c7 | 7회차 · 훑고 찾고 정렬하기 | Ch 18, 20
+
+# p7-1 | 정렬: 직접 짜기 vs std::sort | Ch 18.1, 18.3
+sum: 선택 정렬은 **공부용**. 실제로는 `std::sort(v.begin(), v.end())` 한 줄 — 5만 개에서 **365배** 빠르다.
+ana: 🃏 선택 정렬 = 카드 더미에서 매번 제일 작은 카드를 찾아 앞에 놓기. 카드가 많아지면 끝이 안 남.
+h: 선택 정렬
+code:
+void selectionSort(std::vector<int>& v)
+{
+    for (std::size_t i { 0 }; i + 1 < v.size(); ++i)
+    {
+        std::size_t minIdx { i };                       // 남은 것 중 최소 위치
+        for (std::size_t j { i + 1 }; j < v.size(); ++j)
+            if (v[j] < v[minIdx]) minIdx = j;
+        std::swap(v[i], v[minIdx]);                     // 앞으로 보냄
+    }
+}
+:end
+fix: PPT 에 선택 정렬 설명만 있고 코드가 없어 보충함 (`i + 1 < v.size()` 로 부호 함정 회피).
+h: 속도 비교
+tbl: 원소 수 | 선택 정렬 | std::sort
+r: 1,000 | 0 ms | 0 ms
+r: 10,000 | 25 ms | 0 ms
+r: 50,000 | **730 ms** | **2 ms**
+code:
+std::sort(v.begin(), v.end());   // 한 줄, 실수할 곳 없음
+:end
+li: 차이의 이유는 실력이 아니라 **알고리즘** — 선택 정렬은 원소 수의 **제곱**에 비례
+trap: 실제 코드에 직접 짠 정렬 사용 > `std::sort` > 느리고 경계 실수가 생기기 쉬움
+star: 5만 개에서 **365배** 차이 — 선택 정렬은 **n² 에 비례**.
+mem: 선택 정렬 = **최소 찾아 앞으로**, 반복
+key: 선택 정렬 = 남은 것 중 최소를 앞으로 (n²)
+key: 실제로는 `std::sort(v.begin(), v.end())`
+key: 느린 이유는 알고리즘
+
+# p7-2 | 반복자와 range-for 의 정체 | Ch 18.2
+sum: 반복자 = **위치를 가리키는 것**. `*it` 로 값, `++it` 로 다음. `end()` 는 마지막의 **다음 빈자리**.
+ana: 👆 반복자 = 줄 선 사람을 가리키는 손가락. `++` 로 다음 사람, `end()` 는 맨 뒤 사람 **뒤의 빈 바닥**.
+h: 기본
+code:
+std::vector<int> v { 90, 75, 84 };
+auto it = v.begin();   // 첫 원소
+*it;                   // 90
+++it;                  // 다음
+*it;                   // 75
+v.end();               // 마지막 다음 자리 — 읽으면 안 됨
+:end
+tbl: 위치 | begin() | +1 | +2 | end()
+r: 값 | 90 | 75 | 84 | (없음)
+li: end() 가 “다음 자리”라서 `it != v.end()` 한 줄로 반복 가능
+li: 빈 컨테이너면 begin() == end() → 반복 0번, 특별 처리 불필요
+h: range-for 의 정체
+vs: 우리가 쓰는 것 | 컴파일러가 바꾸는 것
+for (int x : v)
+{
+    std::cout << x;
+}
+--
+for (auto it = v.begin();
+     it != v.end(); ++it)
+{
+    int x = *it;
+    std::cout << x;
+}
+:end
+li: begin()/end() 만 있으면 무엇이든 range-for 가능 → vector, array, string, map, set
+term: 반복자 | iterator | 컨테이너 안 위치를 가리킴. 포인터처럼 `*`, `++`
+trap: `*v.end()` 읽기 > end() 는 비교용으로만 > 값이 없는 자리 = UB
+star: end() = **마지막 다음** — 읽으면 UB, 비교용.
+mem: end() = **줄 맨 뒤의 빈 바닥**
+key: `*it` 값, `++it` 다음, `it != v.end()`
+key: end() 는 읽으면 UB
+key: range-for = 반복자 반복문 축약
+
+# p7-3 | 표준 알고리즘 6개 | Ch 18.3
+sum: 알고리즘은 컨테이너가 아니라 **범위(시작, 끝)** 를 받는다. sort · find · count · max_element · accumulate · reverse.
+ana: 🧰 알고리즘 = 공구. 어떤 상자(vector·array·string)든 “여기서부터 저기까지” 범위만 알려 주면 작업해 줌.
+h: 6개 한눈에 (v = 90 75 84 68 92)
+tbl: 하고 싶은 일 | 코드 | 결과
+r: 정렬 | `std::sort(v.begin(), v.end())` | 68 75 84 90 92
+r: 찾기 | `std::find(v.begin(), v.end(), 84)` | 위치 (없으면 end())
+r: 세기 | `std::count(v.begin(), v.end(), 84)` | 1
+r: 최댓값 | `*std::max_element(v.begin(), v.end())` | 92
+r: 합 | `std::accumulate(v.begin(), v.end(), 0)` | 409
+r: 뒤집기 | `std::reverse(v.begin(), v.end())` | 92 90 84 75 68
+h: 꼭 알 것
+tbl: 주의 | 내용
+r: `accumulate` | **`<numeric>`** (나머지는 `<algorithm>`), 셋째 인자 = 시작값
+r: `max_element` | 값이 아니라 **위치** → `*` 붙여 꺼냄
+r: `find` | 못 찾으면 **end()** → 반드시 비교
+r: 일부만 | `std::sort(v.begin(), v.begin() + 3)` → 앞 3개만
+r: sort 가능한 것 | vector·array·string (list·map ❌)
+tip: “조건에 맞는 것”은 `find_if`, `count_if`, sort 셋째 인자 → 조건을 **함수로** 넘김 (람다).
+trap: `std::accumulate` 쓰면서 `<algorithm>` 만 include > `#include <numeric>` > 컴파일 오류
+trap: `std::max_element(...)` 를 값처럼 출력 > `*std::max_element(...)` > 위치(반복자)라서 안 됨
+star: accumulate 만 **`<numeric>`**. max_element·find 는 **위치**를 돌려준다.
+mem: 알고리즘 = **(시작, 끝)** 두 개만 주면 일하는 공구
+key: 알고리즘은 (begin, end) 를 받음
+key: find 못 찾으면 end(), max_element 는 위치
+key: accumulate 는 `<numeric>`
+
+# p7-4 | 반복자 함정 2가지 | Ch 18.2~18.3
+sum: **find 결과는 end() 와 비교한 뒤** 쓴다. **훑는 중에 컨테이너 크기를 바꾸지 않는다.**
+ana: 🔎 “찾았다!”는 말 없이 손가락이 줄 맨 뒤 빈 바닥(end)을 가리키면, 거기엔 아무도 없음.
+h: ① find 확인
+vs: ❌ 바로 읽음 | ✅ end() 와 비교
+auto it = std::find(v.begin(),
+                    v.end(), 84);
+std::cout << *it;
+// 못 찾았으면 end() → UB
+--
+auto it = std::find(v.begin(),
+                    v.end(), 84);
+if (it != v.end())
+    std::cout << *it;
+else
+    std::cout << "없음";
+:end
+h: ② 훑는 중 수정 금지
+code:
+for (auto it = v.begin(); it != v.end(); ++it)
+    if (*it < 70) v.push_back(0);   // ❌ 이사(재할당) → it 무효
+:end
+out: 6회차 재할당 실험
+추가 전 주소: 0x5577f28452b0
+추가 후 주소: 0x5577f28462e0
+옛 위치로 읽으면: 1467951173
+:end
+tip: Java 는 `ConcurrentModificationException`, C++ 은 **조용히** 망가짐 — 규칙은 같음.
+trap: `std::cout << *std::find(...)` > `if (it != v.end())` 로 확인 후 > 못 찾으면 end() 읽기 = UB
+trap: 반복문 안에서 push_back > 반복이 끝난 뒤 추가 > 반복자 무효 = UB
+star: find 직후엔 **반드시 `!= end()` 확인**.
+mem: find = “**찾았는지 먼저 물어보고** 꺼내기”
+key: `if (it != v.end())` 후 `*it`
+key: 반복 중 push_back → 무효
+key: C++ 은 조용히 넘김
+
+# p7-5 | 조건을 넘기기: 함수 포인터 | Ch 20.1
+sum: `std::count` 는 “값이 같은 것”만 센다. “80점 이상” 같은 **조건**은 **함수를 인자로 넘겨야** 한다.
+ana: 📝 심사위원(함수)을 함께 보내서 “이 사람 통과?” 판단을 맡기는 것.
+h: 왜 필요해?
+tbl: 하고 싶은 것 | count 로 되나
+r: 84 인 것 개수 | ✅ `std::count(..., 84)`
+r: 80 이상 개수 | ❌ 값이 아니라 **판단**
+r: 70 미만 첫 번째 | ❌
+r: 높은 순 정렬 | ❌
+h: 함수를 인자로
+code:
+bool isEven(int x) { return x % 2 == 0; }
+bool isBig(int x)  { return x >= 80; }
+
+int countIf(const std::vector<int>& v, bool (*test)(int))   // 함수를 받음
+{
+    int n { 0 };
+    for (int x : v) if (test(x)) ++n;
+    return n;
+}
+countIf(v, isEven);   // 4  — 이름만 넘김 (괄호 X)
+countIf(v, isBig);    // 3
+:end
+tbl: 코드 | 뜻
+r: `bool (*test)(int)` | int 받고 bool 주는 **함수를 가리키는 포인터**
+r: `countIf(v, isEven)` | ✅ 이름만
+r: `countIf(v, isEven())` | ❌ 괄호 붙이면 “호출 결과”를 넘기는 것
+trap: 함수를 넘길 때 `isEven()` > `isEven` > 괄호를 붙이면 호출해 버림
+warn: 조건마다 함수를 만들고 이름 붙이기 번거로움 → **람다**로 해결.
+star: 함수를 넘길 땐 **괄호 없이 이름만**.
+mem: 함수 포인터 = **심사위원 파견**
+key: 조건 = “맞나?”를 답하는 함수
+key: `bool (*f)(int)`
+key: 넘길 땐 괄호 없이
+
+# p7-6 | 람다 | Ch 20.6
+sum: 람다 = **이름 없이 그 자리에서 만드는 함수**. 모양은 **`[캡처](매개변수){ 본문 }`**.
+ana: 🗒️ 람다 = 포스트잇 메모. 정식 서류(이름 있는 함수) 대신 쓰는 자리에 바로 붙임.
+h: 이름 있는 함수 vs 람다
+vs: 따로 정의 | 람다로 그 자리에
+bool isBig(int x)
+{ return x >= 80; }
+// ...한참 아래
+std::count_if(v.begin(), v.end(),
+              isBig);
+--
+std::count_if(v.begin(), v.end(),
+    [](int x){ return x >= 80; });
+// 조건이 바로 보임
+:end
+h: 람다 뜯어보기
+code:
+[](int x){ return x >= 80; }
+ │   │        │
+ │   │        └ 본문 — 보통 한 줄
+ │   └ 매개변수 — 보통 원소 하나
+ └ 캡처 — 바깥 변수를 쓸 때만
+:end
+tbl: 알아 둘 것 | 내용
+r: 반환형 | 안 써도 됨 (return 보고 추론)
+r: 시작 표시 | `[ ]` 가 보이면 람다
+r: 변수에 담기 | `auto isBig = [](int x){ return x >= 80; };`
+r: 호출 | `isBig(90)`
+h: 알고리즘에 넘기기 (v = 90 75 84 68 92)
+tbl: 코드 | 결과
+r: `count_if(..., [](int x){ return x >= 80; })` | 3
+r: `find_if(..., [](int x){ return x < 70; })` | 68
+r: `sort(..., [](int a, int b){ return a > b; })` | 92 90 84 75 68 (내림차순)
+trap: sort 비교 람다를 “크기 비교”로 생각 > “a 가 앞에 와야 하나?”로 생각 > 순서가 반대로 나옴
+star: sort 비교는 “**a 가 b 보다 앞에 와야 하나?**”. `a > b` = **내림차순**.
+mem: **[ ] ( ) { }** = **가져올 것 / 받을 것 / 할 일**
+key: `[캡처](매개변수){ 본문 }`, 반환형 생략
+key: count_if · find_if · sort 에 람다
+key: `a > b` = 내림차순
+
+# p7-7 | 캡처: 바깥 변수 쓰기 | Ch 20.7
+sum: **`[x]` = 값 복사**(만든 순간 값 고정), **`[&x]` = 참조**(원본을 따라감). 쓰는 것만 하나씩 적자.
+ana: 📷 `[x]` = 만든 순간 찍은 **사진**, `[&x]` = 실시간 **CCTV**.
+h: 값 vs 참조
+code:
+int n { 10 };
+auto byValue = [n]()  { return n; };    // 사진
+auto byRef   = [&n]() { return n; };    // CCTV
+n = 99;
+:end
+tbl: 캡처 | n = 99 로 바꾼 뒤 호출 | 이유
+r: `[n]` | **10** | 만든 순간 값이 복사됨
+r: `[&n]` | **99** | 원본을 봄
+h: 언제 뭘 쓰나
+code:
+int cut { 85 };
+std::count_if(v.begin(), v.end(), [cut](int x){ return x >= cut; });   // 읽기만 → 값
+
+int count { 0 };
+auto tick = [&count]() { ++count; };   // 고쳐야 함 → 참조
+tick(); tick(); tick();                // count == 3
+:end
+tbl: 쓰는 법 | 뜻 | 추천
+r: `[ ]` | 바깥 변수 못 씀 | ✅ 대부분 이걸로 충분
+r: `[cut]` `[&count]` | 쓰는 것만 하나씩 | ✅ 권장
+r: `[=]` / `[&]` | 전부 값 / 전부 참조 | ⚠️ 뭘 가져오는지 안 보임
+trap: 람다 안에서 바깥 변수를 고치려고 `[count]` > `[&count]` > 값 캡처는 사본이라 원본이 안 바뀜
+trap: `[&]` 로 몽땅 캡처 > 쓰는 것만 `[cut]` > 무엇을 가져오는지 안 보임
+star: `[n]` 은 **10**, `[&n]` 은 **99** — 출력 예측 단골.
+mem: 값 캡처 = **사진**, 참조 캡처 = **CCTV**
+key: `[x]` 값 캡처 = 만든 순간 고정
+key: `[&x]` 참조 캡처 = 원본 따라감, 고칠 때
+key: 하나씩 명시
+
+# p7-8 | 내 클래스를 정렬하기 | Ch 18.3, 20.6
+sum: Student 는 그냥 sort 가 안 된다 (`operator<` 없음). 방법 3가지 — **operator< · 비교 함수 · 람다**.
+ana: 🏅 줄 세우기 기준표. 기본 기준(operator<)을 정해 두거나, 그때그때 기준표(비교 함수·람다)를 건네줌.
+h: 그냥은 안 됨
+code:
+std::vector<Student> v { {"홍길동",92}, {"김철수",78}, {"이영희",85} };
+std::sort(v.begin(), v.end());   // ❌
+:end
+out: GCC 13 실제 출력 (78줄 중 핵심 1줄)
+error: no match for 'operator<' (operand types are 'Student' and 'Student')
+:end
+tip: 템플릿 오류가 길어도 **“no match for”** 줄 하나만 찾으면 됨.
+h: 방법 3가지
+code:
+// ① operator< — 기본 순서 (클래스 안)
+bool operator<(const Student& o) const { return m_score < o.m_score; }
+std::sort(v.begin(), v.end());
+
+// ② 비교 함수 — 기준이 여러 개일 때
+bool byScoreDesc(const Student& a, const Student& b) { return a.score() > b.score(); }
+std::sort(v.begin(), v.end(), byScoreDesc);
+
+// ③ 람다 — 한 번만 쓸 기준
+std::sort(v.begin(), v.end(), [](const Student& a, const Student& b) { return a.name() < b.name(); });
+:end
+out: 실제 실행 결과
+operator< 로   : 김철수(78) 이영희(85) 홍길동(92)
+byScoreDesc 로 : 홍길동(92) 이영희(85) 김철수(78)
+이름 람다로    : 김철수(78) 이영희(85) 홍길동(92)
+:end
+tbl: 상황 | 쓸 것 | 이유
+r: 자연스러운 기본 순서 | operator< | max_element·set·map 도 같이 됨
+r: 기준이 여러 개 | 비교 함수 | 이름으로 읽기 쉬움, 재사용
+r: 여기서 한 번만 | 람다 | 조건이 그 자리에 보임
+ref: operator 오버로딩은 21장(이후 회차)에서 자세히.
+trap: `max_element(..., byScoreDesc)` (내림차순 비교) > 오름차순 “a 가 작은가?” 비교 > **최솟값**이 나옴 — 경고도 없음
+star: 비교 함수는 언제나 “**a 가 앞(작은 쪽)인가?**”. max_element 에 내림차순 비교를 넘기면 **최솟값**.
+mem: 비교 함수 = “**a 가 앞이야?**” 질문에 답하는 것
+key: 사용자 타입 sort → operator< / 비교 함수 / 람다
+key: 기본 순서 operator<, 여러 기준 함수, 일회용 람다
+key: max_element + 내림차순 비교 = 최솟값
+
+# p7-9 | C++20 ranges 와 다른 언어 | Ch 18.3
+sum: C++20 부터 **`std::ranges::sort(v)`** 처럼 begin/end 없이 컨테이너를 통째로 넘긴다. 생각하는 방식은 어느 언어나 같다.
+ana: ✂️ 매번 “여기부터 저기까지” 말하던 걸 “이거 전부”로 줄인 것.
+h: 옛 방식 vs ranges
+vs: 지금까지 | C++20 ranges
+std::sort(v.begin(), v.end());
+std::find(v.begin(), v.end(), 84);
+std::count_if(v.begin(), v.end(),
+    [](int x){ return x > 80; });
+--
+std::ranges::sort(v);
+std::ranges::find(v, 84);
+std::ranges::count_if(v,
+    [](int x){ return x > 80; });
+:end
+tbl: 장점 | 내용
+r: 짧아짐 | begin/end 두 번 안 씀
+r: 안전 | 다른 컨테이너의 begin/end 를 섞는 사고 방지
+r: 실습 | C++20 프로젝트라 바로 사용 가능
+h: 다른 언어와 비교
+tbl: 하고 싶은 일 | C++ | 다른 언어
+r: 조건 세기 | `count_if(..., 람다)` | Python `sum(1 for x in v if ...)`
+r: 조건 고르기 | `copy_if` / `find_if` | JS `arr.filter(x => ...)`
+r: 기준 정렬 | `sort(..., 람다)` | Python `sorted(v, key=...)`
+r: 전부 더하기 | `accumulate` | Python `sum(v)`
+ref: “훑으며 거르고 모은다”는 생각은 어느 언어든 같음 — 문법만 다름.
+trap: ranges 만 알고 옛 코드를 못 읽음 > 둘 다 읽을 줄 알기 > 남의 코드는 아직 옛 방식이 많음
+star: `std::ranges::sort(v)` = `std::sort(v.begin(), v.end())`.
+mem: ranges = “**전부**”라고 한 마디로
+key: `std::ranges::sort(v)` — begin/end 생략
+key: 옛 방식과 ranges 둘 다 읽기
+key: 거르기·세기·정렬은 언어 공통
