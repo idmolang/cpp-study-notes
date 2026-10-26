@@ -598,6 +598,37 @@ dl.bd dt { color: var(--accent); }
   .pr-bar .sp { display: none; }
   .pr-con .cmp { grid-template-columns: 1fr; margin-left: 0; }
 }
+
+/* ───────── edit mode ───────── */
+body.editing .ed { outline: 1px dashed color-mix(in srgb, var(--amber) 60%, transparent); outline-offset: 2px; border-radius: 3px; cursor: text; white-space: pre-wrap; }
+body.editing .ed:hover { background: color-mix(in srgb, var(--amber) 10%, transparent); }
+body.editing .ed:focus { outline: 2px solid var(--amber); background: color-mix(in srgb, var(--amber) 14%, transparent); }
+.ed:empty::before { content: "(비어 있음)"; color: var(--faint); }
+.edhint { margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; border: 1px dashed var(--amber); background: color-mix(in srgb, var(--amber) 9%, transparent); font-size: 14.5px; line-height: 1.6; }
+.editbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 75; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--bg2); border-top: 2px solid var(--amber);
+}
+.editbar[hidden] { display: none; }
+.eb-st { flex: 1 1 260px; font-size: 14px; line-height: 1.5; }
+.eb-st.ok { color: var(--ok); font-weight: 600; }
+.eb-st.err, .eb-st.warn { color: var(--warn); font-weight: 600; }
+.eb-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.eb-btns button { height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; font-size: 14px; }
+.eb-btns button:hover { border-color: var(--muted); }
+.eb-btns button:disabled { opacity: .5; cursor: default; }
+.eb-btns .eb-save { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+body.editing .toast { bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
+.modal { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px; }
+.mbox { width: min(460px, 100%); max-height: 90vh; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+.mbox h2 { margin: 0 0 8px; font-size: 18px; }
+.mbox p, .mbox ol { margin: 0 0 12px; font-size: 14.5px; color: var(--muted); }
+.mbox ol { padding-left: 20px; }
+.mbox input { width: 100%; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: 14px var(--mono); }
+.mbox .merr { color: var(--warn); font-size: 13.5px; min-height: 20px; margin: 4px 0 0; }
+.mact { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.mact button { height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-weight: 600; }
+.mact .primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -633,1041 +664,6 @@ dl.bd dt { color: var(--accent); }
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script type="application/json" id="notes-data">{"course": "C++ 프로그래밍", "chapters": [
-{"id": "c1", "title": "1회차 · C++ 기초와 기본 자료형", "sub": "Ch 0~4", "parts": [
-{"id": "p1-1", "title": "코드가 프로그램이 되기까지", "ch": "Ch 0.5", "sum": "내가 쓴 .cpp 파일은 **전처리 → 컴파일 → 링크** 3단계를 거쳐 실행 파일이 된다.", "key": ["빌드 = 전처리 → 컴파일 → 링크", "줄 번호 있으면 컴파일 오류, `undefined reference` 면 링크 오류", "컴파일러는 .cpp 를 하나씩, 따로 본다"], "blocks": [
-{"t": "ana", "x": "🍳 요리로 치면 — 재료 손질(전처리) → 요리마다 따로 조리(컴파일) → 한 상에 차리기(링크)."},
-{"t": "h", "x": "3단계 한눈에"},
-{"t": "flow", "x": [["① 전처리", "`#include` 내용을 그 자리에 복사·붙여넣기"], ["② 컴파일", ".cpp 를 **하나씩** 기계어로 번역 → .o 파일"], ["③ 링크", ".o 조각들을 이어 붙여 → 실행 파일"]]},
-{"t": "h", "x": "오류도 단계마다 다르게 생겼다"},
-{"t": "tbl", "h": ["", "컴파일 오류", "링크 오류"], "r": [["언제", "파일 하나 번역하다가", "조각을 이어 붙이다가"], ["원인", "문법 틀림, 모르는 이름", "함수 “선언”만 있고 “몸통(정의)”이 없음"], ["생김새", "파일명 + **줄 번호**", "줄 번호 없이 `undefined reference`"]]},
-{"t": "h", "x": "컴파일러는 파일을 하나씩만 본다"},
-{"t": "li", "x": [".cpp 하나(+ 그 안의 #include) = **번역 단위**", "컴파일러는 지금 번역 중인 파일 말고 **다른 .cpp 는 전혀 모름**", "그래서 다른 파일의 함수를 쓰려면 “이런 함수 있어요”라고 미리 알려야 함 → 1-7 전방 선언"]},
-{"t": "code", "x": "g++ -c main.cpp          # 번역만 → main.o\ng++ -c add.cpp           # 번역만 → add.o\ng++ main.o add.o -o app  # 이어 붙이기(링크) → app"},
-{"t": "star", "x": "오류에 **줄 번호가 있으면 컴파일 오류**, 줄 번호 없이 **`undefined reference` 면 링크 오류**."},
-{"t": "trap", "x": [["`g++ main.cpp` 만 빌드 (add.cpp 빠뜨림)", "`g++ main.cpp add.cpp`", "add 의 몸통을 못 찾아 링크 오류"]]},
-{"t": "mem", "x": "`-c` = **c**ompile only → 이어 붙이기 직전에서 멈춤"}
-]},
-{"id": "p1-2", "title": "Debug vs Release, 그리고 첫 프로그램", "ch": "Ch 0.7~0.9", "sum": "개발할 땐 **Debug**(느리지만 추적 쉬움), 내보낼 땐 **Release**(빠름). main 이 돌려주는 0 은 “성공”.", "key": ["개발은 Debug, 배포·속도 측정은 Release", "Release 에서만 깨지면 UB 를 의심", "`return 0;` = 성공"], "blocks": [
-{"t": "ana", "x": "🚗 Debug = 연습용 교습 차(천천히, 브레이크 2개), Release = 실전 경주용 차(빠르지만 안을 들여다보기 어려움)."},
-{"t": "h", "x": "둘의 차이"},
-{"t": "tbl", "h": ["", "Debug", "Release"], "r": [["최적화", "끔", "켬"], ["속도", "느림", "빠름"], ["디버거로 한 줄씩 보기", "잘 됨", "흐름이 뒤섞여 어려움"], ["언제", "개발·버그 잡기", "배포·속도 재기"]]},
-{"t": "warn", "x": "Debug 에선 되는데 Release 에서만 깨진다? → 컴파일러 탓 아님. 내 코드에 **미정의 동작(UB)** 이 숨어 있는 것 (초기화 안 한 변수 등)."},
-{"t": "h", "x": "첫 프로그램"},
-{"t": "code", "x": "#include <iostream>\n\nint main()\n{\n    std::cout << \"Hello, world!\\n\";\n    return 0;   // 0 = 성공했다고 운영체제에 알림\n}"},
-{"t": "tbl", "h": ["이런 오류가 나면", "원인"], "r": [["`iostream: No such file`", "표준 헤더는 `< >`, 내 파일은 `\" \"`"], ["`undefined reference to main`", "main 이 없거나 철자 틀림 (Main, mian)"]]},
-{"t": "star", "x": "main 의 반환값 = **종료 코드**. **0 = 성공**, 0 이 아니면 실패."},
-{"t": "trap", "x": [["Debug 빌드로 속도를 잼", "Release 로 잰다", "Debug 속도는 실제 성능과 무관"]]},
-{"t": "mem", "x": "**D**ebug = **D**etective(탐정, 느리게 조사), **R**elease = **R**ace(경주)"}
-]},
-{"id": "p1-3", "title": "프로그램 구조와 변수", "ch": "Ch 1.1~1.3", "sum": "프로그램은 **문장**이 모인 **함수**들이고, 시작은 언제나 **main**. 변수는 이름 붙은 메모리 칸.", "key": ["시작은 main (하나, 반환형 int)", "객체 = 메모리 칸, 변수 = 이름 붙은 객체", "변수는 쓰기 직전에, 한 줄에 하나씩"], "blocks": [
-{"t": "ana", "x": "📦 변수 = 이름표 붙인 상자. 상자(객체)는 메모리 칸이고, 이름표가 변수 이름."},
-{"t": "h", "x": "구성 요소 4가지"},
-{"t": "dl", "x": [["문장", "일 하나. 대부분 `;` 으로 끝남"], ["함수", "문장들을 묶어 이름 붙인 것"], ["main", "프로그램 시작점. **딱 하나**, 반환형은 **int**"], ["`#` 지시문", "컴파일 전에 처리됨. **`;` 없음**"]]},
-{"t": "code", "x": "#include <iostream>        // # 지시문 — 세미콜론 없음\n\nint main()                 // 시작점\n{\n    int x { 5 };           // 문장\n    std::cout << x;        // 문장\n    return 0;              // 문장\n}"},
-{"t": "h", "x": "객체와 변수"},
-{"t": "tbl", "h": ["말", "뜻"], "r": [["객체 (object)", "값을 담으려고 잡은 **메모리 칸**"], ["변수 (variable)", "**이름이 붙은** 객체"]]},
-{"t": "star", "x": "C++ 에서 “객체”는 클래스와 상관없는 말. **`int x;` 도 객체**다."},
-{"t": "h", "x": "이렇게 쓰자"},
-{"t": "li", "x": ["변수는 **쓰기 직전에** 만든다 (맨 위에 몰아 두지 않기)", "**한 줄에 하나씩** 선언", "주석엔 “무엇을”보다 **“왜”** 를 쓴다"]},
-{"t": "trap", "x": [["`int a, double b;`", "줄을 나눠 따로 선언", "타입이 다른 변수는 한 문장에 못 씀"]]},
-{"t": "mem", "x": "상자(객체) + 이름표(변수 이름) = 변수"}
-]},
-{"id": "p1-4", "title": "초기화는 { } 로, 안 하면 위험", "ch": "Ch 1.4, 1.6", "sum": "변수는 만들자마자 **`{ }` 로 값을 넣는다**. 안 넣고 읽으면 **미정의 동작(UB)**.", "key": ["초기화는 `int x { 5 };`, 값이 없으면 `int x {};` (= 0)", "`{ }` 는 축소 변환을 컴파일 오류로 잡음", "초기화 안 한 변수 읽기 = UB"], "blocks": [
-{"t": "ana", "x": "🏠 새 집에 이사 왔는데 청소 안 하면 전 주인 짐(쓰레기 값)이 그대로 있음. `{ }` = 입주 청소."},
-{"t": "h", "x": "초기화 5가지 — 하나만 기억"},
-{"t": "tbl", "h": ["코드", "결과"], "r": [["`int a;`", "❌ 값이 뭔지 모름 (위험)"], ["`int b = 5;`", "5 — 옛날 방식"], ["`int c ( 5 );`", "5 — 함수랑 헷갈림"], ["`int d { 5 };`", "✅ **5 — 이걸 쓴다**"], ["`int e {};`", "✅ **0**"]]},
-{"t": "h", "x": "왜 { } 인가?"},
-{"t": "vs", "a": {"h": "= 로 넣으면", "x": "int n = 4.9;\n// n 은 4\n// 0.9 가 조용히 사라짐"}, "b": {"h": "{ } 로 넣으면", "x": "int n { 4.9 };\n// 컴파일 오류!\n// 실수를 바로 알려 줌"}},
-{"t": "star", "x": "`{ }` 는 값이 잘려 나가는 **축소 변환**을 **컴파일 오류**로 막아 준다."},
-{"t": "h", "x": "미정의 동작 (UB) 이란?"},
-{"t": "li", "x": ["표준이 “**무슨 일이 생길지 책임 안 짐**”이라고 한 상황", "매번 다른 값, 크래시, 아무 일 없음… 전부 가능", "“**항상 0 이 나와서**” 괜찮아 보이는 게 제일 위험 (버그가 숨음)"]},
-{"t": "tbl", "h": ["자주 만나는 UB 5가지"], "r": [["① 초기화 안 한 변수 읽기"], ["② int 범위 넘기기 (오버플로)"], ["③ 반환형 있는 함수에서 return 빠뜨리기"], ["④ 널·사라진 객체 건드리기"], ["⑤ 배열 범위 밖 접근"]]},
-{"t": "trap", "x": [["`int x; std::cout << x;`", "`int x {};`", "쓰레기 값 읽기 = UB"]]},
-{"t": "mem", "x": "`{ }` = **울타리**. 값이 줄어들면(4.9 → 4) 못 넘어감"}
-]},
-{"id": "p1-5", "title": "입출력 · 이름 짓기 · 표현식", "ch": "Ch 1.5, 1.7~1.10", "sum": "`<<` 로 내보내고 `>>` 로 받는다. 줄바꿈은 `'\\n'`. **표현식은 값**을 만들고, **문장은 일**을 한다.", "key": ["출력 `<<`, 입력 `>>`, 줄바꿈 `'\\n'`", "이름: 문자·숫자·_ , 숫자로 시작 X", "표현식은 값, `;` 붙이면 문장"], "blocks": [
-{"t": "ana", "x": "➡️ 화살표 방향 = 데이터가 흐르는 방향. `cout << x` 는 x 가 화면으로, `cin >> x` 는 키보드 입력이 x 로."},
-{"t": "h", "x": "입출력"},
-{"t": "code", "x": "std::string name {};\nint age {};\nstd::cin >> name >> age;                  // 공백 기준으로 하나씩 읽음\nstd::cout << name << ' ' << age << '\\n';  // 이어서 출력 가능"},
-{"t": "tbl", "h": ["줄바꿈", "차이"], "r": [["`'\\n'`", "✅ 줄만 바꿈 — 빠름"], ["`std::endl`", "줄 바꾸고 **버퍼까지 비움** — 반복문에서 느림"]]},
-{"t": "h", "x": "이름 짓기 규칙"},
-{"t": "tbl", "h": ["꼭 지킬 것", "지키면 좋은 것"], "r": [["문자·숫자·`_` 만", "소문자로 시작: `itemCount`"], ["숫자로 시작 ❌", "`_` 로 시작 ❌ (예약됨)"], ["키워드 ❌, 대소문자 구분", "쓰는 범위가 넓을수록 길게"]]},
-{"t": "h", "x": "표현식 vs 문장"},
-{"t": "tbl", "h": ["말", "뜻", "예"], "r": [["리터럴", "코드에 박힌 고정값", "`5` `3.14` `'a'` `\"hi\"` `true`"], ["표현식", "**값 하나**를 만드는 조각", "`2 + 3` → 5"], ["문장", "표현식 + `;` → 일을 시킴", "`x = 4;`"]]},
-{"t": "star", "x": "`'\\n'` 이 기본, `std::endl` 은 flush 까지 해서 느림."},
-{"t": "trap", "x": [["반복문 안에서 `std::endl`", "`'\\n'`", "매번 버퍼를 비워서 느려짐"]]},
-{"t": "mem", "x": "표현식 = **값**, 문장 = **일**"}
-]},
-{"id": "p1-6", "title": "함수: 매개변수 · 인자 · 반환", "ch": "Ch 2.1~2.4", "sum": "함수 정의 쪽 변수 = **매개변수**, 부를 때 넣는 값 = **인자**. 넘길 땐 **복사**된다. return 을 빠뜨리면 UB.", "key": ["매개변수(정의) ↔ 인자(호출), 넘기면 복사", "반환형 있으면 모든 길에 return (main 만 예외)", "함수 하나엔 일 하나"], "blocks": [
-{"t": "ana", "x": "🧾 매개변수 = 주문서의 빈칸, 인자 = 손님이 빈칸에 적어 낸 값. 주방엔 **복사본**이 감."},
-{"t": "h", "x": "함수 생김새"},
-{"t": "code", "x": "int add(int a, int b)   // a, b = 매개변수 (빈칸)\n{\n    return a + b;       // 값을 돌려주고 즉시 끝\n}\n\nint sum { add(3, 4) };  // 3, 4 = 인자 (채운 값)"},
-{"t": "tbl", "h": ["말", "어디에", "예"], "r": [["매개변수 (parameter)", "함수 **정의** 쪽", "`int a`"], ["인자 (argument)", "함수 **호출** 쪽", "`3`"], ["값 전달", "인자가 **복사**됨", "안에서 바꿔도 원본 그대로"]]},
-{"t": "h", "x": "return 규칙"},
-{"t": "vs", "a": {"h": "❌ return 빠짐", "x": "int get(bool f)\n{\n    if (f) return 1;\n    // f 가 false 면? → UB\n}"}, "b": {"h": "✅ 모든 길에 return", "x": "int get(bool f)\n{\n    if (f) return 1;\n    return 0;\n}"}},
-{"t": "tbl", "h": ["상황", "결과"], "r": [["반환형 있는데 return 없는 길", "❌ UB"], ["**main** 만 return 생략", "✅ 자동으로 `return 0;`"], ["반환값을 안 씀 `add(3,4);`", "✅ 괜찮음"], ["void 함수 값을 쓰려 함", "❌ 컴파일 오류"]]},
-{"t": "star", "x": "return 생략이 허락되는 건 **main 하나뿐**."},
-{"t": "trap", "x": [["어떤 if 갈래에서 return 을 빠뜨림", "마지막 줄에 기본 return", "반환값을 쓰는 순간 UB"]]},
-{"t": "mem", "x": "**파**라미터 = 정의 **파**일 쪽 빈칸, **인**자 = 실제로 **넣**는 값"}
-]},
-{"id": "p1-7", "title": "선언 · 정의 · 헤더 파일", "ch": "Ch 2.7~2.12", "sum": "**선언** = “이런 게 있다”(여러 번 OK), **정의** = 실제 몸통(**딱 한 번**). 헤더엔 선언, .cpp 엔 정의.", "key": ["선언 여러 번, 정의 한 번 (ODR)", "헤더 = 선언, .cpp = 정의", "정의 빠짐 = 링크 오류"], "blocks": [
-{"t": "ana", "x": "📇 선언 = 명함(“저 여기 있어요”), 정의 = 실제 사람. 명함은 여러 장 뿌려도 되지만 사람은 한 명."},
-{"t": "h", "x": "왜 선언이 필요해?"},
-{"t": "li", "x": ["컴파일러는 위에서 아래로 **한 번만** 읽음", "아직 안 나온 함수를 부르면 “그게 뭔데?” → 오류", "해결: 맨 위에 **전방 선언** 한 줄"]},
-{"t": "code", "x": "int add(int a, int b);        // 전방 선언 (몸통 없음, ; 로 끝)\n\nint main() { std::cout << add(3, 4); }\n\nint add(int a, int b)         // 정의 (몸통)\n{\n    return a + b;\n}"},
-{"t": "h", "x": "선언 vs 정의"},
-{"t": "tbl", "h": ["", "선언", "정의"], "r": [["뜻", "“이런 이름이 있다”", "실제 내용"], ["몇 번?", "여러 번 OK", "**프로그램 전체에서 딱 1번** (ODR)"], ["빠뜨리면", "컴파일 오류", "**링크 오류**"]]},
-{"t": "h", "x": "파일 나누기"},
-{"t": "tbl", "h": ["파일", "넣을 것"], "r": [["`add.h`", "선언만 + 헤더 가드"], ["`add.cpp`", "정의(몸통)"], ["`main.cpp`", "`#include \"add.h\"` 후 사용"]]},
-{"t": "code", "x": "// add.h\n#ifndef ADD_H        // 헤더 가드: 두 번 포함 방지\n#define ADD_H\nint add(int a, int b);\n#endif"},
-{"t": "star", "x": "선언만 있고 정의가 없으면 → **컴파일은 통과, 링크에서 `undefined reference`**."},
-{"t": "trap", "x": [["헤더에 함수 **몸통**까지 씀", "헤더엔 선언만", "여러 파일에 복사돼 정의가 여러 개 → 링크 오류"]]},
-{"t": "mem", "x": "명함(선언)은 여러 장, 사람(정의)은 한 명 = **ODR**"}
-]},
-{"id": "p1-8", "title": "네임스페이스와 전처리기", "ch": "Ch 2.9~2.10", "sum": "이름이 겹치면 **네임스페이스**로 구분 (`math::add`). `using namespace std;` 는 쓰지 말 것. 전처리기는 문법 모르는 **텍스트 치환기**.", "key": ["이름 충돌은 `namespace::이름` 으로", "`using namespace std;` 금지", "전처리기 = 문법 모르는 글자 치환"], "blocks": [
-{"t": "ana", "x": "🏫 네임스페이스 = 반 이름. “1반 철수”, “2반 철수”라고 부르면 안 헷갈림. `::` 가 “~반의”."},
-{"t": "h", "x": "네임스페이스"},
-{"t": "code", "x": "namespace math    { int add(int a, int b) { return a + b; } }\nnamespace physics { int add(int a, int b) { return a + b; } }\n\nmath::add(3, 4);      // :: = \"~안의\"\nphysics::add(3, 4);   // 이름이 같아도 OK"},
-{"t": "tbl", "h": ["방법", "괜찮나?"], "r": [["`using namespace std;`", "❌ std 전체를 끌어와 `count`, `data` 등과 충돌"], ["헤더에 `using namespace`", "❌❌ 포함한 **모든 파일** 오염"], ["함수 안에서 `using std::cout;`", "✅ 필요한 것만, 좁게"]]},
-{"t": "h", "x": "전처리기가 하는 3가지"},
-{"t": "flow", "x": [["`#include`", "파일 내용을 통째로 붙여넣기"], ["`#define`", "글자를 다른 글자로 바꿔치기"], ["`#ifdef`", "조건 안 맞는 코드는 지워 버림"]]},
-{"t": "li", "x": ["전처리기는 C++ 문법을 **모름** — 그냥 글자 바꾸기", "매크로는 정의된 곳부터 **그 파일 끝까지**만", "상수는 매크로 대신 `constexpr` (2회차)"]},
-{"t": "star", "x": "`using namespace std;` 는 쓰지 않는다 — 특히 **헤더에는 절대**."},
-{"t": "trap", "x": [["헤더에 `using namespace std;`", "함수 안에서 `using std::cout;`", "그 헤더를 쓰는 모든 파일에 이름 충돌이 퍼짐"]]},
-{"t": "mem", "x": "`::` = “~반의” (math 반의 add)"}
-]},
-{"id": "p1-9", "title": "디버깅", "ch": "Ch 3.1~3.10", "sum": "문법 오류는 컴파일러가 잡지만, **의도와 다르게 도는 오류**는 내가 찾아야 한다. 추측 말고 **좁혀 가며** 찾기.", "key": ["구문 오류는 컴파일러가, 의미 오류는 내가", "첫 오류부터, 절반씩 좁히기", "Step into / over / out"], "blocks": [
-{"t": "ana", "x": "🔦 디버깅 = 정전된 집에서 차단기 찾기. 아무거나 누르지 말고, 절반씩 꺼 보며 범위를 좁힘."},
-{"t": "h", "x": "오류 2종류"},
-{"t": "tbl", "h": ["", "구문 오류", "의미 오류"], "r": [["뜻", "문법이 틀림 (`;` 빠짐)", "문법은 맞는데 **결과가 틀림**"], ["누가 찾나", "컴파일러가 줄까지 알려 줌", "**내가** 찾아야 함"], ["난이도", "쉬움", "어려움"]]},
-{"t": "code", "x": "for (int i { 0 }; i <= 5; ++i)   // 5번 돌리려 했는데 6번 돎 (의미 오류)\n    std::cout << i;"},
-{"t": "h", "x": "찾는 순서 5단계"},
-{"t": "flow", "x": [["1 재현", "매번 똑같이 버그가 나게"], ["2 범위 좁히기", "절반씩 확인"], ["3 원인 확인", "그 지점 값이 예상과 다른가"], ["4 고치기", "증상 말고 **원인**을"], ["5 다시 확인", "다른 데 안 깨졌나"]]},
-{"t": "h", "x": "디버거 버튼 3개"},
-{"t": "tbl", "h": ["버튼", "하는 일"], "r": [["Step **into**", "함수 **안으로** 들어감"], ["Step **over**", "함수를 **통째로** 실행하고 다음 줄"], ["Step **out**", "지금 함수를 끝내고 **밖으로**"], ["중단점", "그 줄에서 멈춤"], ["호출 스택", "“여기까지 어떻게 왔지?” 경로"]]},
-{"t": "star", "x": "오류는 **첫 번째 것부터** 고친다. 하나가 수십 개를 만든다."},
-{"t": "trap", "x": [["결과가 1 크니까 `-1` 을 붙임", "왜 1 큰지 원인을 찾음", "증상만 가리면 다른 곳에서 또 터짐"], ["Release 빌드로 디버깅", "Debug 빌드로", "최적화로 흐름이 뒤섞여 변수가 안 보임"]]},
-{"t": "mem", "x": "into = 안으로 쏙, over = 건너뛰기, out = 밖으로 탈출"}
-]},
-{"id": "p1-10", "title": "정수: 크기 · 오버플로 · unsigned", "ch": "Ch 4.1~4.5", "sum": "정수는 **int** 가 기본. 범위를 넘으면 int 는 **UB(터짐)**, unsigned 는 **한 바퀴 돎(조용히 틀림)**. 정수 나눗셈은 소수점을 **버린다**.", "key": ["정수는 int, 크기는 보장 X", "int 오버플로 = UB, unsigned = 한 바퀴", "`7 / 2 == 3`"], "blocks": [
-{"t": "ana", "x": "🚗 int = 계기판 끝을 넘으면 차가 고장(UB). unsigned = 주행 거리계처럼 999999 다음 000000 으로 돌아감."},
-{"t": "h", "x": "기본 타입 한눈에"},
-{"t": "tbl", "h": ["종류", "타입", "보통 크기"], "r": [["정수", "`short` `int` `long` `long long`", "2 / 4 / 4~8 / 8 바이트"], ["실수", "`float` `double`", "4 / 8 바이트"], ["참/거짓", "`bool`", "1 바이트"], ["문자", "`char`", "1 바이트"], ["없음", "`void`", "—"]]},
-{"t": "star", "x": "표준은 크기를 **보장하지 않음**. 보장하는 건 순서뿐: char ≤ short ≤ int ≤ long ≤ long long."},
-{"t": "h", "x": "넘치면? signed vs unsigned"},
-{"t": "tbl", "h": ["", "int (부호 있음)", "unsigned (부호 없음)"], "r": [["범위 넘으면", "❌ **UB**", "한 바퀴 돎"], ["예", "21억 + 1 → ???", "`3u - 5` → 4294967294"], ["위험", "최적화로 이상하게 깨짐", "조용히 거대한 수"]]},
-{"t": "vs", "a": {"h": "❌ 이미 넘친 뒤 검사", "x": "bool willOverflow(int x)\n{\n    return x + 1 < x;  // 이 자체가 UB\n}"}, "b": {"h": "✅ 넘치기 전에 검사", "x": "bool willOverflow(int x)\n{\n    return x == std::numeric_limits<int>::max();\n}"}},
-{"t": "h", "x": "정수 나눗셈"},
-{"t": "tbl", "h": ["식", "결과"], "r": [["`7 / 2`", "**3** (소수점 버림)"], ["`7.0 / 2`", "3.5"], ["`static_cast<double>(a) / b`", "실수 나눗셈"]]},
-{"t": "trap", "x": [["`unsigned size {5}; i < size - 6`", "부호 있는 int 사용", "0 - 1 이 42억이 되어 거의 무한 반복"], ["`sum / count` 로 평균 (둘 다 int)", "`static_cast<double>(sum) / count`", "소수점이 사라짐"]]},
-{"t": "mem", "x": "signed 는 **터진다**(UB), unsigned 는 **돈다**(wrap)"}
-]},
-{"id": "p1-11", "title": "실수 · bool · char", "ch": "Ch 4.7~4.12", "sum": "실수는 **근삿값**이라 `==` 비교 금지. bool 은 **1/0** 으로 찍힌다. char 는 사실 **작은 정수**(`'A'` = 65).", "key": ["실수는 근삿값 → `==` 금지, 기본은 double", "bool 은 1/0 출력 (`boolalpha` 로 true/false)", "`'A'` = 65, `'A' + 1` = 66"], "blocks": [
-{"t": "ana", "x": "📏 실수 = 눈금이 유한한 자. 0.1 을 정확히 잴 눈금이 없어서 0.1000000001 처럼 근처 값으로 잼."},
-{"t": "h", "x": "실수"},
-{"t": "code", "x": "std::cout << (0.1 + 0.2 == 0.3);   // 0 (false!)\n// 0.1 + 0.2 = 0.30000000000000004"},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["왜 틀려?", "0.1 은 2진수로 딱 떨어지지 않음 (1/3 = 0.333… 처럼)"], ["정밀도", "float ≈ 7자리, double ≈ 16자리"], ["기본", "**double** 을 쓴다"], ["`3.2e5`", "3.2 × 10⁵ = 320000"]]},
-{"t": "h", "x": "bool"},
-{"t": "tbl", "h": ["코드", "출력"], "r": [["`std::cout << true;`", "**1**"], ["`std::cout << std::boolalpha << true;`", "true"], ["`if (0)`", "거짓 (0 만 false, 나머지는 true)"]]},
-{"t": "h", "x": "char 와 static_cast"},
-{"t": "tbl", "h": ["코드", "결과"], "r": [["`char ch { 'A' };  cout << ch;`", "A"], ["`static_cast<int>('A')`", "**65** (문자 코드)"], ["`'A' + 1`", "**66** (B 가 아님! int 로 바뀜)"], ["`char c { 65 };  cout << c;`", "A"]]},
-{"t": "li", "x": ["변환은 `static_cast<타입>(값)` — C 스타일 `(int)x` 는 쓰지 않기"]},
-{"t": "star", "x": "`'A' + 1` 은 **66**. 실수는 **==로 비교하지 않는다**."},
-{"t": "trap", "x": [["`if (0.1 + 0.2 == 0.3)`", "오차 범위로 비교 (2회차)", "근삿값이라 거의 항상 false"], ["`if (x = 5)`", "`if (x == 5)`", "`=` 는 대입이라 항상 참"], ["`std::cin >> ch;` 로 여러 글자 입력", "한 글자씩 읽힌다는 걸 기억", "남은 글자가 다음 입력으로 딸려 감"]]},
-{"t": "mem", "x": "char = **변장한 정수**. 출력할 때만 글자 옷을 입음"}
-]}
-]},
-{"id": "c2", "title": "2회차 · 상수·문자열부터 오류 처리까지", "sub": "Ch 5~9", "parts": [
-{"id": "p2-1", "title": "const 와 숫자 표기법", "ch": "Ch 5.1~5.3", "sum": "**const** = “한 번 정하면 못 바꿈”. 숫자 앞에 0 을 붙이면 **8진수**가 되니 조심.", "key": ["const = 초기화 후 변경 불가 (실행 중 값도 OK)", "`012` = 10, `0xFF` = 255", "`3.14` 는 double, `3.14f` 는 float"], "blocks": [
-{"t": "ana", "x": "🔒 const = 값에 자물쇠. 처음 넣을 때만 열려 있고, 그 뒤론 잠김."},
-{"t": "h", "x": "const 기본"},
-{"t": "code", "x": "const double gravity { 9.8 };          // 만들 때 반드시 값 넣기\n// gravity = 9.9;                      // ❌ 오류: 못 바꿈\nconst int rows { getRowsFromUser() };  // ✅ 실행 중에 정해진 값도 OK"},
-{"t": "li", "x": ["const 의 약속은 “**초기화 후 안 바뀐다**”뿐", "값이 **실행 중에** 정해져도 상관없음", "컴파일할 때 이미 정해져야 하면 → **constexpr** (다음 파트)"]},
-{"t": "h", "x": "숫자 표기법"},
-{"t": "tbl", "h": ["쓴 것", "뜻"], "r": [["`3.14` / `3.14f`", "double(기본) / float"], ["`5u` `5L`", "unsigned / long"], ["`0b1010`", "2진수 → 10"], ["`012`", "⚠️ **8진수 → 10** (12 아님!)"], ["`0xFF`", "16진수 → 255"], ["`1'000'000`", "그냥 1000000 (읽기 편하라고 ’ 넣음)"], ["`\"abc\"s` / `\"abc\"sv`", "std::string / std::string_view"]]},
-{"t": "trap", "x": [["`int month { 08 };` (자릿수 맞추려 0 붙임)", "`int month { 8 };`", "0 으로 시작하면 8진수. 8진수엔 8 이 없어 오류"]]},
-{"t": "star", "x": "`012` 는 **10**, `0xFF` 는 **255**."},
-{"t": "mem", "x": "0**b** = **b**inary, 0**x** = he**x**, 그냥 **0** = 8진수 (O ctal 의 O 모양)"}
-]},
-{"id": "p2-2", "title": "constexpr: 컴파일할 때 정해지는 상수", "ch": "Ch 5.4~5.6", "sum": "**constexpr** = 값이 **컴파일할 때 이미** 정해진 상수. 미리 아는 값이면 const 대신 constexpr 이 기본.", "key": ["constexpr 은 컴파일할 때 정해져야 함", "constexpr 은 자동으로 const", "미리 아는 값은 constexpr 이 기본"], "blocks": [
-{"t": "ana", "x": "📅 const = “오늘 정할게, 그다음엔 안 바꿔”. constexpr = “**달력에 이미 인쇄**돼 있어”."},
-{"t": "h", "x": "const vs constexpr"},
-{"t": "tbl", "h": ["", "const", "constexpr"], "r": [["값이 정해지는 때", "실행 중이어도 OK", "**반드시 컴파일할 때**"], ["바꿀 수 있나", "❌", "❌ (constexpr 은 자동으로 const)"], ["배열 크기로", "실행 중 값이면 ❌", "✅"], ["헤더에서 공유", "파일마다 사본", "`inline constexpr` 로 하나만"], ["언제", "값이 실행 중에 정해질 때", "**미리 아는 값 — 기본**"]]},
-{"t": "code", "x": "constexpr int side { 4 };\nconstexpr int area { side * side };   // 컴파일할 때 16 으로 계산됨\nint arr[area];                        // ✅ 배열 크기로 사용 가능\n\nint rows { getRowsFromUser() };\n// constexpr int r { rows };          // ❌ 실행 중 값은 안 됨\nconst int r { rows };                 // ✅ const 는 됨"},
-{"t": "fix", "x": "엄밀히는 `const int n { 5 };` 처럼 **숫자로 바로 초기화한 const** 는 배열 크기에 쓸 수 있음. 헷갈리면 “컴파일 타임 상수 = constexpr”로 기억."},
-{"t": "ref", "x": "as-if 규칙 — 결과만 같으면 컴파일러는 코드를 마음대로 최적화해도 됨. const 도 최적화될 수 있지만 보장은 없음."},
-{"t": "trap", "x": [["`constexpr int r { rows };` (rows 는 입력값)", "`const int r { rows };`", "실행 중에 정해진 값은 constexpr 불가"]]},
-{"t": "star", "x": "constexpr = **컴파일 타임 상수**. 실행 중 값으로 초기화하면 **컴파일 오류**."},
-{"t": "mem", "x": "const = “안 바꿀게”, constexpr = “**이미 알아**”"}
-]},
-{"id": "p2-3", "title": "std::string 과 한 줄 입력", "ch": "Ch 5.7", "sum": "문자열은 **std::string**. `cin >>` 은 **공백에서 끊기니**, 한 줄 전체는 `getline(cin >> ws, s)`.", "key": ["문자열은 std::string, `<string>` include", "`length()` 는 바이트 수 (한글 3바이트)", "한 줄 읽기 = `getline(cin >> ws, s)`"], "blocks": [
-{"t": "ana", "x": "✂️ `cin >>` = 띄어쓰기마다 가위질. “홍 길동”을 넣으면 “홍”만 가져가고 “길동”은 남겨 둠."},
-{"t": "h", "x": "std::string 기본"},
-{"t": "code", "x": "#include <string>\n\nstd::string name { \"홍길동\" };\nname += \" 님\";               // 길이가 알아서 늘어남\nname.length();               // 바이트 수 (한글은 1글자 = 3바이트)\nstd::string empty {};        // 빈 문자열"},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["왜 string?", "길이·메모리를 알아서 관리"], ["`length()`", "**바이트** 수 → `\"한글\".length()` 는 **6**"], ["include", "`<string>` 꼭 직접 쓰기"]]},
-{"t": "h", "x": "공백 있는 입력 받기"},
-{"t": "vs", "a": {"h": "❌ cin >>", "x": "std::cin >> name;\n// \"홍 길동\" 입력\n// name = \"홍\"\n// \"길동\"은 남아서\n// 다음 입력에 딸려 감"}, "b": {"h": "✅ getline + ws", "x": "std::getline(std::cin >> std::ws, name);\n// \"홍 길동\" 전체가 들어감"}},
-{"t": "h", "x": "왜 std::ws 를 붙여?"},
-{"t": "flow", "x": [["① `cin >> age;`", "숫자는 읽고 Enter(개행)는 남김"], ["② `getline(cin, s);`", "남은 개행을 바로 만나 **빈 문자열**로 끝"], ["③ `getline(cin >> ws, s);`", "ws 가 남은 공백·개행을 먼저 치움 ✅"]]},
-{"t": "trap", "x": [["`std::cin >> name;` 으로 이름 받기", "`std::getline(std::cin >> std::ws, name);`", "공백에서 끊겨 입력이 하나씩 밀림"], ["`cin >> age;` 다음 바로 `getline(cin, s)`", "`getline(cin >> ws, s)`", "남은 개행 때문에 빈 문자열이 읽힘"]]},
-{"t": "star", "x": "한 줄 입력 = `std::getline(std::cin >> std::ws, s)` — **ws 까지 세트로 외우기**."},
-{"t": "mem", "x": "**ws** = **w**hite **s**pace 청소기"}
-]},
-{"id": "p2-4", "title": "std::string_view: 복사 없이 보기만", "ch": "Ch 5.8~5.9", "sum": "**string_view** = 문자열을 **복사 없이 들여다보는 창문**. 내 것이 아니라서 원본이 사라지면 같이 망가진다.", "key": ["string_view = 주소+길이, 복사 공짜, 읽기 전용", "매개변수는 view, 멤버·반환은 string", "view 반환·원본 재할당 = 댕글링"], "blocks": [
-{"t": "ana", "x": "🪟 string_view = 창문. 집(원본 문자열)이 철거되면 창문으로 보이는 건 허공."},
-{"t": "h", "x": "string vs string_view"},
-{"t": "tbl", "h": ["", "std::string", "std::string_view"], "r": [["정체", "문자열을 **소유**", "주소 + 길이만 (빌려 봄)"], ["복사 비용", "있음", "거의 0"], ["수정", "가능", "❌ 읽기 전용"], ["원본이 사라지면", "상관없음", "❌ **댕글링 (UB)**"]]},
-{"t": "code", "x": "void printA(std::string s)      { std::cout << s; }  // 부를 때마다 복사\nvoid printB(std::string_view s) { std::cout << s; }  // 복사 없음 ✅\n\nprintB(\"리터럴도 OK\");\nstd::string name { \"홍길동\" };\nprintB(name);                   // string 도 그대로 넘어감"},
-{"t": "h", "x": "언제 뭘 쓸까"},
-{"t": "tbl", "h": ["상황", "쓸 것"], "r": [["읽기만 하는 **매개변수**", "✅ string_view"], ["클래스 **멤버 변수**", "std::string"], ["함수에서 **반환**", "std::string"], ["수정·저장해야 함", "std::string"], ["컴파일 타임 상수 문자열", "`constexpr std::string_view`"]]},
-{"t": "h", "x": "함정: 댕글링"},
-{"t": "code", "x": "std::string_view getName()\n{\n    std::string name { \"홍길동\" };\n    return name;          // ❌ name 은 함수 끝나면 사라짐\n}\n\nstd::string s { \"안녕\" };\nstd::string_view sv { s };\ns = \"훨씬 더 긴 문자열\";   // s 가 메모리를 새로 잡으면\nstd::cout << sv;          // ❌ sv 가 가리키던 곳은 이미 없음"},
-{"t": "trap", "x": [["함수에서 string_view 반환", "std::string 반환", "지역 string 이 사라져 댕글링"], ["view 를 만든 뒤 원본 string 을 크게 바꿈", "view 는 원본을 안 건드릴 때만", "원본이 재할당되면 view 무효"]]},
-{"t": "star", "x": "**소유하면 string, 잠깐 보기만 하면 string_view.** 애매하면 string (느릴 뿐 틀리진 않음)."},
-{"t": "mem", "x": "view = **창문** — 집이 없으면 아무것도 안 보임"}
-]},
-{"id": "p2-5", "title": "우선순위와 계산 순서", "ch": "Ch 6.1, 6.4", "sum": "우선순위는 “**무엇끼리 묶이나**”만 정한다. “**무엇부터 계산하나**”는 대부분 안 정해져 있다.", "key": ["헷갈리면 괄호", "우선순위 ≠ 계산 순서", "`i++ + ++i` = UB"], "blocks": [
-{"t": "ana", "x": "🧮 우선순위 = 괄호를 어디에 칠지. 계산 순서 = 누가 먼저 계산기를 두드릴지 — 이건 컴파일러 마음."},
-{"t": "h", "x": "우선순위 (위가 먼저 묶임)"},
-{"t": "tbl", "h": ["순위", "연산자"], "r": [["1", "`::`"], ["2", "`++x` `--x` `!` `-x` `sizeof`"], ["3", "`*` `/` `%`"], ["4", "`+` `-`"], ["5", "`<<` `>>`"], ["6", "`<` `<=` `>` `>=`"], ["7", "`==` `!=`"], ["8", "`&&`"], ["9", "`||`"], ["10", "`?:` `=` `+=` (오른쪽부터)"]]},
-{"t": "tip", "x": "다 외우지 말고 **괄호**. `* / %` 가 `+ -` 보다 먼저라는 것만 기억."},
-{"t": "h", "x": "우선순위 ≠ 계산 순서"},
-{"t": "tbl", "h": ["우선순위", "계산 순서"], "r": [["`a + b * c` → b*c 가 묶임", "a 와 b*c 중 무엇을 먼저 계산? → **미정**"], ["표준이 정함", "대부분 표준이 **안 정함**"]]},
-{"t": "code", "x": "int i { 1 };\nstd::cout << i++ + ++i;   // ❌ UB — 컴파일러마다 다름\n\nint x { 1 };\nadd(x, ++x);              // ❌ 인자 계산 순서 미정 → 결과 불확정"},
-{"t": "trap", "x": [["`i++ + ++i`", "문장을 나눠서 따로 계산", "한 식에서 같은 변수를 두 번 바꾸면 UB"]]},
-{"t": "star", "x": "한 식 안에서 **같은 변수를 두 번 바꾸지 않는다**."},
-{"t": "mem", "x": "우선순위 = **어디에 괄호**, 계산 순서 = **누가 먼저** (몰라도 되게 짜기)"}
-]},
-{"id": "p2-6", "title": "나눗셈 · 나머지 · ++", "ch": "Ch 6.2~6.5", "sum": "정수끼리 나누면 소수점을 **버린다**. 나머지 부호는 **앞 숫자**를 따른다. `++x` 는 올리고 주고, `x++` 는 주고 올린다.", "key": ["정수 나눗셈은 버림, `7/2 == 3`", "홀수는 `x % 2 != 0`", "`++x` 새 값, `x++` 옛 값"], "blocks": [
-{"t": "ana", "x": "🍕 피자 7조각을 2명이 정수로 나누면 3조각씩, 1조각은 버려짐(7/2 = 3)."},
-{"t": "h", "x": "나눗셈과 나머지"},
-{"t": "tbl", "h": ["식", "결과", "왜"], "r": [["`7 / 2`", "**3**", "정수끼리라 소수점 버림"], ["`7.0 / 2`", "3.5", "한쪽이 실수"], ["`-5 % 3`", "**-2**", "부호는 앞 숫자(-5)를 따름"], ["`5 % -3`", "2", "앞 숫자가 양수"], ["`-3 % 2`", "**-1**", "그래서 홀수 판정에 주의"], ["`std::pow(3, 2)`", "9 (double)", "8.999… 일 수 있음"]]},
-{"t": "h", "x": "홀수 판정"},
-{"t": "vs", "a": {"h": "❌ == 1", "x": "x % 2 == 1\n// -3 이면 -1 이라 실패"}, "b": {"h": "✅ != 0", "x": "x % 2 != 0\n// 음수도 OK"}},
-{"t": "h", "x": "++ 앞뒤 차이"},
-{"t": "tbl", "h": ["코드", "결과", "순서"], "r": [["`int y { ++x };` (x=5)", "x=6, **y=6**", "올리고 → 줌"], ["`int b { a++ };` (a=5)", "a=6, **b=5**", "주고 → 올림"]]},
-{"t": "term", "ko": "부작용", "en": "side effect", "d": "값을 돌려주는 것 말고 **상태를 바꾸는** 일 (대입, ++, 출력)"},
-{"t": "trap", "x": [["`sum / count` 로 평균 (둘 다 int)", "`static_cast<double>(sum) / count`", "소수점이 사라짐"], ["`if (x % 2 == 1)`", "`if (x % 2 != 0)`", "음수 홀수는 나머지가 -1"]]},
-{"t": "star", "x": "`7 / 2 == 3`, `-3 % 2 == -1`, `a++` 는 **옛 값**을 준다."},
-{"t": "mem", "x": "++ 가 **앞**이면 **먼저** 올림, **뒤**면 **나중에** 올림"}
-]},
-{"id": "p2-7", "title": "비교 · 논리 연산자", "ch": "Ch 6.6~6.8", "sum": "실수는 `==` 대신 **오차 범위**로 비교. `&&` `||` 는 답이 정해지면 **나머지를 아예 계산 안 한다**.", "key": ["실수는 오차 범위로 비교 (6.7절)", "`&&` 왼쪽 false / `||` 왼쪽 true → 오른쪽 생략", "널 검사는 `&&` 왼쪽"], "blocks": [
-{"t": "ana", "x": "🚪 `&&` = 문 두 개를 다 통과해야 함. 첫 문이 잠겨 있으면 두 번째 문은 쳐다보지도 않음."},
-{"t": "h", "x": "실수 비교"},
-{"t": "code", "x": "// 절대 오차: 큰 수에서는 실패\nbool almostEqualAbs(double a, double b, double eps = 1e-9)\n{ return std::abs(a - b) <= eps; }\n\n// 상대 오차 (learncpp 6.7절 방식)\nbool almostEqualRel(double a, double b, double relEps = 1e-8)\n{ return std::abs(a - b) <= std::max(std::abs(a), std::abs(b)) * relEps; }"},
-{"t": "fix", "x": "PPT 에 “learncpp **5.7**절 방식”이라고 되어 있지만 실수 비교는 **6.7**절."},
-{"t": "h", "x": "단축 평가 (short-circuit)"},
-{"t": "tbl", "h": ["연산자", "오른쪽을 건너뛰는 때"], "r": [["`a && b`", "a 가 **false** 면 → b 계산 안 함"], ["`a || b`", "a 가 **true** 면 → b 계산 안 함"]]},
-{"t": "code", "x": "if (ptr != nullptr && ptr->value > 0)   // ✅ 널이면 오른쪽 안 봄 → 안전\nif (ptr->value > 0 && ptr != nullptr)   // ❌ 순서 바꾸면 널 역참조"},
-{"t": "h", "x": "그 밖에"},
-{"t": "tbl", "h": ["규칙", "내용"], "r": [["드모르간", "`!(a && b)` = `!a || !b`"], ["섞어 쓸 때", "`&&` 가 `||` 보다 먼저 → 괄호로"], ["`?:`", "`x > y ? x : y` — 값을 돌려주는 식. 중첩하면 읽기 어려움"]]},
-{"t": "trap", "x": [["`0.1 + 0.2 == 0.3`", "오차 범위 함수로 비교", "실수는 근삿값"], ["`if (a() \\|\\| b())` 에서 b() 가 꼭 실행돼야 함", "따로 호출해 두고 비교", "a() 가 true 면 b() 는 건너뜀"]]},
-{"t": "star", "x": "널 검사는 `&&` 의 **왼쪽**에 둔다."},
-{"t": "mem", "x": "드모르간 = **!를 안으로 넣으면 && ↔ || 뒤집힘**"}
-]},
-{"id": "p2-8", "title": "스코프 · 수명 · 링키지", "ch": "Ch 7.1~7.8, 7.12", "sum": "세 가지 질문 — **어디서 보이나**(스코프) · **언제까지 사나**(수명) · **다른 파일과 같은 것인가**(링키지).", "key": ["스코프(어디서) · 수명(언제까지) · 링키지(파일 간)", "안쪽 이름이 바깥을 가림, `::x` 는 전역", "static·const 전역 = 내부, extern = 선언"], "blocks": [
-{"t": "ana", "x": "🏢 스코프 = 출입증이 통하는 층, 수명 = 근무 기간, 링키지 = 다른 지점에서도 같은 사람으로 통하나."},
-{"t": "h", "x": "세 개념 한눈에"},
-{"t": "tbl", "h": ["개념", "질문", "종류"], "r": [["스코프", "이 이름을 **어디서** 쓸 수 있나", "블록 / 전역"], ["수명", "객체가 **언제** 생기고 사라지나", "자동 / 정적 / 동적"], ["링키지", "다른 **파일**의 같은 이름이 같은 것인가", "없음 / 내부 / 외부"]]},
-{"t": "h", "x": "이름 가리기 (섀도잉)"},
-{"t": "code", "x": "int value { 10 };            // 전역\nint main()\n{\n    int value { 20 };        // 전역을 가림\n    {\n        int value { 30 };    // 또 가림\n        std::cout << value;  // 30\n    }\n    std::cout << value;      // 20\n    std::cout << ::value;    // 10  ← :: 는 전역\n}"},
-{"t": "li", "x": ["블록 `{ }` 안에서 만든 변수는 블록이 끝나면 **사라짐**", "변수 범위는 **최대한 좁게**"]},
-{"t": "h", "x": "전역 변수와 링키지"},
-{"t": "tbl", "h": ["선언", "링키지", "다른 파일에서"], "r": [["`int g_count { 0 };`", "외부", "`extern int g_count;` 로 사용 ✅"], ["`static int s_helper { 0 };`", "내부", "❌ 안 보임"], ["`const int g_max { 100 };`", "내부 (const 전역 기본값)", "❌ 안 보임"], ["`extern int g_count;`", "(선언만)", "정의는 다른 파일에"]]},
-{"t": "warn", "x": "바꿀 수 있는 전역 변수는 피하기 — 누가 언제 바꿨는지 추적 불가, 테스트 어려움."},
-{"t": "trap", "x": [["다른 파일에서 `static` 전역을 `extern` 으로 씀", "외부 링키지 변수만 공유", "내부 링키지라 링크 오류"]]},
-{"t": "star", "x": "출력 순서 **30 → 20 → 10**. `::value` 는 전역."},
-{"t": "mem", "x": "**스**코프 = **시**야, **수**명 = **살**아 있는 기간, **링**키지 = 파일끼리 **연결**"}
-]},
-{"id": "p2-9", "title": "헤더 상수 · static 지역 변수 · using", "ch": "Ch 7.9~7.14", "sum": "헤더 상수는 **`inline constexpr`**. 함수 안 static 은 **수명만** 늘린다. using 은 필요한 이름만.", "key": ["헤더 상수 = `inline constexpr`", "함수 안 static = 한 번만 초기화, 값 유지", "static 은 위치에 따라 뜻이 다름"], "blocks": [
-{"t": "ana", "x": "📌 static 지역 변수 = 회의실 화이트보드. 회의(함수)가 끝나도 지워지지 않고 다음 회의 때 그대로 있음."},
-{"t": "h", "x": "헤더에서 상수 공유"},
-{"t": "code", "x": "// constants.h\nnamespace constants\n{\n    inline constexpr double gravity { 9.8 };   // ✅ 전체에서 하나\n    inline constexpr int    maxUsers { 100 };\n}"},
-{"t": "tbl", "h": ["헤더에 이렇게 쓰면", "결과"], "r": [["`constexpr double g { 9.8 };`", "포함한 파일마다 **사본**"], ["`inline constexpr double g { 9.8 };`", "✅ 프로그램 전체에 **하나**"]]},
-{"t": "li", "x": ["요즘 `inline` 의 뜻 = “같은 정의가 여러 파일에 있어도 ODR 위반 아님”", "C++17 이전이면 .cpp 에 정의, 헤더엔 extern 선언"]},
-{"t": "h", "x": "함수 안 static"},
-{"t": "code", "x": "void counter()\n{\n    static int calls { 0 };   // 처음 한 번만 초기화\n    ++calls;\n    std::cout << calls;\n}\ncounter(); counter(); counter();   // 1 2 3"},
-{"t": "tbl", "h": ["static 의 위치", "뜻"], "r": [["**함수 안**", "수명을 프로그램 끝까지 (보이는 곳은 그대로)"], ["**함수 밖**", "링키지를 내부로 (이 파일에서만)"]]},
-{"t": "h", "x": "종합표"},
-{"t": "tbl", "h": ["선언", "스코프", "수명", "링키지"], "r": [["`int x;` (함수 안)", "블록", "자동", "없음"], ["`static int x;` (함수 안)", "블록", "정적", "없음"], ["`int x;` (함수 밖)", "전역", "정적", "외부"], ["`static int x;` (함수 밖)", "전역", "정적", "내부"], ["`const int x {1};` (함수 밖)", "전역", "정적", "내부"], ["`inline constexpr int x {1};`", "전역", "정적", "외부 (하나만)"], ["`extern int x;`", "전역", "정적", "외부 (선언만)"]]},
-{"t": "h", "x": "using"},
-{"t": "tbl", "h": ["쓰는 법", "괜찮나"], "r": [["`using namespace std;`", "❌ 이름 충돌이 예고 없이"], ["함수 안 `using std::cout;`", "✅ 필요한 것만, 좁게"]]},
-{"t": "trap", "x": [["헤더에 `constexpr` 상수", "`inline constexpr`", "파일마다 사본이 생김"]]},
-{"t": "star", "x": "`static` 은 **위치에 따라 뜻이 다르다** — 안: 수명, 밖: 링키지."},
-{"t": "mem", "x": "static — 안에선 **오래 살기**, 밖에선 **집 밖에 못 나가기**"}
-]},
-{"id": "p2-10", "title": "if 와 switch", "ch": "Ch 8.2~8.6", "sum": "if 는 한 줄이어도 **항상 중괄호**. switch 는 **break** 가 없으면 아래 case 로 흘러내린다.", "key": ["if 는 항상 중괄호", "switch 는 break 없으면 흘러내림", "switch 는 정수·열거형만, default 는 안전망"], "blocks": [
-{"t": "ana", "x": "🌊 switch 의 case = 계단식 물웅덩이. break(둑)가 없으면 물이 아래 칸으로 쭉 흘러내림."},
-{"t": "h", "x": "if 실수 4가지"},
-{"t": "code", "x": "if (x > 5);              // ① ; 때문에 if 가 여기서 끝남\n    std::cout << \"큼\";   //    → 항상 실행\n\nif (x = 5)               // ② 대입! 항상 참\n\nif (a)\n    if (b) f();\n    else   g();          // ③ else 는 가장 가까운 if(b) 짝\n\nif (x > 5)\n    std::cout << \"큼\";\n    std::cout << \"확실\";  // ④ if 밖. 항상 실행"},
-{"t": "star", "x": "4가지를 한 번에 막는 법 = **항상 중괄호** `{ }`."},
-{"t": "h", "x": "switch"},
-{"t": "code", "x": "switch (grade)              // 정수·열거형만 (문자열 ❌)\n{\n    case 'A':\n    case 'B':               // 비어 있는 case 는 그냥 흘러가도 OK\n        std::cout << \"합격\";\n        break;              // ← 빠뜨리면 아래로 흘러감\n    case 'C':\n        pass();\n        [[fallthrough]];    // \"일부러 흘려보냄\" 표시 (C++17)\n    case 'D':\n        record();\n        break;\n    default:                // 나머지 전부 — 안전망\n        break;\n}"},
-{"t": "tbl", "h": ["규칙", "내용"], "r": [["조건 타입", "**정수·열거형만**"], ["break 없음", "다음 case 로 흘러내림 (오류 아님!)"], ["의도한 흘러내림", "`[[fallthrough]];`"], ["case 안 변수 선언", "그 case 를 `{ }` 로 감싸야 함"]]},
-{"t": "trap", "x": [["break 를 빠뜨림", "모든 case 끝에 break", "다음 case 까지 실행됨 (컴파일러가 안 막음)"], ["`if (x", "5);`", "`if (x > 5) { ... }` > 세미콜론에서 if 가 끝남"]]},
-{"t": "mem", "x": "else 는 **가장 가까운** if 와 짝 (들여쓰기는 컴파일러가 안 봄)"}
-]},
-{"id": "p2-11", "title": "반복문 · 종료 · 난수", "ch": "Ch 8.7~8.15", "sum": "횟수 모르면 **while**, 최소 한 번이면 **do-while**, 횟수 정해지면 **for**. 난수는 `rand()` 말고 **`<random>`**.", "key": ["while(모름) · do-while(최소 1번) · for(정해짐)", "`<=` 는 한 번 더 — off-by-one", "난수 엔진은 한 번만 만들기"], "blocks": [
-{"t": "ana", "x": "🏃 while = “지칠 때까지 뛰어”, do-while = “일단 한 바퀴는 뛰고 판단”, for = “운동장 5바퀴”."},
-{"t": "h", "x": "반복문 3가지"},
-{"t": "tbl", "h": ["형태", "언제", "주의"], "r": [["`while (조건) {}`", "횟수 모름. 0번일 수도", "조건을 바꾸는 코드 빠뜨리면 무한 루프"], ["`do {} while (조건);`", "**최소 1번** (메뉴, 재입력)", "끝의 `;`"], ["`for (초기; 조건; 증가)`", "횟수가 정해짐", "`<=` 로 한 번 더 돎"]]},
-{"t": "code", "x": "for (int i { 0 }; i < 5; ++i)    // 0~4 → 5번 ✅\nfor (int i { 0 }; i <= 5; ++i)   // 0~5 → 6번 (off-by-one)\n\nwhile (true) {\n    if (done) break;             // 반복 전체 탈출\n    if (skip) continue;          // 이번 회차만 건너뜀\n}"},
-{"t": "h", "x": "프로그램 끝내기"},
-{"t": "tbl", "h": ["방법", "정리(뒷정리)"], "r": [["main 에서 `return`", "✅ 전부 정리 — 가장 안전"], ["`std::exit(코드)`", "정적 객체만. **지금 함수의 지역 객체는 정리 안 됨**"], ["`std::abort()`", "❌ 아무것도 정리 안 함"]]},
-{"t": "h", "x": "난수"},
-{"t": "vs", "a": {"h": "❌ rand()", "x": "std::srand(std::time(0));\nint r = std::rand() % 6 + 1;\n// 품질 나쁨, 분포 치우침\n// 1초 안에 여러 번 → 같은 수열"}, "b": {"h": "✅ <random>", "x": "std::mt19937 gen{ std::random_device{}() };\nstd::uniform_int_distribution die{ 1, 6 };\nint r { die(gen) };\n// 분포 고름"}},
-{"t": "tip", "x": "재현이 필요하면 고정 시드 `std::mt19937 gen{ 42 };` → 매번 같은 수열 (디버깅용)."},
-{"t": "trap", "x": [["함수 안에서 엔진을 매번 새로 만듦", "엔진은 한 번만 만들어 재사용 (static 등)", "같은 값이 반복될 수 있음"], ["`for (int i { 0 }; i <= 5; ++i)` 로 5번", "`i < 5`", "6번 돎"]]},
-{"t": "star", "x": "`i <= 5` 는 **6번**. 난수는 **mt19937 + 분포 객체**."},
-{"t": "mem", "x": "**break** = 루프를 부숨, **continue** = 이번 판만 넘김"}
-]},
-{"id": "p2-12", "title": "테스트와 오류 다루기", "ch": "Ch 9.1~9.4", "sum": "**경계값**(0, 음수, 최댓값, 빈 입력)을 테스트하고, 오류는 **절대 조용히 넘기지 않는다**.", "key": ["경계값 테스트", "테스트 = 회귀 방지", "오류를 조용히 넘기지 않기"], "blocks": [
-{"t": "ana", "x": "🧱 버그는 대부분 담장 끝(경계)에 숨어 있다. 마당 한가운데보다 모서리를 먼저 살펴라."},
-{"t": "h", "x": "테스트가 얼마나 덮었나"},
-{"t": "tbl", "h": ["커버리지", "확인할 것"], "r": [["문장", "모든 줄이 한 번은 실행됐나"], ["분기", "if 의 참·거짓 둘 다 실행됐나"], ["반복", "0번 · 1번 · 여러 번 다 돌려 봤나"]]},
-{"t": "code", "x": "#include <cassert>\nvoid testAdd()\n{\n    assert(add(2, 3) == 5);\n    assert(add(-1, 1) == 0);   // 음수 경계\n    assert(add(0, 0) == 0);    // 0 경계\n}"},
-{"t": "tip", "x": "테스트의 진짜 쓸모 = **고친 버그가 다시 살아나지 않게** 막기. 버그 하나 고치면 테스트 하나 추가."},
-{"t": "li", "x": ["흔한 의미 오류: off-by-one · 우선순위 착각 · 정수 나눗셈 · 실수 `==` · 부호 섞기"]},
-{"t": "h", "x": "오류 다루는 4가지 방법"},
-{"t": "tbl", "h": ["방법", "예"], "r": [["① 함수 안에서 해결", "기본값으로 대체, 재시도"], ["② 부른 쪽에 알림", "bool 반환, 실패 값, std::optional"], ["③ 프로그램 종료", "assert, std::exit"], ["④ 예외 던지기", "📎 이 과정 범위 밖"]]},
-{"t": "trap", "x": [["오류를 무시하고 계속 진행", "4가지 중 하나로 처리", "엉뚱한 곳에서 터져 원인 찾기가 몇 배 어려움"]]},
-{"t": "star", "x": "테스트는 **경계값**부터. 오류 처리 최악은 **조용히 무시**."},
-{"t": "mem", "x": "버그는 **모서리**에 산다 (0, -1, 최대, 빈 것)"}
-]},
-{"id": "p2-13", "title": "잘못된 입력 처리 · assert", "ch": "Ch 9.5~9.6", "sum": "입력이 실패하면 **`clear()` 로 깃발 내리고 → `ignore()` 로 남은 쓰레기 치우기**. assert 는 실행 중, static_assert 는 컴파일할 때 검사.", "key": ["입력 실패 → `clear()` 후 `ignore(max, '\\n')`", "assert 는 Release 에서 사라짐, static_assert 는 컴파일 타임", "assert 안에 부작용 금지"], "blocks": [
-{"t": "ana", "x": "🚩 cin 이 실패하면 빨간 깃발을 들고 파업. clear 로 깃발을 내리고, ignore 로 바닥 쓰레기를 치워야 다시 일함."},
-{"t": "h", "x": "과제 단골 패턴"},
-{"t": "code", "x": "int getInt()\n{\n    while (true)\n    {\n        int x {};\n        std::cin >> x;\n        if (!std::cin)                     // 숫자 대신 문자를 넣었다면\n        {\n            std::cin.clear();              // ① 실패 깃발 내리기\n            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\\n');  // ② 줄 버리기\n            continue;\n        }\n        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\\n');      // ③ 남은 것 버리기\n        return x;\n    }\n}"},
-{"t": "tbl", "h": ["빼먹으면", "생기는 일"], "r": [["① `clear()`", "이후 입력이 전부 무시 → **무한 루프**"], ["② `ignore()`", "같은 쓰레기를 또 읽어 또 실패 → **무한 루프**"], ["③ 성공 후 `ignore()`", "`\"12abc\"` → 12 만 읽고 abc 가 다음 입력에 딸려 감"]]},
-{"t": "h", "x": "assert vs static_assert"},
-{"t": "code", "x": "assert(b != 0 && \"0 으로 나눌 수 없음\");                 // 실행 중 검사\nstatic_assert(sizeof(int) == 4, \"32비트 int 가정\");    // 컴파일할 때 검사"},
-{"t": "tbl", "h": ["", "assert", "static_assert"], "r": [["언제 검사", "실행 중", "컴파일할 때"], ["실패하면", "즉시 중단", "컴파일 오류"], ["Release (`NDEBUG`)", "**사라짐**", "그대로 검사"]]},
-{"t": "trap", "x": [["`assert(++i < 10);`", "`++i;` 를 따로 쓰고 `assert(i < 10);`", "Release 에서 assert 가 통째로 사라져 ++i 도 안 됨"], ["사용자 입력 검증을 assert 로", "일반 if 로 검사", "assert 는 “일어날 리 없는 일” 확인용"]]},
-{"t": "star", "x": "입력 실패 = **clear → ignore** (순서도 이대로)."},
-{"t": "mem", "x": "**깃발 내리고(clear) → 쓰레기 치우기(ignore)**"}
-]},
-{"id": "p2-14", "title": "2회차 함정 총정리", "ch": "Ch 5~9", "sum": "2회차에서 실제로 자주 터지는 9가지. 시험 직전엔 **이 카드만** 다시 보기.", "key": ["입력: getline + ws, 실패 시 clear + ignore", "UB: view 반환, 한 식에서 두 번 변경", "습관: 중괄호, break, inline constexpr, `<random>`"], "blocks": [
-{"t": "ana", "x": "📋 시험 전날 냉장고에 붙여 둘 체크리스트."},
-{"t": "h", "x": "한 장 요약"},
-{"t": "tbl", "h": ["주제", "기억할 한 줄"], "r": [["입력", "한 줄은 `getline(cin >> ws, s)`, 실패하면 `clear` + `ignore`"], ["문자열", "매개변수 view, 멤버·반환 string"], ["계산", "`7/2 == 3`, 홀수는 `% 2 != 0`, 한 식에서 두 번 변경 ❌"], ["제어문", "항상 중괄호, switch 엔 break"], ["상수", "미리 아는 값은 constexpr, 헤더는 `inline constexpr`"], ["난수", "`<random>`, 엔진은 한 번만"]]},
-{"t": "trap", "x": [["`std::cin >> name`", "`getline(cin >> ws, name)`", "공백에서 끊기고 나머지가 버퍼에 남음"], ["입력 실패 후 그대로 둠", "`clear()` + `ignore()`", "실패 상태로 남아 무한 루프"], ["string_view 반환", "std::string 반환", "원본이 사라져 댕글링"], ["`i++ + ++i`", "문장을 나눔", "계산 순서 미정 → UB"], ["`x % 2 == 1`", "`x % 2 != 0`", "음수에서 실패"], ["switch 에서 break 누락", "break 또는 `[[fallthrough]]`", "다음 case 로 흘러내림"], ["헤더에 `constexpr` 상수", "`inline constexpr`", "파일마다 사본"], ["`rand() % n`", "`<random>` 분포 객체", "분포가 치우치고 품질이 나쁨"], ["if 본문 중괄호 생략", "항상 중괄호", "줄을 추가하면 조용히 범위 밖"]]},
-{"t": "star", "x": "함정 카드의 **❌ → ✅** 짝이 그대로 OX·빈칸 문제로 나오기 좋음."},
-{"t": "mem", "x": "**입·문·계·제·상·난** (입력·문자열·계산·제어문·상수·난수)"}
-]}
-]},
-{"id": "c3", "title": "3회차 · 타입 시스템과 복합 타입", "sub": "Ch 10~13", "parts": [
-{"id": "p3-1", "title": "자동 형변환과 부호 섞기", "ch": "Ch 10.1~10.3, 10.5", "sum": "타입 변환은 **자동으로, 조용히** 일어난다. 특히 부호 있는 값과 없는 값을 섞으면 **−1 이 42억**이 된다.", "key": ["승격(안전) · 수치 변환(손실 가능) · 산술 변환(맞추기)", "`-1 < 1u` 은 false", "`i < v.size()` 는 부호 섞기 경고"], "blocks": [
-{"t": "ana", "x": "💱 환전소. 작은 돈 → 큰 지갑(승격)은 안전하지만, 큰 돈 → 작은 지갑(축소)은 넘치는 만큼 버려짐."},
-{"t": "h", "x": "변환 3종류"},
-{"t": "tbl", "h": ["종류", "예", "안전?"], "r": [["승격", "char·short·bool → int, float → double", "✅ 값 안 잃음"], ["수치 변환", "double → int, int → short", "⚠️ 값을 잃을 수 있음"], ["산술 변환", "`a + b` 에서 두 타입을 맞춤", "⚠️ 부호 섞기가 여기서 터짐"]]},
-{"t": "code", "x": "int    i { };\ni = 3.7;               // 3 — 0.7 사라짐\nint n { 'A' + 1 };     // 66 — char 가 int 로 승격\nshort a { 1 }, b { 2 };\nauto s { a + b };      // short + short 도 int 가 됨"},
-{"t": "fix", "x": "PPT 코드가 `short a { 1 }, b { 2 };` 에서 끝나 있어 마지막 줄을 보충함 — “short 끼리 더해도 결과는 int”."},
-{"t": "h", "x": "부호 섞기 함정"},
-{"t": "code", "x": "int x { -1 };\nunsigned int y { 1 };\nstd::cout << (x < y);   // 0 (false!) — -1 이 4294967295 로 바뀜\n\nstd::vector<int> v { 1, 2, 3 };\nfor (int i { 0 }; i < v.size(); ++i)   // ⚠️ 경고: v.size() 는 unsigned"},
-{"t": "tip", "x": "`-Wconversion -Wsign-conversion` 을 켜면 값을 잃는 변환을 경고해 줌."},
-{"t": "trap", "x": [["`int` 와 `unsigned` 를 비교", "부호를 한 식에 섞지 않기", "signed 가 unsigned 로 바뀌어 −1 이 42억"]]},
-{"t": "star", "x": "signed 와 unsigned 를 섞으면 **signed 가 unsigned 로** 바뀐다 → `-1 < 1u` 은 **false**."},
-{"t": "mem", "x": "unsigned 랑 만나면 signed 가 **져서** unsigned 옷으로 갈아입음"}
-]},
-{"id": "p3-2", "title": "static_cast 와 타입 별칭", "ch": "Ch 10.4, 10.6~10.7", "sum": "변환은 **`static_cast<타입>(값)`** 으로 드러내 쓴다. `using` 별칭은 새 타입이 아니라 **별명**일 뿐.", "key": ["변환은 static_cast, `(double)a` 금지", "using/typedef = 별명, 새 타입 X", "축소는 `{}` 가 막고, 부호는 섞지 않기"], "blocks": [
-{"t": "ana", "x": "🏷️ using 별칭 = 닉네임. “철수”를 “쭈니”라고 불러도 같은 사람 — 다른 사람 취급해 주지 않음."},
-{"t": "h", "x": "캐스트 비교"},
-{"t": "vs", "a": {"h": "❌ C 스타일", "x": "double r = (double)a / b;\n// 무슨 변환인지 안 보임\n// 위험한 변환도 조용히 함\n// 검색하기 어려움"}, "b": {"h": "✅ static_cast", "x": "double r = static_cast<double>(a) / b;\n// 값 변환만 허용\n// 위험하면 컴파일 오류\n// 눈에 띄고 검색 쉬움"}},
-{"t": "tip", "x": "일부러 자를 때도 `int n { static_cast<int>(4.9) };` 처럼 써서 “알고 자른 것”을 드러냄."},
-{"t": "h", "x": "타입 별칭"},
-{"t": "code", "x": "typedef std::vector<int> Scores;   // 옛 방식\nusing Scores = std::vector<int>;   // ✅ 요즘 방식\n\nusing Meter  = double;\nusing Second = double;\nMeter m { 10 }; Second t { 2 };\ndouble v = m + t;                  // ⚠️ 통과 — 단위가 달라도 못 막음"},
-{"t": "h", "x": "형변환 한눈에"},
-{"t": "tbl", "h": ["변환", "값 잃나", "대응"], "r": [["승격", "없음", "신경 안 써도 됨"], ["수치 변환", "있을 수 있음", "`-Wconversion`"], ["축소 변환", "있음", "`{ }` 초기화가 막음"], ["산술 변환", "부호 섞을 때", "부호 섞지 말기"], ["명시적 변환", "의도대로", "`static_cast`"]]},
-{"t": "fix", "x": "3회차 표지에 “타입 추론(auto)·함수 템플릿”이 있지만 본문엔 없음. 템플릿은 **5회차**에서. auto 는 “초기값을 보고 타입을 정한다”(`auto x { 5 };` → int)만 알면 됨."},
-{"t": "trap", "x": [["`(double)a / b`", "`static_cast<double>(a) / b`", "어떤 변환인지 안 드러남"], ["`using Meter = double;` 로 단위 구분을 기대", "별칭은 구분 못 한다는 걸 알기", "Meter + Second 도 그냥 double + double"]]},
-{"t": "star", "x": "3회차 형변환 3원칙 — ① `{ }` 가 축소를 잡는다 ② 부호를 섞지 않는다 ③ 변환은 `static_cast` 로."},
-{"t": "mem", "x": "별칭 = **닉네임** (같은 사람)"}
-]},
-{"id": "p3-3", "title": "함수 오버로딩", "ch": "Ch 11.1~11.4", "sum": "**이름은 같고 매개변수(개수·타입)가 다른** 함수 여러 개. 반환 타입만 다른 건 안 된다.", "key": ["오버로드 = 매개변수 개수·타입 (반환형 X)", "순서: 정확 → 승격 → 표준 → 사용자 → 가변", "같은 등급 둘 = 모호함 오류"], "blocks": [
-{"t": "ana", "x": "👨‍🍳 “요리해 줘” 한마디에 재료(인자)를 보고 셰프가 레시피를 고름. 같은 재료면 고를 수 없음."},
-{"t": "h", "x": "되는 것 / 안 되는 것"},
-{"t": "code", "x": "int    add(int a, int b);          // ✅\ndouble add(double a, double b);    // ✅ 타입이 다름\nint    add(int a, int b, int c);   // ✅ 개수가 다름\n// double add(int a, int b);       // ❌ 반환형만 다름\n// int add(int x, int y);          // ❌ 이름만 다름"},
-{"t": "tbl", "h": ["구분 기준 ✅", "구분 기준 ❌"], "r": [["매개변수 **개수**", "반환 타입"], ["매개변수 **타입**", "매개변수 이름"], ["", "값 매개변수의 const"]]},
-{"t": "li", "x": ["반환형으로 못 고르는 이유: `add(1, 2);` 처럼 반환값을 안 쓰고 부를 수 있어서"]},
-{"t": "h", "x": "컴파일러가 고르는 순서"},
-{"t": "flow", "x": [["① 정확히 일치", "그대로 맞음"], ["② 승격", "char → int 등"], ["③ 표준 변환", "int → double 등"], ["④ 사용자 정의", "변환 생성자 등"], ["⑤ 가변 인자", "`...`"]]},
-{"t": "code", "x": "void print(int);  void print(double);\nprint('a');       // char → int 승격이 먼저 → print(int)\n\nvoid f(int);  void f(long);\nf(3.0);           // ❌ 둘 다 같은 등급 → 모호함(ambiguous)"},
-{"t": "trap", "x": [["반환형만 바꿔 오버로드", "매개변수를 다르게", "호출만으로는 구분 불가 → 컴파일 오류"], ["같은 등급 후보가 둘 (`f(int)`, `f(long)` 에 `f(3.0)`)", "인자 타입을 맞춰 호출", "모호함 오류"]]},
-{"t": "star", "x": "오버로드는 **매개변수 개수·타입**으로만 구분. 고르는 순서 **정·승·표·사·가**."},
-{"t": "mem", "x": "**정·승·표·사·가** (정확 → 승격 → 표준 → 사용자 → 가변)"}
-]},
-{"id": "p3-4", "title": "기본 인자", "ch": "Ch 11.5", "sum": "기본값은 **오른쪽부터** 채우고, **선언(헤더)에 한 번만** 적는다.", "key": ["오른쪽부터", "선언(헤더)에 한 번만", "오버로드와 섞으면 모호함 주의"], "blocks": [
-{"t": "ana", "x": "🍔 세트 메뉴: 음료(마지막 칸)는 기본 콜라. 앞 칸(버거)을 비워 두고 뒤만 고를 순 없음."},
-{"t": "h", "x": "규칙"},
-{"t": "code", "x": "void print(int value, int base = 10);   // 헤더의 선언에만\n\nvoid print(int value, int base) { }     // 정의엔 다시 안 씀\n\nprint(15);       // base = 10\nprint(15, 16);   // base = 16\n// void f(int a = 1, int b);            // ❌ 오른쪽부터 채워야 함"},
-{"t": "tbl", "h": ["규칙", "내용"], "r": [["위치", "기본값 있는 매개변수는 **오른쪽에 몰기**"], ["적는 곳", "선언·정의 중 **한 곳** (보통 헤더)"]]},
-{"t": "trap", "x": [["`void f(int);` 와 `void f(int, int = 0);` 을 같이 둠", "하나로 합치기", "`f(1)` 이 모호해져 오류"]]},
-{"t": "star", "x": "기본 인자는 **오른쪽부터**, **선언에 한 번만**."},
-{"t": "mem", "x": "기본값은 **꼬리**부터 (오른쪽 끝)"}
-]},
-{"id": "p3-5", "title": "lvalue/rvalue 와 값·참조·포인터 그림", "ch": "Ch 12.1~12.2", "sum": "**lvalue** = 이름·주소가 있는 것, **rvalue** = 잠깐 생긴 임시 값. 값·참조·포인터는 “**별개 객체인가? 널이 될 수 있나?**”로 구분.", "key": ["lvalue = 주소 있음, rvalue = 임시", "`=` 왼쪽엔 lvalue 만", "값(사본) · 참조(별명) · 포인터(주소 쪽지)"], "blocks": [
-{"t": "ana", "x": "🏠 lvalue = 주소 있는 집, rvalue = 잠깐 지나가는 택배 상자. 상자엔 주소를 못 붙임."},
-{"t": "h", "x": "lvalue vs rvalue"},
-{"t": "tbl", "h": ["", "lvalue", "rvalue"], "r": [["뜻", "이름 있고 주소 있음", "임시 값"], ["수명", "식이 끝나도 남음", "식이 끝나면 사라짐"], ["예", "`x`, `arr[0]`, `*ptr`", "`5`, `x + 1`, `\"abc\"`"], ["`=` 왼쪽에", "✅", "❌"], ["`&` 로 주소", "✅", "❌"]]},
-{"t": "code", "x": "int x { 5 };\nx = 10;          // ✅ x 는 lvalue\n// 5 = x;        // ❌ 5 는 rvalue\nint* p { &x };   // ✅ 주소 있음\n// &5            // ❌ 임시 값엔 주소 없음"},
-{"t": "h", "x": "값 · 참조 · 포인터"},
-{"t": "tbl", "h": ["전달", "모양", "함수 안에 생기는 것", "별개 객체?", "널 가능?"], "r": [["값", "`f(int p)`", "**복사본**", "✅", "❌"], ["참조", "`f(int& r)`", "원본의 **다른 이름**", "❌", "❌"], ["포인터", "`f(int* q)`", "원본 **주소를 담은 변수**", "✅", "✅"]]},
-{"t": "trap", "x": [["`5 = x;` 처럼 임시 값에 대입", "`x = 5;`", "rvalue 는 `=` 왼쪽에 못 옴"], ["`&5` 로 리터럴 주소를 얻으려 함", "변수에 담고 `&x`", "rvalue 엔 주소가 없음"]]},
-{"t": "star", "x": "값 = **사본**, 참조 = **별명**, 포인터 = **주소 쪽지**."},
-{"t": "mem", "x": "**l**value = **l**ocation(위치) 있음"}
-]},
-{"id": "p3-6", "title": "참조", "ch": "Ch 12.3~12.6", "sum": "참조 = 원본의 **다른 이름**. 반드시 초기화, 바꿔 달 수 없음, 널 불가. 큰 건 **const&** 로 받기.", "key": ["참조 3규칙: 초기화, 재지정 X, 널 X", "const& 는 임시 값도 받음", "기본 자료형은 값, 그 외는 const&"], "blocks": [
-{"t": "ana", "x": "📛 참조 = 별명. “철수”를 “반장”이라 불러도 같은 사람이고, 반장이라는 별명을 다른 사람에게 옮길 수 없음."},
-{"t": "h", "x": "참조 3규칙"},
-{"t": "code", "x": "int x { 5 };\nint& ref { x };    // ref = x 의 별명\nref = 10;          // x 도 10\n\n// int& r2;        // ❌ 초기화 필수\n// ref = y;        // ⚠️ \"y 를 가리켜라\"가 아니라 x 에 y 값을 대입\n// int& r3 { 5 };  // ❌ 임시 값에 붙을 수 없음\nconst int& cr { 5 };  // ✅ const 참조는 됨 (임시 값 수명 연장)"},
-{"t": "tbl", "h": ["규칙", "내용"], "r": [["①", "반드시 초기화"], ["②", "한 번 정하면 다른 대상으로 못 바꿈"], ["③", "널이 될 수 없음"], ["보너스", "**const&** 는 임시 값에도 붙고, 그 수명을 늘려 줌"]]},
-{"t": "h", "x": "함수에 넘길 때"},
-{"t": "code", "x": "void byValue(std::string s)           { s += \"!\"; }  // 사본 수정 → 원본 그대로\nvoid byRef(std::string& s)            { s += \"!\"; }  // 원본 수정\nvoid byConstRef(const std::string& s) { std::cout << s; }  // 복사 없이 읽기\nbyConstRef(\"리터럴도 OK\");             // const& 라서 가능"},
-{"t": "tbl", "h": ["무엇을", "이렇게 받기"], "r": [["int, double, char, bool, enum", "**값**"], ["string, vector 를 읽기만", "**const&**"], ["문자열 읽기만", "**string_view**"], ["원본을 고쳐야 함", "**&**"], ["어차피 사본이 필요", "**값**"]]},
-{"t": "trap", "x": [["`ref = y;` 로 ref 를 y 에 다시 연결하려 함", "참조는 재지정 불가임을 기억", "x 에 y 값이 대입될 뿐"]]},
-{"t": "warn", "x": "호출 코드 `byRef(msg);` 만 봐선 msg 가 바뀌는지 안 보임 → 함수 이름으로 드러내기."},
-{"t": "star", "x": "참조 = **초기화 필수 · 재지정 불가 · 널 불가**. const& 는 임시 값도 받음."},
-{"t": "mem", "x": "**작은 건 값, 큰 건 const&**"}
-]},
-{"id": "p3-7", "title": "포인터", "ch": "Ch 12.7~12.11", "sum": "포인터 = **주소를 담는 변수**. `&` 로 주소를 얻고 `*` 로 따라간다. 없으면 **nullptr**, 쓰기 전엔 **널 검사**.", "key": ["`&x` 주소, `*p` 따라가기, 없으면 nullptr", "const 위치: `*` 왼쪽 = 값, 오른쪽 = 포인터", "포인터 매개변수는 널 검사"], "blocks": [
-{"t": "ana", "x": "📍 포인터 = 주소가 적힌 쪽지. `*` = 쪽지에 적힌 집에 찾아가기. 빈 쪽지(nullptr)로 찾아가면 사고."},
-{"t": "h", "x": "기본"},
-{"t": "code", "x": "int x { 5 };\nint* ptr { &x };    // & : x 의 주소\n*ptr = 10;          // * : 따라가서 x 를 10 으로\nint* p2 { };        // nullptr (아무것도 안 가리킴)\nif (p2)             // 널 검사\n    std::cout << *p2;"},
-{"t": "tbl", "h": ["기호", "위치", "뜻"], "r": [["`&x`", "변수 앞", "x 의 **주소**"], ["`*p`", "포인터 앞", "p 가 가리키는 **값**"], ["`int*`", "타입", "int 를 가리키는 포인터"]]},
-{"t": "warn", "x": "초기화 안 한 포인터는 **널보다 더 위험**. 널은 바로 크래시라 찾기 쉽지만, 쓰레기 주소는 엉뚱한 메모리를 조용히 망가뜨림."},
-{"t": "h", "x": "const 와 포인터 4조합"},
-{"t": "tbl", "h": ["선언", "값 바꾸기", "포인터 바꾸기"], "r": [["`int* p`", "✅", "✅"], ["`const int* p`", "❌", "✅"], ["`int* const p`", "✅", "❌"], ["`const int* const p`", "❌", "❌"]]},
-{"t": "h", "x": "주소로 넘기기"},
-{"t": "code", "x": "void update(int* p)\n{\n    if (!p) return;   // 널 검사 필수\n    *p = 100;\n}\nupdate(&x);           // 호출에 & 가 보임 → \"바뀔 수 있음\" 신호\nupdate(nullptr);      // \"값 없음\" 표현 가능"},
-{"t": "tbl", "h": ["장점", "비용"], "r": [["nullptr 로 “없음” 표현", "매번 널 검사"], ["호출에 `&` 가 보임", "문법이 지저분"], ["가리키는 대상을 바꿀 수 있음", "널 역참조 위험"]]},
-{"t": "trap", "x": [["`int* p;` (초기화 안 함)", "`int* p { nullptr };`", "쓰레기 주소를 따라가 메모리 망가뜨림"], ["널 검사 없이 `*p`", "`if (p) *p = ...;`", "널 역참조 = UB"]]},
-{"t": "star", "x": "const 가 `*` **왼쪽이면 값**, **오른쪽이면 포인터**를 잠근다."},
-{"t": "mem", "x": "`*` 를 벽이라 치면 — const 가 **왼쪽**이면 값 잠금, **오른쪽**이면 포인터 잠금"}
-]},
-{"id": "p3-8", "title": "댕글링 · out 매개변수 · 참조 vs 포인터", "ch": "Ch 12.12~12.15", "sum": "**지역 변수의 참조·주소를 반환하지 마라** (3회차 최중요). 결과는 값으로 돌려주고, 기본은 참조·“없음”이 필요할 때만 포인터.", "key": ["지역 변수 참조·주소 반환 금지", "여러 결과는 struct 로 값 반환", "기본 참조, 없을 수 있으면 포인터"], "blocks": [
-{"t": "ana", "x": "🏚️ 댕글링 = 이사 간 집 주소 쪽지. 찾아가 보면 빈집이거나 남의 집."},
-{"t": "h", "x": "댕글링"},
-{"t": "code", "x": "int& getBad()\n{\n    int x { 5 };\n    return x;              // ❌ x 는 함수 끝나면 사라짐\n}\nconst std::string& getBad2()\n{\n    return \"임시 문자열\";   // ❌ 임시 string 이 바로 사라짐\n}\nint& getOK(int& value)     // ✅ 받은 걸 그대로 돌려주면 안전\n{\n    value *= 2;\n    return value;\n}"},
-{"t": "tbl", "h": ["반환", "안전?"], "r": [["지역 변수의 참조·주소", "❌ 댕글링"], ["인자로 받은 참조", "✅"], ["static·전역 객체의 참조", "✅"], ["값", "✅ 가장 안전"]]},
-{"t": "h", "x": "out 매개변수보다 값 반환"},
-{"t": "vs", "a": {"h": "out 매개변수", "x": "void getStats(const std::vector<int>& d,\n              int& outMin, int& outMax);\nint mn{}, mx{};\ngetStats(v, mn, mx);\n// mn, mx 가 바뀌는지\n// 호출만 봐선 모름"}, "b": {"h": "struct 로 값 반환", "x": "struct Stats { int min; int max; };\nStats getStats2(const std::vector<int>& d);\nauto [lo, hi] = getStats2(v);\n// 결과가 분명히 보임"}},
-{"t": "h", "x": "참조 vs 포인터 고르기"},
-{"t": "tbl", "h": ["상황", "쓸 것"], "r": [["반드시 있는 객체", "**참조**"], ["없을 수도 있음", "포인터 (nullptr)"], ["가리키는 대상을 바꿔야 함", "포인터"], ["읽기만 하는 큰 객체", "**const 참조**"], ["배열·동적 메모리", "일단 **std::vector**"]]},
-{"t": "trap", "x": [["지역 변수 참조 반환 `int& f() { int x; return x; }`", "값으로 반환 `int f()`", "함수가 끝나면 x 가 사라져 댕글링"], ["결과를 out 매개변수로 돌려줌", "struct 로 묶어 값 반환", "무엇이 바뀌는지 안 보임"]]},
-{"t": "star", "x": "**지역 변수의 참조·주소 반환 = 댕글링 UB.** 기본은 참조, “없음”이 필요하면 포인터."},
-{"t": "mem", "x": "댕글링 = **이사 간 집 주소**"}
-]},
-{"id": "p3-9", "title": "enum 과 enum class", "ch": "Ch 13.1~13.6", "sum": "숫자에 이름을 주려면 enum. 그런데 그냥 **enum 은 이름이 새고 숫자로 변한다** → **enum class** 를 쓴다.", "key": ["그냥 enum: 이름 샘, `red == apple` 통과", "enum class: `Color::red` 필수, 다른 타입 비교 오류", "정의 뒤 `;`"], "blocks": [
-{"t": "ana", "x": "🏫 enum = 교실 문이 없는 반. 학생 이름이 복도로 새어 나와 옆 반 학생과 이름이 부딪힘. enum class = 문 달린 반."},
-{"t": "h", "x": "왜 타입을 만드나"},
-{"t": "vs", "a": {"h": "숫자만 쓰면", "x": "int color { 2 };   // 2가 뭐지?\ndraw(10, 20, 30, 40);\n// 순서를 바꿔도 못 막음"}, "b": {"h": "의미에 타입을 주면", "x": "enum class Color { red, green, blue };\nColor c { Color::green };\nstruct Rect { int x, y, w, h; };\ndraw(Rect{ 10, 20, 30, 40 });"}},
-{"t": "li", "x": ["타입 정의는 헤더에 둬도 됨 (같은 정의면 여러 파일 OK)", "타입 이름은 대문자로 시작 (Color, Rect)", "정의 끝 **`};` 세미콜론** 잊지 말기"]},
-{"t": "h", "x": "그냥 enum 의 문제 2가지"},
-{"t": "code", "x": "enum Color { red, green, blue };       // 0, 1, 2\nenum Fruit { apple, banana, cherry };\n// enum Feeling { red };               // ❌ red 가 이미 있음 (이름이 샘)\nint n = red;                           // 숫자로 바로 변함\nif (red == apple) { }                  // ⚠️ 통과! 둘 다 0"},
-{"t": "tbl", "h": ["문제", "내용"], "r": [["① 이름 오염", "열거자가 바깥으로 새서 다른 enum 과 충돌"], ["② 숫자 변환", "다른 enum 끼리 비교·정수 대입이 됨"]]},
-{"t": "h", "x": "enum class"},
-{"t": "code", "x": "enum class Color { red, green, blue };\nenum class Fruit { apple, banana, red };   // ✅ red 겹쳐도 OK\nColor c { Color::red };                    // 반드시 Color::\n// if (c == Fruit::red)                    // ❌ 타입 달라 오류 (좋은 것!)\n// int n = c;                              // ❌ 자동 변환 없음\nint n { static_cast<int>(c) };             // 필요하면 명시적으로\nenum class Status : std::uint8_t { ok, fail };  // 바탕 타입 지정"},
-{"t": "trap", "x": [["`enum Color { red };`", "`enum class Color { red };`", "이름 오염 + 의도치 않은 정수 비교"], ["enum·struct 정의 끝 `;` 누락", "`};`", "엉뚱한 줄에서 오류"]]},
-{"t": "star", "x": "enum class = **이름 안 샘 + 숫자로 안 변함**. 정수가 필요하면 `static_cast<int>`."},
-{"t": "mem", "x": "**class** 가 붙으면 **문 달린 교실** → `Color::` 로 문 열고 들어감"}
-]},
-{"id": "p3-10", "title": "struct", "ch": "Ch 13.7~13.12", "sum": "관련 값을 **한 덩어리**로. 초기화는 **선언 순서대로**, 큰 struct 는 **const&** 로 넘기고, 포인터면 **`->`**.", "key": ["초기화는 선언 순서대로 (지정 초기화가 안전)", "넘길 땐 const&, 포인터면 `->`", "패딩 → 큰 멤버부터"], "blocks": [
-{"t": "ana", "x": "🗂️ struct = 서류철. 이름·번호·월급을 한 파일에 묶어 들고 다님."},
-{"t": "h", "x": "만들고 쓰기"},
-{"t": "code", "x": "struct Employee\n{\n    int id { };                // 기본값을 붙여 두면 안전\n    std::string name { };\n    double salary { 0.0 };\n};                             // ; 잊지 말기\n\nEmployee e1 { 1, \"홍길동\", 5000 };            // 선언 순서대로\nEmployee e2 { 2, \"김철수\" };                  // 빠진 건 기본값\nEmployee e3 { };                              // 전부 기본값\nEmployee e4 { .id = 3, .name = \"이영희\" };    // C++20 지정 초기화\ne1.salary = 6000;                             // . 으로 멤버 접근"},
-{"t": "h", "x": "넘기기 · 포인터"},
-{"t": "tbl", "h": ["상황", "이렇게"], "r": [["함수에 넘김", "`const Employee&`"], ["반환", "값으로 OK: `return { id, \"신입\", 3000 };`"], ["포인터로 멤버 접근", "`p->name` (= `(*p).name`)"], ["struct 안의 struct", "`c.ceo.name`"]]},
-{"t": "h", "x": "메모리 여백 (패딩)"},
-{"t": "tbl", "h": ["struct", "멤버 순서", "sizeof"], "r": [["BadOrder", "char, double, char", "**24**"], ["GoodOrder", "double, char, char", "**16**"]]},
-{"t": "li", "x": ["CPU 가 빨리 읽게 컴파일러가 빈칸(패딩)을 끼워 넣음", "그래서 크기 ≥ 멤버 크기 합. **큰 멤버부터** 쓰면 줄어듦"]},
-{"t": "trap", "x": [["struct 멤버 순서를 바꿈", "C++20 지정 초기화 `{ .id = 1 }`", "기존 `{ 1, \"홍\" }` 초기화가 조용히 다른 뜻"], ["`(*p).name` 에서 괄호 생략", "`p->name`", "`*p.name` 은 다른 뜻"]]},
-{"t": "star", "x": "`p->name` = `(*p).name`. struct 크기는 **패딩** 때문에 멤버 합보다 클 수 있다."},
-{"t": "mem", "x": "화살표 `->` = 포인터가 **가리키는 쪽의** 멤버"}
-]},
-{"id": "p3-11", "title": "매개변수 고르기 + 3회차 함정 총정리", "ch": "Ch 10~13", "sum": "매개변수는 **바꾸나? → 없을 수 있나? → 비싼가? → 문자열인가?** 순서로 정한다.", "key": ["바꾸면 &, 없으면 *, 크면 const&, 문자열은 view", "`for (const auto& e : v)` 로 복사 피하기", "함정 9개는 이 카드로 복습"], "blocks": [
-{"t": "ana", "x": "🧭 4갈래 길 안내판. 위에서부터 “예”가 나오는 첫 칸에서 멈추면 됨."},
-{"t": "h", "x": "4단계 결정"},
-{"t": "flow", "x": [["① 값을 바꿔야 하나?", "예 → `&` (참조)"], ["② 없을 수도 있나?", "예 → `*` (포인터)"], ["③ 복사가 비싼가?", "기본 자료형 → 값, 그 외 → `const&`"], ["④ 문자열인가?", "읽기만 → `string_view`"]]},
-{"t": "code", "x": "void tick(int count);                     // 작은 값, 읽기만 → 값\nvoid normalize(std::vector<double>& v);   // 바꿈 → &\nvoid print(const Employee& e);            // 큰 객체 읽기 → const&\nvoid log(std::string_view msg);           // 문자열 읽기 → view\nvoid attach(Node* parent);                // 없을 수 있음 → *"},
-{"t": "tip", "x": "왜 이렇게 받았는지 주석 한 줄 남기기 → 나중에 고칠 때 안전."},
-{"t": "trap", "x": [["`i < v.size()`", "`std::ssize(v)` 나 range-for", "부호 섞기"], ["`for (auto e : v)`", "`for (const auto& e : v)`", "원소마다 복사"], ["지역 변수 참조·주소 반환", "값으로 반환", "댕글링 UB"], ["템플릿 정의를 .cpp 에", "정의까지 헤더에", "링크 오류"], ["`enum Color { red };`", "enum class", "이름 오염·정수 비교"], ["널 검사 없이 역참조", "먼저 검사", "크래시"], ["`(double)a / b`", "`static_cast<double>(a) / b`", "변환이 안 보임"], ["struct 멤버 순서 변경", "지정 초기화", "초기화 뜻이 조용히 바뀜"], ["struct 끝 `;` 누락", "`};`", "엉뚱한 곳에서 오류"]]},
-{"t": "star", "x": "결정 순서 **바꾸나 → 없나 → 비싼가 → 문자열**."},
-{"t": "mem", "x": "**변·없·비·문** (변경? 없음? 비싼가? 문자열?)"}
-]}
-]},
-{"id": "c4", "title": "4회차 · 클래스 입문", "sub": "Ch 14", "parts": [
-{"id": "p4-1", "title": "왜 클래스가 필요할까", "ch": "Ch 14.1~14.2", "sum": "따로 노는 변수들을 **데이터 + 동작이 한 덩어리**인 클래스로 묶는다. 클래스는 **설계도**, 객체는 **찍어낸 물건**.", "key": ["따로 둔 변수엔 “한 덩어리” 정보가 없음", "클래스 = 설계도, 객체 = 실물", "std::string 도 클래스"], "blocks": [
-{"t": "ana", "x": "🐟 클래스 = 붕어빵 틀, 객체 = 붕어빵. 틀은 하나, 붕어빵은 몇 개든."},
-{"t": "h", "x": "변수를 따로 두면 생기는 문제"},
-{"t": "code", "x": "std::string name1 { \"홍길동\" };  int score1 { 90 };\nstd::string name2 { \"김철수\" };  int score2 { 75 };\n// 10명이면 변수 20개, 이름·점수를 엇갈려 써도 컴파일러는 모름"},
-{"t": "li", "x": ["“이 이름과 이 점수가 한 사람 것”이라는 정보가 코드에 **없음**", "함수에 넘기려면 인자가 계속 늘어남", "“학년”을 추가하면 관련 코드를 전부 찾아 고쳐야 함"]},
-{"t": "h", "x": "struct 는 반쪽짜리"},
-{"t": "tbl", "h": ["", "struct (3회차)", "class (오늘)"], "r": [["데이터 묶기", "✅", "✅"], ["동작(출력·판정) 넣기", "밖에 흩어짐", "✅ 안으로"], ["아무나 못 건드리게", "❌", "✅"]]},
-{"t": "h", "x": "클래스 vs 객체"},
-{"t": "tbl", "h": ["", "클래스", "객체"], "r": [["정체", "설계도", "설계도로 만든 실물"], ["개수", "한 번 정의", "몇 개든"], ["메모리", "차지 안 함", "차지함, 각자 값"]]},
-{"t": "flow", "x": [["설계도 정의", "`class Student { … };`"], ["객체 생성", "`Student a; Student b;`"], ["사용", "`a.print();`"]]},
-{"t": "tip", "x": "이미 써 봤음 — `std::string` 이 클래스, `std::string s;` 의 s 가 객체."},
-{"t": "trap", "x": [["이름·점수를 변수 따로따로 관리", "클래스로 묶기", "짝이 맞는지 컴파일러가 확인 못 함"], ["“클래스를 만들면 메모리를 차지한다”", "객체를 만들 때 차지", "클래스는 설계도일 뿐"]]},
-{"t": "star", "x": "클래스 = 설계도(메모리 X), 객체 = 실물(메모리 O)."},
-{"t": "mem", "x": "클래스 = **붕어빵 틀**, 객체 = **붕어빵**"}
-]},
-{"id": "p4-2", "title": "첫 클래스 만들기", "ch": "Ch 14.2", "sum": "`class 이름 { public: ... };` — **public:** 과 끝의 **`;`** 를 잊지 말 것. 멤버 값은 **객체마다 따로**.", "key": ["클래스 끝 `};` + `public:`", "멤버는 객체마다 따로", "`객체.멤버` (클래스.멤버 X)"], "blocks": [
-{"t": "ana", "x": "🏠 같은 설계도로 지은 집 두 채. 한 집 벽지를 바꿔도 옆집은 그대로."},
-{"t": "h", "x": "기본 모양"},
-{"t": "code", "x": "class Student {\npublic:                     // ← 없으면 밖에서 못 씀\n    std::string name {};\n    int score {};\n};                          // ← ; 잊지 말기\n\nStudent a {};\na.name = \"홍길동\";\na.score = 90;"},
-{"t": "h", "x": "객체마다 따로"},
-{"t": "code", "x": "Student a {}, b {};\na.score = 90;  b.score = 75;\na.score = 95;              // a 만 바뀜\n// a.score = 95, b.score = 75"},
-{"t": "h", "x": "점(.) 읽는 법"},
-{"t": "tbl", "h": ["코드", "맞나", "이유"], "r": [["`a.score = 90;`", "✅", "a 라는 물건의 점수"], ["`b.print();`", "✅", "b 에게 시킴"], ["`Student.score = 90;`", "❌", "설계도엔 값이 없음"], ["`score = 90;`", "❌", "누구 것인지 모름"]]},
-{"t": "trap", "x": [["클래스 끝 `;` 누락", "`};`", "엉뚱한 줄에서 오류"], ["`public:` 을 안 씀", "`public:` 추가", "class 는 기본 private → `a.name` 오류"]]},
-{"t": "star", "x": "입문 오류 TOP 2 — **`};` 누락**, **`public:` 누락**."},
-{"t": "mem", "x": "점(.) = “**누구의 무엇**” (`a.score` = a 의 점수)"}
-]},
-{"id": "p4-3", "title": "멤버 함수", "ch": "Ch 14.3", "sum": "동작도 클래스 안에 넣는다. 멤버 함수 안의 `name` 은 “**이 함수를 부른 객체의** name”.", "key": ["멤버 함수 = 클래스 안의 동작", "같은 함수, 부른 객체에 따라 결과 다름", "클래스 안에선 전방 선언 불필요"], "blocks": [
-{"t": "ana", "x": "📢 `a.print()` = a 에게 “자기소개 해 봐”. 같은 대사(함수)라도 말하는 사람이 다르면 내용이 다름."},
-{"t": "h", "x": "밖 vs 안"},
-{"t": "vs", "a": {"h": "함수를 밖에", "x": "void print(const Student& s)\n{\n    std::cout << s.name;\n}\nprint(a);"}, "b": {"h": "함수를 안에", "x": "class Student {\npublic:\n    std::string name {};\n    void print() { std::cout << name; }\n};\na.print();"}},
-{"t": "li", "x": ["안에 넣으면 `s.` 가 사라짐 — 누구인지는 `a.print()` 의 **a** 가 정함"]},
-{"t": "code", "x": "a.print();   // 홍길동 (90점)\nb.print();   // 김철수 (75점)  ← 같은 함수, 다른 결과"},
-{"t": "h", "x": "멤버 함수의 장점"},
-{"t": "tbl", "h": ["장점", "내용"], "r": [["이름 겹쳐도 OK", "`Student::print`, `Course::print` 는 남남"], ["순서 상관없음", "클래스 안에선 **아래 함수를 위에서 그냥 부름** (전방 선언 불필요)"]]},
-{"t": "code", "x": "class Student {\npublic:\n    int score {};\n    void report() { std::cout << gradeOf(); }   // 아래에 있어도 OK\n    char gradeOf() { return score >= 90 ? 'A' : 'B'; }\n};"},
-{"t": "trap", "x": [["멤버 함수 안에서 `s.name` 처럼 객체를 또 적음", "그냥 `name`", "부른 객체의 멤버가 자동으로 쓰임"], ["`Student.print();` (클래스 이름으로 호출)", "`a.print();`", "누구에게 시킬지 객체가 필요"]]},
-{"t": "star", "x": "멤버 함수 안의 멤버 이름 = **부른 객체의 것**."},
-{"t": "mem", "x": "`a.print()` = **a 에게 시키기**"}
-]},
-{"id": "p4-4", "title": "class vs struct, Roster 비교", "ch": "Ch 14.5", "sum": "둘의 **문법 차이는 하나** — struct 는 기본 public, class 는 기본 private. 지킬 규칙이 있으면 class.", "key": ["차이는 기본 접근 지정자 하나", "규칙이 있으면 class", "따로 노는 데이터는 실수를 못 막음"], "blocks": [
-{"t": "ana", "x": "🏪 struct = 진열대(누구나 집음), class = 카운터 뒤 진열장(점원을 통해서만)."},
-{"t": "h", "x": "유일한 차이"},
-{"t": "tbl", "h": ["", "struct", "class"], "r": [["기본 접근", "**public**", "**private**"], ["언제", "아무 값이나 OK (좌표, 색)", "규칙이 있음 (점수 0~100)"]]},
-{"t": "code", "x": "struct Point  { int x {}; };   Point p {};  p.x = 3;   // ✅\nclass  Point2 { int x {}; };   Point2 q {}; q.x = 3;   // ❌ private"},
-{"t": "h", "x": "함수만으로 명단을 관리하면"},
-{"t": "code", "x": "std::string names[100] {};\nint scores[100] {};\nint count { 0 };\naddStudent(names, scores, count, \"홍길동\", 90);   // 매번 셋을 같이 넘김\naverage(scores, count);   // 83   ✅\naverage(scores, 5);       // 49.8 ❌ 개수를 잘못 넘김 — 경고도 없음"},
-{"t": "fix", "x": "PPT 에 실행 결과가 빠져 있음. 잘못 넘기면 (90+75+84+0+0) / 5 = **49.8**."},
-{"t": "li", "x": ["names·scores·count 가 짝이라는 건 **사람 머릿속에만** 있음", "count 올리기를 깜빡해도 조용히 틀림"]},
-{"t": "h", "x": "클래스로 묶으면"},
-{"t": "code", "x": "class Roster {\n    std::vector<Student> m_list {};   // 개수는 vector 가 앎\npublic:\n    void add(std::string_view n, int s);\n    double average();\n};\nRoster r;\nr.add(\"홍길동\", 90);\nr.average();                          // 개수를 넘길 일이 없음"},
-{"t": "trap", "x": [["`average(scores, 5);` 처럼 개수를 따로 넘김", "데이터와 개수를 클래스로 묶기", "잘못 넘겨도 컴파일러가 모름 → 49.8"]]},
-{"t": "star", "x": "struct 기본 **public**, class 기본 **private** — 문법 차이는 이것뿐."},
-{"t": "mem", "x": "**S**truct = **S**hare(공개), **C**lass = **C**losed(잠김)"}
-]},
-{"id": "p4-5", "title": "생성자", "ch": "Ch 14.9, 14.11", "sum": "생성자 = 객체가 만들어질 때 **자동으로 불리는 함수**. 이름 = 클래스 이름, **반환형 없음**.", "key": ["생성자: 클래스 이름, 반환형 없음, 자동 호출", "기본 생성자 = 인자 없는 생성자", "생성자도 오버로딩 가능"], "blocks": [
-{"t": "ana", "x": "🎁 생성자 = 택배 상자에 물건을 **넣어서** 보내는 것. 빈 상자 받고 나중에 채우지 않아도 됨."},
-{"t": "h", "x": "생성자 없으면"},
-{"t": "code", "x": "Student a {};\na.name = \"홍길동\";   // 만든 뒤 한 줄씩 채움\na.score = 90;        // 깜빡하면 빈 값 — 컴파일러가 안 막음"},
-{"t": "h", "x": "생성자 3규칙"},
-{"t": "tbl", "h": ["규칙", "내용"], "r": [["① 이름", "클래스 이름과 같음"], ["② 반환형", "**없음** (void 도 아님)"], ["③ 호출", "직접 안 부름 — 만들면 **자동**"]]},
-{"t": "code", "x": "class Student {\npublic:\n    std::string name {};\n    int score {};\n    Student()                            // 기본 생성자 (인자 없음)\n    { name = \"이름없음\"; score = 0; }\n    Student(std::string_view n, int s)   // 인자 받는 생성자\n    { name = n; score = s; }\n};\n\nStudent a {};                // → 이름없음 (0점)\nStudent b { \"홍길동\", 90 };  // → 홍길동 (90점)"},
-{"t": "out", "x": "a 를 만들기 직전\n  Student 하나가 만들어짐    ← 부른 적 없는데 불림\nb 를 만들기 직전\n  Student 하나가 만들어짐", "cap": "기본 생성자에 출력을 넣었을 때"},
-{"t": "li", "x": ["생성자도 **여러 개** 가능 — 인자 개수·타입으로 컴파일러가 고름 (함수 오버로딩과 같음)"]},
-{"t": "fix", "x": "PPT 에 “**2회차**의 함수 오버로딩”이라고 되어 있지만 오버로딩은 **3회차**에서 배움."},
-{"t": "trap", "x": [["생성자에 `void` 를 붙임", "반환형 없이 `Student()`", "생성자는 반환형이 아예 없음"]]},
-{"t": "star", "x": "생성자 = **이름 같음 · 반환형 없음 · 자동 호출**."},
-{"t": "mem", "x": "생성자 = 객체의 **출생 신고** (태어날 때 딱 한 번 자동)"}
-]},
-{"id": "p4-6", "title": "초기화 리스트와 사라지는 기본 생성자", "ch": "Ch 14.10~14.11", "sum": "생성자는 **`: 멤버 { 값 }`** 으로 초기화한다. 생성자를 하나라도 만들면 **기본 생성자가 사라짐** → `= default`.", "key": ["초기화 리스트 `: m { v }` (const 멤버는 필수)", "생성자를 만들면 기본 생성자 사라짐", "`T() = default;` 로 되살리기"], "blocks": [
-{"t": "ana", "x": "🍳 본문 대입 = 빈 그릇을 꺼냈다가 다시 담기. 초기화 리스트 = 처음부터 음식을 담아서 꺼내기."},
-{"t": "h", "x": "본문 대입 vs 초기화 리스트"},
-{"t": "vs", "a": {"h": "본문에서 대입", "x": "Student(std::string_view n, int s)\n{\n    name = n;    // 빈 문자열로 만든 뒤\n    score = s;   // 다시 대입\n}"}, "b": {"h": "✅ 초기화 리스트", "x": "Student(std::string_view n, int s)\n    : name { n }    // 처음부터 n\n    , score { s }\n{ }"}},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["위치", "`:` 뒤, 본문 `{ }` 앞, 쉼표로 나열"], ["장점", "한 단계 덜 해서 빠름"], ["필수인 경우", "**const 멤버** 처럼 대입이 안 되는 멤버"]]},
-{"t": "h", "x": "함정: 기본 생성자가 사라짐"},
-{"t": "code", "x": "class Student {\npublic:\n    Student(std::string_view n, int s) : name { n }, score { s } {}\n};\nStudent a {};    // ❌ 컴파일 오류 — 인자 없는 생성자가 없음"},
-{"t": "out", "x": "error: no matching function for call to 'Student::Student(<brace-enclosed initializer list>)'", "cap": "GCC 13 실제 출력"},
-{"t": "code", "x": "class Student {\npublic:\n    Student() = default;                                       // ✅ 되살리기\n    Student(std::string_view n, int s) : name { n }, score { s } {}\n};"},
-{"t": "li", "x": ["`std::vector<Student> v(10);`, `Student arr[5];` 처럼 인자 없이 만드는 곳이 있으면 꼭 필요"]},
-{"t": "warn", "x": "남은 문제 — 전부 public 이라 `a.score = -50;` 을 아무도 안 막음 → 다음 파트."},
-{"t": "trap", "x": [["생성자 만든 뒤 `Student a {};`", "`Student() = default;` 추가", "기본 생성자가 사라져 컴파일 오류"]]},
-{"t": "star", "x": "생성자를 직접 만들면 **기본 생성자는 사라진다** → `T() = default;`"},
-{"t": "mem", "x": "생성자를 직접 만들면 컴파일러가 **공짜 기본 생성자를 회수**함"}
-]},
-{"id": "p4-7", "title": "private 과 getter/setter", "ch": "Ch 14.5~14.6", "sum": "멤버는 **private** 으로 숨기고, 값을 바꾸는 **문(setter)을 하나만** 열어 거기서 검사한다.", "key": ["private = 바깥 접근 불가", "setter 에서 검사 → 문은 하나", "`m_` = 멤버 변수"], "blocks": [
-{"t": "ana", "x": "🏦 은행 금고. 아무나 손 못 대고(private), 창구(setter) 하나에서만 확인 후 넣고 뺌."},
-{"t": "h", "x": "public 이면 생기는 일"},
-{"t": "code", "x": "a.score = -50;     // 컴파일 OK\na.score = 1000;    // 이것도 OK — 어디서 깨졌는지 찾기 어려움"},
-{"t": "flow", "x": [["① 막기", "바깥에서 못 건드리게 private"], ["② 문 하나", "값을 바꾸는 setter 하나만"], ["③ 검사", "그 문에서 규칙 확인"]]},
-{"t": "h", "x": "private 과 접근 함수"},
-{"t": "code", "x": "class Student {\nprivate:\n    std::string m_name {};\n    int m_score {};\npublic:\n    int getScore() { return m_score; }     // getter: 읽기\n    void setScore(int v)                   // setter: 쓰기\n    {\n        if (v < 0 || v > 100) return;      // 검사 통과해야만\n        m_score = v;\n    }\n};\n// a.m_score = -50;   // ❌ 'm_score' is private"},
-{"t": "tbl", "h": ["말", "뜻"], "r": [["접근 지정자", "public / private"], ["getter", "값을 **읽는** 함수"], ["setter", "값을 **쓰는** 함수 (검사 포함)"], ["`m_`", "멤버 변수 표시 관습"]]},
-{"t": "li", "x": ["private 이어도 **같은 클래스의 멤버 함수**는 자유롭게 씀"]},
-{"t": "trap", "x": [["멤버를 public 으로 둬 아무 데서나 대입", "private + setter", "잘못된 값이 어디서 들어왔는지 추적 불가"]]},
-{"t": "star", "x": "m_score 에 대입하는 곳은 프로그램 전체에서 **setScore 안 한 줄**. 규칙이 바뀌어도 고칠 곳이 하나."},
-{"t": "mem", "x": "private = **금고**, setter = **창구**"}
-]},
-{"id": "p4-8", "title": "생성자 검사와 캡슐화", "ch": "Ch 14.6~14.9", "sum": "생성자도 setter 를 거치게 하면 **잘못된 객체가 아예 안 생긴다**. getter/setter 를 기계적으로 다 만들지 말 것.", "key": ["생성자도 setter 를 거치게", "getter/setter 는 필요한 것만, 동작(addBonus)으로", "캡슐화 = 내부 변경에도 밖이 안전"], "blocks": [
-{"t": "ana", "x": "🚪 공항 보안검색대. 입국(생성)할 때도, 나중에 짐을 넣을 때(setter)도 같은 검색대를 지나감."},
-{"t": "h", "x": "생성자도 같은 문으로"},
-{"t": "code", "x": "Student(std::string_view n, int s) : m_name { n }, m_score { 0 }\n{\n    setScore(s);   // 생성자도 setter 를 거침\n}"},
-{"t": "tbl", "h": ["해 본 것", "결과"], "r": [["`Student a { \"홍길동\", 90 };`", "90"], ["`Student b { \"김철수\", -50 };`", "**0** (거부됨)"], ["`a.setScore(1000);`", "90 **그대로**"]]},
-{"t": "h", "x": "접근 함수 만드는 기준"},
-{"t": "tbl", "h": ["하지 말 것", "이렇게"], "r": [["멤버마다 get/set 기계적으로", "바깥이 **정말 필요한 것만**"], ["학번에도 setter", "안 바뀌는 값은 getter 만"], ["`setScore(getScore() + 5)`", "`addBonus(5)` — 의도가 이름에"], ["getScore / score / Score 섞기", "프로젝트 안에서 하나로 통일"]]},
-{"t": "h", "x": "캡슐화의 진짜 이유"},
-{"t": "vs", "a": {"h": "public 이었다면", "x": "struct Student {\n    std::string name {};\n};\n// 성/이름으로 쪼개면\n// s.name 쓰는 코드 전부 깨짐"}, "b": {"h": "private 이었다면", "x": "class Student {\n    std::string m_first {}, m_last {};\npublic:\n    std::string getName()\n    { return m_last + m_first; }\n};\n// 바깥 코드 수정: 0줄"}},
-{"t": "tbl", "h": ["말", "뜻"], "r": [["캡슐화 (encapsulation)", "내부는 숨기고 문만 열어 둠"], ["불변식 (invariant)", "객체가 항상 지켜야 할 조건 (점수 0~100)"]]},
-{"t": "trap", "x": [["모든 멤버에 getter/setter 를 다 만듦", "필요한 동작만 공개", "사실상 전부 public 과 같아짐"]]},
-{"t": "star", "x": "기준은 “멤버를 알아야 하나?”가 아니라 **“바깥이 이 객체로 뭘 하고 싶나?”**. 캡슐화의 가치 = **내부를 바꿔도 밖이 안 깨짐**."},
-{"t": "mem", "x": "캡슐화 = **알약 캡슐** — 안의 성분이 바뀌어도 먹는 법은 같음"}
-]},
-{"id": "p4-9", "title": "const 멤버 함수", "ch": "Ch 14.4", "sum": "멤버를 **안 바꾸는** 멤버 함수엔 예외 없이 **`const`**. 안 붙이면 const 객체·const& 로 받은 객체에서 못 부른다.", "key": ["읽기 전용 멤버 함수 → `() const`", "const 없으면 const 객체에서 호출 불가", "생성자·setter 엔 안 붙임"], "blocks": [
-{"t": "ana", "x": "👀 const 멤버 함수 = “**보기만 할게요**” 서약서. 서약서 없는 사람은 유리 진열장(const 객체)에 접근 금지."},
-{"t": "h", "x": "문제 상황"},
-{"t": "code", "x": "void report(const Student& s)   // 복사 피하려고 const& 로 받음\n{\n    std::cout << s.getScore();  // ❌ 컴파일 오류\n}"},
-{"t": "out", "x": "error: passing 'const Student' as 'this' argument discards qualifiers", "cap": "GCC 13 실제 출력"},
-{"t": "li", "x": ["컴파일러는 getScore 안을 **들여다보지 않음** — const 표시가 없으면 “바꿀 수도 있다”고 봄"]},
-{"t": "h", "x": "해결: 괄호 뒤에 const"},
-{"t": "code", "x": "class Student {\n    int m_score {};\npublic:\n    int getScore() const { return m_score; }   // ✅ 읽기만\n    void setScore(int v) { m_score = v; }      // 바꾸니까 const X\n};\nconst Student a { \"홍길동\", 90 };\na.getScore();     // ✅\na.setScore(80);   // ❌ const 객체는 못 바꿈"},
-{"t": "tbl", "h": ["붙인다", "안 붙인다"], "r": [["getScore, getName, print", "setScore"], ["멤버를 안 바꾸는 모든 함수", "**생성자** (채우는 게 일)"]]},
-{"t": "li", "x": ["const 를 붙이면 함수 안에서 실수로 멤버를 바꿀 때 **컴파일 오류** — 이게 더 큰 장점"]},
-{"t": "trap", "x": [["읽기 함수에 const 를 안 붙임", "`int get() const`", "const& 로 받은 곳에서 호출 불가 → 수정이 줄줄이 번짐"]]},
-{"t": "star", "x": "안 바꾸는 멤버 함수엔 **무조건 const** (나중에 붙이면 수정이 줄줄이 번짐)."},
-{"t": "mem", "x": "const 자리 = **괄호 닫고 바로 뒤** `int get() const`"}
-]},
-{"id": "p4-10", "title": "복사는 언제 일어날까", "ch": "Ch 14.7, 14.13~14.15", "sum": "같은 타입 객체로 새 객체를 만들면 **복사 생성자**가 불린다. 읽기만 하면 **const&**, 새로 만든 건 **값으로 반환**.", "key": ["`b{a}`, `c = a` → 복사 생성자", "읽기 인자 const&, 작은 값은 값", "새 객체 반환은 값으로"], "blocks": [
-{"t": "ana", "x": "📠 복사 생성자 = 복사기. 원본을 넣으면 똑같은 새 문서가 나옴."},
-{"t": "h", "x": "언제 복사되나"},
-{"t": "tbl", "h": ["코드", "불리는 것"], "r": [["`Student a { \"홍길동\" };`", "일반 생성자"], ["`Student b { a };`", "**복사 생성자**"], ["`Student c = a;`", "**복사 생성자** (대입 아님!)"]]},
-{"t": "code", "x": "Student(const Student& other) : m_name { other.m_name }   // 복사 생성자\n{ std::cout << \"복사!\"; }"},
-{"t": "li", "x": ["안 만들어도 컴파일러가 **알아서** 만들어 줌 (위 코드는 출력 보려고 직접 쓴 것)"]},
-{"t": "h", "x": "넘기고 돌려주기"},
-{"t": "tbl", "h": ["상황", "이렇게", "이유"], "r": [["객체를 읽기만", "`const Student&`", "복사 0회"], ["객체를 고침", "`Student&`", "원본 수정"], ["int·double 등 작은 값", "값", "참조가 더 느릴 수도"], ["새 객체를 반환", "값", "C++17 부터 복사 생략"], ["문자열 멤버 getter", "`const std::string&`", "값이면 매번 복사"]]},
-{"t": "trap", "x": [["`Student c = a;` 를 대입이라 생각", "새 객체가 태어나니 복사 생성", "c 는 이 줄에서 처음 생김"]]},
-{"t": "star", "x": "`Student c = a;` 는 **대입이 아니라 복사 생성**."},
-{"t": "mem", "x": "**새로 태어나면 생성자**, 이미 있는 것에 넣으면 대입"}
-]},
-{"id": "p4-11", "title": "파일 나누기 · 설계 순서 · explicit", "ch": "Ch 14.16", "sum": "**.h 에 클래스 선언, .cpp 에 `Student::` 붙여 정의.** 설계는 규칙 → 동작 → 데이터 순서. 인자 하나짜리 생성자엔 **explicit**.", "key": [".h 선언, .cpp 에 `Student::` 정의", "규칙 → 동작 → 데이터 → 생성자 → const → 반환형", "인자 하나 생성자엔 explicit"], "blocks": [
-{"t": "ana", "x": "📐 집 짓기: 규칙(건축법) 확인 → 방 용도(동작) 정하기 → 자재(데이터) 고르기. 자재부터 사면 쓸데없는 걸 삼."},
-{"t": "h", "x": "파일 나누기"},
-{"t": "vs", "a": {"h": "Student.h — 선언", "x": "#pragma once\nclass Student {\n    std::string m_name {};\n    int m_score {};\npublic:\n    Student(std::string_view, int);\n    int getScore() const;\n    void setScore(int v);\n};"}, "b": {"h": "Student.cpp — 정의", "x": "#include \"Student.h\"\nStudent::Student(std::string_view n, int s)\n    : m_name { n }, m_score { s } {}\nint Student::getScore() const\n{ return m_score; }\nvoid Student::setScore(int v)\n{ if (v >= 0 && v <= 100) m_score = v; }"}},
-{"t": "tbl", "h": ["규칙", "내용"], "r": [["`Student::`", "클래스 **밖**에서 정의할 때 “Student 의 멤버”라는 표시"], ["`const`", ".cpp 정의에도 **다시** 적어야 함"], ["클래스 정의", "헤더에 있어도 됨 (ODR 예외)"]]},
-{"t": "fix", "x": "이 PPT 코드의 생성자는 점수 검사를 안 함. 4-8 처럼 본문에서 `setScore(s);` 를 부르는 게 일관됨."},
-{"t": "h", "x": "클래스 만드는 6단계"},
-{"t": "flow", "x": [["1 규칙", "무엇을 막을지 (점수 0~100)"], ["2 동작 public", "print, getScore, addBonus"], ["3 데이터 private", "1·2에 필요한 것만"], ["4 생성자", "규칙 어긴 객체 금지, 인자 하나면 explicit"], ["5 const", "안 바꾸는 함수 전부"], ["6 반환형", "string 은 const&, int 는 값"]]},
-{"t": "h", "x": "explicit (보충)"},
-{"t": "fix", "x": "함정 표에 explicit 이 나오지만 설명 슬라이드가 없어 보충함."},
-{"t": "code", "x": "class Student {\npublic:\n    explicit Student(int s) : m_score { s } {}   // ✅ explicit\n};\nvoid printScore(const Student& s);\nprintScore('A');            // explicit 없으면: 'A' → 65 → Student{65} 로 몰래 변환!\nprintScore(Student { 90 }); // ✅ 명시적으로"},
-{"t": "h", "x": "용어"},
-{"t": "tbl", "h": ["한국어", "영어", "한 줄"], "r": [["클래스 / 객체", "class / object", "설계도 / 실물"], ["멤버 변수·함수", "member", "클래스 안의 변수·함수"], ["접근 지정자", "access specifier", "public / private"], ["접근 함수", "access function", "getter / setter"], ["생성자", "constructor", "만들 때 자동 호출"], ["기본 생성자", "default constructor", "인자 없는 생성자"], ["멤버 초기화 리스트", "member initializer list", "생성자 `:` 뒤 목록"], ["불변식", "invariant", "항상 지킬 조건"], ["캡슐화", "encapsulation", "숨기고 문만 열기"]]},
-{"t": "trap", "x": [["클래스 끝 `;` 누락", "`};`", "엉뚱한 줄에서 오류"], ["`public:` 안 씀", "`public:` 추가", "전부 private"], ["생성자 만든 뒤 인자 없이 생성", "`T() = default;`", "기본 생성자 사라짐"], ["읽기 함수에 const 누락", "`() const`", "const 객체에서 호출 불가"], ["인자 하나 생성자에 explicit 누락", "`explicit`", "`printScore('A')` 가 65점 — **조용히 틀림**"], ["사라진 객체의 멤버 참조 사용", "객체가 살아 있을 때만", "댕글링 UB"]]},
-{"t": "star", "x": "함정 6개 중 **explicit 누락만 조용히 틀린다** (나머지는 컴파일러가 잡음)."},
-{"t": "mem", "x": "설계 순서 **규·동·데·생·콘·반**"}
-]}
-]},
-{"id": "c5", "title": "5회차 · 클래스 더 쓰기", "sub": "Ch 15", "parts": [
-{"id": "p5-1", "title": "오늘 배울 도구 5개", "ch": "Ch 15", "sum": "4회차 Student 에 **this · 소멸자 · static · 템플릿 · friend** 를 붙인다. 비중은 소멸자와 템플릿이 가장 크다.", "key": ["도구 5개: this · 소멸자 · static · 템플릿 · friend", "비중: 소멸자·템플릿", "목표: 자동 뒷정리, 공유 값, 타입 일반화"], "blocks": [
-{"t": "ana", "x": "🧰 지난 시간에 만든 집(Student)에 공구 5개로 설비를 추가하는 시간."},
-{"t": "h", "x": "지난 시간 Student"},
-{"t": "code", "x": "class Student {\n    std::string m_name {};\n    int m_score {};\npublic:\n    Student() = default;\n    Student(std::string_view n, int s) : m_name { n }, m_score { s } { }\n    const std::string& getName() const { return m_name; }\n    void setScore(int v) { if (v >= 0 && v <= 100) m_score = v; }\n};"},
-{"t": "h", "x": "도구 5개"},
-{"t": "tbl", "h": ["도구", "한 줄", "비중"], "r": [["this", "“나를 부른 객체”를 가리키는 포인터", "짧게"], ["소멸자", "사라질 때 자동으로 불리는 뒷정리 함수", "⭐ 크게"], ["static 멤버", "클래스 전체에 **하나**만 있는 변수", "보통"], ["템플릿", "타입을 빈칸으로 둔 함수·클래스", "⭐ 크게"], ["friend", "바깥 함수 하나에게만 private 공개", "짧게"]]},
-{"t": "h", "x": "끝나면 할 수 있어야 할 것"},
-{"t": "li", "x": ["뒷정리가 **자동**으로 되게 만들기", "객체 수·다음 번호처럼 **모두가 공유하는 값** 다루기", "**타입만 다른** 함수·클래스를 하나로 합치기"]},
-{"t": "trap", "x": [["모든 클래스에 소멸자를 습관처럼 작성", "시작한 게 있을 때만", "멤버가 알아서 정리함 (5-4)"], ["static 을 “상수”로 오해", "static = 클래스에 하나", "값은 얼마든지 바뀜"]]},
-{"t": "star", "x": "5회차 핵심 = **소멸자(자동 뒷정리)** 와 **템플릿(타입 일반화)**."},
-{"t": "mem", "x": "**티·소·스·템·프** (this · 소멸자 · static · 템플릿 · friend)"}
-]},
-{"id": "p5-2", "title": "this 포인터", "ch": "Ch 15.1", "sum": "**this** = 이 함수를 **부른 객체**의 주소. 멤버 함수 안의 `name` 은 사실 `this->name`.", "key": ["this = 부른 객체 주소", "멤버 이름 = `this->멤버`", "같은 이름이면 `this->` 로 구분"], "blocks": [
-{"t": "ana", "x": "🙋 this = 멤버 함수가 “**지금 나를 부른 사람 누구야?**” 하고 볼 수 있는 명찰."},
-{"t": "h", "x": "어떻게 누구인지 알까"},
-{"t": "code", "x": "class Student {\npublic:\n    std::string name {};\n    void whoAmI() { std::cout << this << ' ' << this->name; }\n};\nStudent a {}; a.name = \"홍길동\";\na.whoAmI();     // this == &a"},
-{"t": "out", "x": "a 의 주소: 0x7ffddba106f0   b 의 주소: 0x7ffddba10710\n  부른 객체의 주소: 0x7ffddba106f0  이름: 홍길동\n  부른 객체의 주소: 0x7ffddba10710  이름: 김철수", "cap": "실제 실행 결과 (주소는 매번 다름)"},
-{"t": "li", "x": ["`a.whoAmI()` 를 부르면 **a 의 주소**가 몰래 함께 넘어감", "멤버 이름 `name` 은 컴파일러가 `this->name` 으로 바꿔 줌"]},
-{"t": "h", "x": "쓸모: 이름이 같을 때"},
-{"t": "vs", "a": {"h": "❌ this 없이", "x": "void setAll(std::string_view name,\n            int score)\n{\n    name = name;    // 자기 자신에게\n    score = score;  // 멤버는 그대로\n}\n// 결과: \" (0점)\""}, "b": {"h": "✅ this 로 구분", "x": "void setAll(std::string_view name,\n            int score)\n{\n    this->name = name;\n    this->score = score;\n}\n// 결과: \"홍길동 (90점)\""}},
-{"t": "warn", "x": "`name = name;` 은 문법상 정상이라 **오류가 안 남**. GCC 기본은 조용, VS `/W4` 는 C4458 경고."},
-{"t": "tip", "x": "가장 안전한 습관 = 매개변수 이름을 멤버와 **다르게** (그래서 `m_` 접두어)."},
-{"t": "trap", "x": [["매개변수와 멤버 이름이 같은데 `name = name;`", "`this->name = name;` 또는 이름을 다르게", "경고 없이 아무 일도 안 일어남"]]},
-{"t": "star", "x": "this = **부른 객체의 주소**. `name = name;` 은 **아무 일도 안 한다**."},
-{"t": "mem", "x": "this = **명찰** (“나를 부른 게 누구?”)"}
-]},
-{"id": "p5-3", "title": "소멸자", "ch": "Ch 15.4", "sum": "소멸자 **`~이름()`** = 객체가 사라질 때 **자동으로 불리는** 뒷정리 함수. 인자 X, 반환형 X, 딱 하나.", "key": ["`~T()`: 인자·반환형 없음, 하나뿐, 자동", "블록 끝에서 생성의 역순으로 소멸", "멤버 소멸자는 자동 → 대부분 소멸자 불필요"], "blocks": [
-{"t": "ana", "x": "🧹 생성자가 입주 청소라면, 소멸자는 이사 나갈 때 청소. 퇴실(블록 끝)하면 저절로 함."},
-{"t": "h", "x": "언제 불리나"},
-{"t": "code", "x": "class Guard {\n    std::string m_name {};\npublic:\n    Guard(std::string_view n) : m_name { n } { std::cout << m_name << \" 생성\\n\"; }\n    ~Guard() { std::cout << m_name << \" 소멸\\n\"; }   // 소멸자\n};\nint main()\n{\n    Guard a { \"첫째\" };\n    { Guard b { \"둘째\" }; }   // 블록 끝 → b 소멸\n    std::cout << \"main 끝\\n\";\n}                             // main 끝 → a 소멸"},
-{"t": "out", "x": "첫째 생성\n둘째 생성\n둘째 소멸      ← 부르지 않았는데 불림\nmain 끝\n첫째 소멸", "cap": "실제 실행 결과"},
-{"t": "h", "x": "생성자 vs 소멸자"},
-{"t": "tbl", "h": ["", "생성자", "소멸자"], "r": [["언제", "만들어질 때", "사라질 때"], ["이름", "`Student()`", "`~Student()`"], ["인자", "받을 수 있음", "**못 받음**"], ["개수", "여러 개", "**딱 하나**"], ["일", "준비", "뒷정리"]]},
-{"t": "h", "x": "순서: 쌓고 거꾸로 허물기"},
-{"t": "out", "x": "엔진 생성 → 바퀴 생성 → 기계 생성     ← 멤버 먼저(선언 순), 그다음 자신\n기계 소멸 → 바퀴 소멸 → 엔진 소멸     ← 자신 먼저, 멤버는 역순", "cap": "Machine 안에 엔진·바퀴 멤버가 있을 때"},
-{"t": "tip", "x": "멤버(string, vector)는 각자 소멸자가 알아서 정리 → 대부분 클래스는 소멸자를 **안 써도 됨**."},
-{"t": "trap", "x": [["소멸자에 인자나 반환형을 적음", "항상 `~Student()` 한 모양", "컴파일 오류"]]},
-{"t": "star", "x": "생성은 **멤버 → 자신**, 소멸은 **자신 → 멤버(역순)**."},
-{"t": "mem", "x": "`~` = **물결** — 파도에 쓸려 사라질 때 불림"}
-]},
-{"id": "p5-4", "title": "Timer 로 배우는 RAII", "ch": "Ch 15.4", "sum": "**생성자에서 시작, 소멸자에서 끝.** 중괄호로 감싸기만 하면 뒷정리가 저절로 된다 — 이게 **RAII**.", "key": ["RAII = 시작은 생성자, 끝은 소멸자", "어떻게 빠져나가든 소멸자는 불림", "소멸자 직접 호출 금지"], "blocks": [
-{"t": "ana", "x": "⏱️ 스톱워치를 방 문에 달아 둔 것. 방에 들어가면(생성) 시작, 나오면(소멸) 자동으로 멈추고 시간 출력."},
-{"t": "h", "x": "Timer"},
-{"t": "code", "x": "class Timer {\n    std::string m_label {};\n    std::chrono::steady_clock::time_point m_start {};\npublic:\n    Timer(std::string_view label)\n        : m_label { label }, m_start { std::chrono::steady_clock::now() } { }   // 시작 시각 기록\n    ~Timer()                                                                      // 걸린 시간 출력\n    {\n        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(\n                      std::chrono::steady_clock::now() - m_start).count();\n        std::cout << \"[\" << m_label << \"] \" << ms << \" ms\\n\";\n    }\n};"},
-{"t": "ref", "x": "std::chrono 문법은 외울 필요 없음 — “now() 로 지금 시각, 차이를 ms 로”만."},
-{"t": "code", "x": "int main()\n{\n    Timer whole { \"전체\" };\n    { Timer part { \"1단계\" }; work(120); }   // 블록 끝 → 1단계 시간 출력\n    { Timer part { \"2단계\" }; work(80);  }\n}                                            // main 끝 → 전체 시간 출력"},
-{"t": "out", "x": "[1단계] 끝 - 120 ms\n[2단계] 끝 - 80 ms\n[전체] 끝 - 200 ms", "cap": "실제 실행 결과"},
-{"t": "h", "x": "RAII"},
-{"t": "flow", "x": [["만든다", "생성자에서 시작"], ["쓴다", "중간에 무슨 일이 있어도"], ["사라진다", "소멸자에서 뒷정리 — **자동**"]]},
-{"t": "term", "ko": "RAII", "en": "Resource Acquisition Is Initialization", "d": "뒷정리를 **객체의 수명**에 맡기는 방식"},
-{"t": "li", "x": ["return 이 몇 개든, 어디로 빠져나가든 **소멸자는 반드시 불림** → “깜빡함”이 사라짐", "string·vector 가 메모리를 알아서 돌려주는 것도 RAII 덕분"]},
-{"t": "ref", "x": "진짜 쓸모는 9회차(메모리)·11회차(파일 닫기)에서."},
-{"t": "h", "x": "소멸자를 쓸까?"},
-{"t": "tbl", "h": ["상황", "소멸자"], "r": [["멤버가 int·string·vector 뿐", "❌ 안 씀"], ["생성자에서 뭔가 **시작**함 (Timer)", "✅ 끝내는 코드"], ["파일·메모리를 직접 잡음", "✅ 닫고 돌려주기"]]},
-{"t": "trap", "x": [["`a.~Student();` 직접 호출", "컴파일러에 맡김", "나중에 자동으로 또 불려 **두 번 소멸**"]]},
-{"t": "star", "x": "판단 기준 = “생성자에서 **시작한 게** 있나?” 있으면 소멸자에서 끝내고, 없으면 쓰지 않는다."},
-{"t": "mem", "x": "RAII = **문에 단 스톱워치** (들어가면 시작, 나오면 자동 정지)"}
-]},
-{"id": "p5-5", "title": "static 멤버", "ch": "Ch 15.6~15.7", "sum": "**static 멤버 변수** = 객체마다가 아니라 **클래스에 하나**. **static 멤버 함수** = 객체 없이 부르고 **this 가 없다**.", "key": ["static 멤버 변수 = 클래스에 하나, `inline static`", "static 함수 = `클래스::함수()`, this 없음", "수명은 프로그램 전체"], "blocks": [
-{"t": "ana", "x": "🏫 일반 멤버 = 학생 각자의 공책, static 멤버 = 교실 앞 칠판(반 전체에 하나)."},
-{"t": "h", "x": "왜 필요해?"},
-{"t": "tbl", "h": ["방법", "문제"], "r": [["일반 멤버 `int m_count`", "객체마다 따로 → 전체를 못 셈"], ["전역 변수 `g_count`", "누구나 건드림, 이름 오염"], ["**static 멤버**", "✅ 클래스 안에 있으면서 전체에 하나"]]},
-{"t": "h", "x": "static 멤버 변수 · 함수"},
-{"t": "code", "x": "class Student {\n    inline static int s_count { 0 };      // 클래스 전체에 하나\n    std::string m_name {};                // 객체마다 하나\npublic:\n    Student(std::string_view n) : m_name { n } { ++s_count; }   // 태어나면 +1\n    ~Student() { --s_count; }                                   // 사라지면 -1\n    static int count() { return s_count; }                      // static 함수\n};\nStudent::count();   // 0 — 객체 없이 호출"},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["`inline static`", "헤더에 써도 정의가 하나로 (C++17). 없으면 .cpp 에 따로 정의"], ["`s_` 접두어", "static 표시 관습"], ["객체가 0개여도", "static 변수는 존재"], ["static 함수", "**this 없음** → `m_name` 같은 객체 멤버 ❌, `const` 도 ❌"]]},
-{"t": "h", "x": "수명 비교"},
-{"t": "tbl", "h": ["", "지역 변수", "static 멤버", "전역 변수"], "r": [["수명", "블록 안", "프로그램 전체", "프로그램 전체"], ["누가 쓰나", "그 블록", "클래스가 정함 (private 가능)", "아무나"]]},
-{"t": "trap", "x": [["static 함수 안에서 `m_name` 사용", "static 멤버나 인자로 받은 객체만", "this 가 없어 컴파일 오류"]]},
-{"t": "star", "x": "static 함수엔 **this 가 없다** → 객체 멤버 못 씀, const 못 붙임."},
-{"t": "mem", "x": "static = **칠판**(하나), 일반 멤버 = **공책**(각자). 칠판 담당은 누구 공책인지 몰라서 못 봄"}
-]},
-{"id": "p5-6", "title": "학번 자동 부여 · 인원 세기", "ch": "Ch 15.6~15.7", "sum": "`m_id { s_nextId++ }` 로 **겹치지 않는 학번**, 생성자 `++` / 소멸자 `--` 로 **인원 수가 자동**으로 맞는다.", "key": ["`m_id { s_nextId++ }` — 현재 값 주고 증가", "생성자 ++, 소멸자 --", "블록 끝 → 소멸 → 인원 감소"], "blocks": [
-{"t": "ana", "x": "🎫 은행 번호표 기계. 한 번 뽑힌 번호는 손님이 떠나도 다시 안 나옴."},
-{"t": "h", "x": "코드"},
-{"t": "code", "x": "class Student {\n    inline static int s_count { 0 };            // 지금 인원\n    inline static int s_nextId { 20250001 };    // 다음 학번\n    std::string m_name {};\n    int m_id {};\npublic:\n    Student(std::string_view n) : m_name { n }, m_id { s_nextId++ } { ++s_count; }\n    ~Student() { --s_count; }\n    int id() const { return m_id; }\n    static int count() { return s_count; }\n};\nint main()\n{\n    Student a { \"홍길동\" };\n    Student b { \"김철수\" };\n    { Student c { \"이영희\" }; }   // 블록 끝 → c 소멸, 인원 -1\n}"},
-{"t": "out", "x": "시작: 0명\n홍길동 학번 20250001, 지금 2명\n이영희 학번 20250003, 블록 안 3명\n블록 밖 2명", "cap": "실제 실행 결과"},
-{"t": "tbl", "h": ["무엇", "왜"], "r": [["이영희가 **20250003**", "김철수가 20250002 를 가져감"], ["블록 밖 **2명**", "c 의 소멸자가 `--s_count`"], ["학번은 다시 안 줄어듦", "s_nextId 는 소멸자에서 안 건드림"]]},
-{"t": "trap", "x": [["`m_id { ++s_nextId }` (전위)", "`m_id { s_nextId++ }` (후위)", "첫 학번이 20250002 부터 시작"]]},
-{"t": "star", "x": "출력 예측 — **학번은 계속 증가**, **인원은 소멸하면 감소**."},
-{"t": "mem", "x": "학번 = **번호표**(다시 안 나옴), 인원 = **현재 대기 인원**(나가면 줄어듦)"}
-]},
-{"id": "p5-7", "title": "함수 템플릿", "ch": "Ch 11.6~11.7", "sum": "**`template <typename T>`** — 타입을 빈칸 T 로 두면 컴파일러가 **쓰는 타입마다 함수를 찍어낸다**.", "key": ["`template <typename T>` + 타입 자리에 T", "함수 템플릿은 인자로 T 추론", "`larger(3, 7.5)` → T 충돌"], "blocks": [
-{"t": "ana", "x": "🍪 쿠키 틀. 반죽(타입)만 바꿔 넣으면 같은 모양 쿠키(함수)가 나옴."},
-{"t": "h", "x": "문제: 타입만 다른 복붙"},
-{"t": "code", "x": "int         larger(int a, int b)                 { return a > b ? a : b; }\ndouble      larger(double a, double b)           { return a > b ? a : b; }\nstd::string larger(std::string a, std::string b) { return a > b ? a : b; }\n// 본문은 똑같고 타입만 다름"},
-{"t": "fix", "x": "PPT 에 “**4회차**의 오버로드”라고 되어 있지만 함수 오버로딩은 **3회차**에서 배움."},
-{"t": "h", "x": "템플릿으로 하나로"},
-{"t": "code", "x": "template <typename T>\nT larger(T a, T b)\n{\n    return a > b ? a : b;\n}\nlarger(3, 7);       // 7       — T = int\nlarger(2.5, 1.5);   // 2.5     — T = double\nlarger(s1, s2);     // 홍길동  — T = std::string"},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["`template <typename T>`", "“T 는 타입이다” 선언. 함수 바로 앞"], ["T 는 누가 정하나", "컴파일러가 **인자를 보고**"], ["실제로는", "int용·double용·string용 함수를 각각 찍어냄"]]},
-{"t": "h", "x": "T 가 안 정해지면"},
-{"t": "code", "x": "larger(3, 7.5);     // ❌ T 가 int? double?\nlarger(3.0, 7.5);   // ✅ 타입을 맞춤"},
-{"t": "out", "x": "error: no matching function for call to 'larger(int, double)'\nnote:   deduced conflicting types for parameter 'T' ('int' and 'double')", "cap": "GCC 13 실제 출력"},
-{"t": "tip", "x": "템플릿 오류는 **둘째 줄**(`deduced conflicting types`)이 진짜 이유."},
-{"t": "trap", "x": [["`larger(3, 7.5)`", "`larger(3.0, 7.5)`", "T 를 하나로 정할 수 없음"]]},
-{"t": "star", "x": "템플릿은 함수가 아니라 **함수를 찍어내는 틀**. 인자 타입이 다르면 T 충돌 오류."},
-{"t": "mem", "x": "템플릿 = **쿠키 틀**, T = **반죽 자리**"}
-]},
-{"id": "p5-8", "title": "클래스 템플릿", "ch": "Ch 15.5", "sum": "클래스도 `template <typename T>`. 다만 보통 **`Pair<int>`** 처럼 타입을 직접 적는다. 정의는 **헤더에 전부**.", "key": ["클래스 템플릿은 `Pair<int>` 처럼 타입을 적음", "`Pair<int>` ≠ `Pair<string>`", "템플릿 정의는 헤더에"], "blocks": [
-{"t": "ana", "x": "📦 크기는 같고 내용물만 다른 택배 상자. `상자<사과>`, `상자<책>` — 상자 설계는 하나."},
-{"t": "h", "x": "함수 템플릿 vs 클래스 템플릿"},
-{"t": "tbl", "h": ["", "함수 템플릿", "클래스 템플릿"], "r": [["T 정하기", "인자를 보고 **자동**", "보통 `< >` 에 **직접**"], ["예", "`larger(3, 7)`", "`Pair<int> p { 3, 7 };`"], ["표준 예", "`std::max`", "`std::vector<int>`"]]},
-{"t": "code", "x": "template <typename T>\nclass Pair {\n    T m_first {}, m_second {};\npublic:\n    Pair(const T& a, const T& b) : m_first { a }, m_second { b } { }\n    const T& larger() const { return m_first > m_second ? m_first : m_second; }\n};\nPair<int> nums { 3, 7 };                       // nums.larger() → 7\nPair<std::string> names { \"홍길동\", \"김철수\" };   // names.larger() → 홍길동"},
-{"t": "li", "x": ["`Pair<int>` 와 `Pair<std::string>` 은 **완전히 다른 타입** (서로 대입 불가)", "std::string, std::vector 도 전부 클래스 템플릿"]},
-{"t": "tip", "x": "템플릿 오류가 20줄이어도 **첫 줄과 마지막 줄**만 보면 됨."},
-{"t": "h", "x": "함정: 정의를 .cpp 에 두면"},
-{"t": "vs", "a": {"h": "❌ .h 선언 + .cpp 정의", "x": "// pair.h\ntemplate <typename T>\nclass Pair {\n    const T& larger() const;\n};\n// pair.cpp\ntemplate <typename T>\nconst T& Pair<T>::larger() const\n{ ... }"}, "b": {"h": "✅ .h 에 전부", "x": "// pair.h\ntemplate <typename T>\nclass Pair {\n    const T& larger() const\n    { ... }\n};\n// pair.cpp 없음"}},
-{"t": "out", "x": "undefined reference to 'Pair<int>::larger() const'", "cap": "GCC 13 실제 출력"},
-{"t": "li", "x": ["이유: `Pair<int>` 를 찍어내려면 **정의를 봐야** 하는데, main.cpp 를 컴파일할 땐 pair.cpp 를 못 봄"]},
-{"t": "trap", "x": [["템플릿 정의를 .cpp 에 분리", "헤더에 정의까지", "링크 오류 (undefined reference)"]]},
-{"t": "star", "x": "템플릿은 **헤더에 정의까지** — “긴 함수는 .cpp” 규칙의 **유일한 예외**."},
-{"t": "mem", "x": "틀(템플릿)은 **찍는 곳(헤더)** 옆에 둬야 찍을 수 있음"}
-]},
-{"id": "p5-9", "title": "friend", "ch": "Ch 15.8", "sum": "friend = 클래스가 **고른 바깥 함수 하나에게만** private 을 보여 준다. 기본은 getter, friend 는 마지막 수단.", "key": ["friend 선언은 클래스 안, 정의는 바깥", "friend 는 멤버 아님 → this 없음", "기본 getter, friend 는 최후"], "blocks": [
-{"t": "ana", "x": "🔑 집주인이 친구 한 명에게만 열쇠를 줌. 친구가 스스로 열쇠를 만들 수는 없음."},
-{"t": "h", "x": "문제: 둘을 대등하게 비교"},
-{"t": "code", "x": "bool isHigher(const Student& a, const Student& b)\n{\n    return a.m_score > b.m_score;   // ❌ private 이라 막힘\n}"},
-{"t": "out", "x": "error: 'int Student::m_score' is private within this context", "cap": "GCC 13 실제 출력"},
-{"t": "li", "x": ["“a 가 b 보다 높나”는 둘이 **대등** → 멤버(`a.isHigher(b)`)보다 바깥 함수가 자연스러움"]},
-{"t": "h", "x": "해결 2가지"},
-{"t": "vs", "a": {"h": "① getter (기본)", "x": "class Student {\npublic:\n    int getScore() const\n    { return m_score; }\n};\nbool isHigher(const Student& a,\n              const Student& b)\n{ return a.getScore() > b.getScore(); }"}, "b": {"h": "② friend", "x": "class Student {\n    friend bool isHigher(const Student& a,\n                         const Student& b);\n};\nbool isHigher(const Student& a,\n              const Student& b)\n{ return a.m_score > b.m_score; }"}},
-{"t": "tbl", "h": ["friend 특징", "내용"], "r": [["멤버인가?", "❌ 바깥의 평범한 함수 → **this 없음**, `a.m_score` 처럼 객체를 적어야 함"], ["friend 줄 위치", "public·private 어디든 상관없음"], ["누가 정하나", "**클래스가** 고름"]]},
-{"t": "h", "x": "언제 쓰나"},
-{"t": "tbl", "h": ["friend 가 맞을 때", "getter 면 충분할 때"], "r": [["두 객체 내부를 동시에 보는 비교", "값 하나 읽기"], ["`std::cout << a` 같은 연산자 (12회차)", "이미 getter 가 있음"], ["밖에 getter 를 두기 싫은 내부 값", "나머지 대부분"]]},
-{"t": "warn", "x": "friend 가 늘수록 캡슐화에 구멍 — “내부를 바꿔도 밖이 안 깨진다”는 장점이 사라짐."},
-{"t": "trap", "x": [["바깥 함수에서 private 직접 접근", "getter 또는 friend 선언", "is private within this context 오류"]]},
-{"t": "star", "x": "friend 는 **멤버가 아니다** → this 없음, 선언 위치 무관. 기본은 **getter**."},
-{"t": "mem", "x": "friend = **열쇠 받은 친구** (집주인이 줌)"}
-]},
-{"id": "p5-10", "title": "파일 나누기 · 클래스 안 타입 · 완성 Student", "ch": "Ch 15.2~15.3", "sum": "클래스 정의·짧은 함수·`inline static`·**템플릿은 헤더**, 긴 함수는 .cpp. 클래스 전용 타입은 **클래스 안에**.", "key": ["템플릿·inline static·짧은 함수는 헤더", "클래스 안 타입은 `Student::Grade`", "소멸자는 내가 시작한 것만 되돌림"], "blocks": [
-{"t": "ana", "x": "🗄️ 헤더 = 매장 진열대(손님이 봐야 하는 것), .cpp = 창고(긴 작업)."},
-{"t": "h", "x": "어디에 둘까"},
-{"t": "tbl", "h": ["무엇", "어디", "이유"], "r": [["클래스 정의", ".h", "쓰는 쪽이 크기·멤버를 알아야 함"], ["짧은 멤버 함수", ".h (클래스 안)", "자동 inline"], ["긴 멤버 함수", ".cpp", "고칠 때 그 파일만 다시 컴파일"], ["static 멤버 변수", ".h 에 `inline static`", "C++17 한 줄"], ["템플릿", "**전부 .h**", ".cpp 면 링크 오류"]]},
-{"t": "tip", "x": "헤더 맨 위 `#pragma once` — 같은 헤더 두 번 포함 방지 (표준은 아니지만 주요 컴파일러 모두 지원)."},
-{"t": "h", "x": "클래스 안에 타입 두기"},
-{"t": "code", "x": "class Student {\npublic:\n    enum class Grade { A, B, C, D, F };   // 클래스 안\n    Grade grade() const { return m_score >= 90 ? Grade::A : Grade::B; }\n};\nStudent::Grade g = a.grade();            // 밖에서는 Student:: 붙임\nif (g == Student::Grade::A) { }"},
-{"t": "h", "x": "두 회차 동안 자란 Student"},
-{"t": "code", "x": "class Student {\n    inline static int s_count { 0 };                       // 5회차 static\n    std::string m_name {};\n    int m_score {};\npublic:\n    Student(std::string_view n, int s) : m_name { n } { setScore(s); ++s_count; }\n    ~Student() { --s_count; }                              // 5회차 소멸자\n    const std::string& getName() const { return m_name; }  // 4회차 const\n    void setScore(int v) { if (v >= 0 && v <= 100) m_score = v; }   // 4회차 검사\n    static int count() { return s_count; }                 // 5회차 static 함수\n    friend bool isHigher(const Student& a, const Student& b);       // 5회차 friend\n};"},
-{"t": "tip", "x": "소멸자가 `--s_count` 하나뿐인 이유 — m_name 은 string 이 알아서 정리. 이 클래스가 **직접 시작한 것**(인원 세기)만 되돌림."},
-{"t": "trap", "x": [["템플릿을 .cpp 로 분리", "헤더에 전부", "링크 오류"]]},
-{"t": "star", "x": "밖에서 클래스 안 타입을 쓸 땐 **`Student::Grade::A`**."},
-{"t": "mem", "x": "헤더 = **진열대**, .cpp = **창고**"}
-]},
-{"id": "p5-11", "title": "5회차 함정 · 표준 라이브러리 · 8단계", "ch": "Ch 15", "sum": "함정 6개 중 **this 누락·소멸자 직접 호출은 컴파일러가 못 잡는다**. 표준 라이브러리도 오늘 도구로 만들어져 있다.", "key": ["조용: this 누락, 소멸자 직접 호출", "링크: 템플릿 .cpp 분리", "8단계: 규·동·데·생·끝·콘·정·친"], "blocks": [
-{"t": "ana", "x": "🔍 이제 cppreference 의 std::vector 페이지에 나오는 말(member function, static member, destructor, template)이 다 읽힘."},
-{"t": "h", "x": "언제 걸리나"},
-{"t": "tbl", "h": ["함정", "걸리는 때"], "r": [["`name = name;` (this 없이)", "😶 **안 걸림** (조용히 틀림)"], ["소멸자 직접 호출", "😶 **안 걸림** (두 번 소멸)"], ["static 함수에서 `m_name`", "컴파일"], ["`larger(3, 7.5)`", "컴파일"], ["바깥 함수에서 private", "컴파일"], ["템플릿 정의를 .cpp 에", "**링크**"]]},
-{"t": "h", "x": "표준 라이브러리 다시 보기"},
-{"t": "tbl", "h": ["써 본 것", "정체"], "r": [["`std::vector<int>`", "클래스 템플릿"], ["`std::max(3, 7)`", "함수 템플릿 (larger 와 같음)"], ["string 의 자동 메모리 정리", "소멸자 (RAII)"], ["`std::string::npos` (8회차)", "static 멤버 변수"], ["`steady_clock::now()`", "static 멤버 함수"]]},
-{"t": "h", "x": "클래스 만드는 8단계 (갱신판)"},
-{"t": "flow", "x": [["1 규칙", "무엇을 막을지"], ["2 동작 public", "매개변수 이름은 멤버와 다르게"], ["3 데이터 private", "필요한 것만"], ["4 생성자", "인자 하나면 explicit"], ["5 시작했으면 끝내기 ★", "시작한 게 없으면 소멸자 안 씀"], ["6 const", "안 바꾸는 함수 전부"], ["7 공유 값은 static ★", "개수, 다음 번호"], ["8 friend 는 최후 ★", "getter 로 되면 getter"]]},
-{"t": "h", "x": "용어"},
-{"t": "tbl", "h": ["한국어", "영어", "한 줄"], "r": [["this 포인터", "this pointer", "부른 객체를 가리킴"], ["소멸자", "destructor", "사라질 때 자동 호출"], ["RAII", "Resource Acquisition Is Initialization", "뒷정리를 수명에 맡김"], ["정적 멤버 변수·함수", "static member", "클래스에 하나 / 객체 없이 호출"], ["함수·클래스 템플릿", "function / class template", "타입을 빈칸으로"], ["프렌드 함수", "friend function", "private 에 접근하는 바깥 함수"]]},
-{"t": "trap", "x": [["`name = name;`", "`this->name = name;`", "경고 없이 아무 일도 안 함"], ["소멸자 직접 호출", "컴파일러에 맡김", "두 번 소멸"], ["static 함수에서 `m_name`", "static 멤버나 인자 객체만", "this 없음"], ["`larger(3, 7.5)`", "`larger(3.0, 7.5)`", "T 를 못 정함"], ["템플릿 정의를 .cpp 에", "헤더에", "undefined reference"], ["바깥 함수에서 private", "getter 또는 friend", "is private within this context"]]},
-{"t": "star", "x": "**조용히 깨지는 것 2개**(this 누락, 소멸자 직접 호출)와 **링크 오류 1개**(템플릿 .cpp)를 구분하기."},
-{"t": "mem", "x": "8단계 **규·동·데·생·끝·콘·정·친**"}
-]},
-{"id": "p5-12", "title": "5회차 실습 과제", "ch": "Ch 15", "sum": "this 눈으로 보기 → Timer 만들기 → static·friend → **Stack<T> 제출**.", "key": ["과제 4개를 순서대로", "Stack<T> 는 헤더에 전부", "두 타입으로 테스트"], "blocks": [
-{"t": "ana", "x": "🧗 계단 4칸. 하나씩 올라가면 마지막에 템플릿 스택이 완성됨."},
-{"t": "h", "x": "과제 4개"},
-{"t": "flow", "x": [["1 this 보기", "whoAmI() 로 this == &a 확인, `name = name` 버그 재현 후 수정"], ["2 Timer", "생성자 시각 기록, 소멸자 경과 시간 출력, 블록 2개 재기"], ["3 static·friend", "인원 수 + 학번 자동, isHigher friend"], ["4 Stack<T> 제출", "크기 10 배열, push·pop·top·size·empty·print"]]},
-{"t": "code", "x": "template <typename T>\nclass Stack {\n    T m_data[10] {};            // 크기 10 배열\n    int m_size { 0 };\npublic:\n    bool push(const T& v);      // 꽉 차면 false\n    void pop();                 // 비었으면 아무것도 안 함\n    const T& top() const;\n    int size() const { return m_size; }\n    bool empty() const { return m_size == 0; }\n    void print() const;\n};\n// Stack<int> 와 Stack<std::string> 둘 다로 시험"},
-{"t": "fix", "x": "과제 설명의 “4회차 Roster 의 그 배열”은 크기 **100** 이었음 (과제는 10). 구조가 같다는 뜻."},
-{"t": "ref", "x": "6회차는 이 Stack 을 vector 로 다시 쓰며 시작 — 코드 지우지 말 것."},
-{"t": "trap", "x": [["Stack 템플릿을 .h / .cpp 로 나눔", "헤더 하나에 전부", "링크 오류"], ["빈 스택에서 top()", "empty() 먼저 확인", "범위 밖 접근"]]},
-{"t": "star", "x": "Stack<T> 는 **템플릿 → 헤더에 전부**, **int 와 string 둘 다** 테스트."},
-{"t": "mem", "x": "과제 순서 **this → Timer → static·friend → Stack**"}
-]}
-]},
-{"id": "c6", "title": "6회차 · 여러 개를 담기", "sub": "Ch 16~17", "parts": [
-{"id": "p6-1", "title": "std::vector 시작하기", "ch": "Ch 16.1~16.3, 16.6", "sum": "몇 개가 올지 모르면 **std::vector**. 필요한 만큼 늘어나고, **자기 크기를 스스로 안다**.", "key": ["개수 모르면 vector", "size · [i] · push_back · back", "인덱스는 0부터"], "blocks": [
-{"t": "ana", "x": "🎒 vector = 늘어나는 가방. 물건이 많아지면 알아서 커지고, 몇 개 들었는지도 기억함."},
-{"t": "h", "x": "배열의 문제"},
-{"t": "code", "x": "int scores[100] {};       // 3명만 오면 97칸 낭비, 101명이면 넘침\naverage(scores, 5);       // 개수를 잘못 넘겨도 아무도 모름"},
-{"t": "fix", "x": "PPT 주석의 “397칸 낭비”는 100칸 배열이므로 **97칸**."},
-{"t": "term", "ko": "컨테이너", "en": "container", "d": "같은 타입 값을 여러 개 담는 타입 (vector 가 대표)"},
-{"t": "h", "x": "기본 사용법"},
-{"t": "code", "x": "#include <vector>\nstd::vector<int> scores { 90, 75, 84 };\nscores.size();          // 3\nscores[0];              // 90 (0부터 셈)\nscores.push_back(68);   // 뒤에 추가\nscores.back();          // 68 (마지막)"},
-{"t": "tbl", "h": ["함수", "하는 일"], "r": [["`size()`", "지금 몇 개"], ["`v[i]`", "i 번째 (0부터)"], ["`push_back(x)`", "뒤에 추가"], ["`back()`", "마지막 원소"]]},
-{"t": "h", "x": "개수 몰라도 그냥 담기"},
-{"t": "code", "x": "std::vector<int> scores {};\nint x {};\nwhile (std::cin >> x && x >= 0)\n    scores.push_back(x);          // 들어오는 대로\n// 입력 90 75 84 68 -1 → 4개 담김"},
-{"t": "tip", "x": "vector 를 쓰는 가장 큰 이유 = “최대 몇 개?”, “넘치면?” 고민이 **통째로 사라짐**."},
-{"t": "trap", "x": [["크기를 넉넉히 잡은 배열 + 개수 변수", "`std::vector`", "개수를 잘못 넘겨도 조용히 틀림"]]},
-{"t": "star", "x": "`< >` 안 = 담을 타입. `vector<int>`, `vector<Student>` — 5회차 **클래스 템플릿**."},
-{"t": "mem", "x": "vector = **늘어나는 가방**"}
-]},
-{"id": "p6-2", "title": "{ } 와 ( ) · [] 와 at() · size() 함정", "ch": "Ch 16.2~16.3", "sum": "**`{3}` = 원소 3 하나, `(3)` = 0 이 세 칸.** `[]` 는 검사 안 함, `at()` 은 검사함. `size()` 는 부호 없음.", "key": ["`{3}` 원소 하나 vs `(3)` 세 칸", "`[]` 검사 X(UB), `at()` 검사 O", "size() 는 unsigned → range-for"], "blocks": [
-{"t": "ana", "x": "🛒 `{3}` = 장바구니에 “3”이라는 물건 하나, `(3)` = 빈 칸 세 개짜리 장바구니."},
-{"t": "h", "x": "괄호에 따라 완전히 다름"},
-{"t": "tbl", "h": ["코드", "크기", "내용"], "r": [["`vector<int> a { 3 };`", "1", "3"], ["`vector<int> b ( 3 );`", "3", "0 0 0"], ["`vector<int> c { 3, 5 };`", "2", "3 5"], ["`vector<int> d ( 3, 5 );`", "3", "5 5 5"]]},
-{"t": "li", "x": ["값을 **나열** → `{ }`, “**몇 칸짜리**” → `( )`", "“초기화는 중괄호” 규칙의 **유일한 예외 지대**"]},
-{"t": "h", "x": "[] vs at()"},
-{"t": "tbl", "h": ["", "`v[10]`", "`v.at(10)`"], "r": [["범위 검사", "❌ 없음", "✅ 있음"], ["범위 밖이면", "쓰레기 값, 계속 실행 (UB)", "예외 던지고 멈춤"], ["결과", "종료 코드 0 (몰래 틀림)", "종료 코드 134 (`out_of_range`)"], ["언제", "범위가 확실할 때", "**배우는 동안**"]]},
-{"t": "h", "x": "size() 는 부호 없음"},
-{"t": "code", "x": "std::vector<int> v {};\nv.size() - 1;                      // 18446744073709551615 (−1 아님!)\nfor (int i = 0; i < v.size(); ++i) // ⚠️ 부호 섞기 경고"},
-{"t": "tbl", "h": ["해결", "코드"], "r": [["① range-for (가장 좋음)", "`for (int x : v)`"], ["② size_t 로 세기", "`for (std::size_t i = 0; i < v.size(); ++i)`"], ["③ int 로 바꾸기", "`static_cast<int>(v.size())`"]]},
-{"t": "trap", "x": [["`vector<int> v { 3 };` 로 3칸을 기대", "`vector<int> v ( 3 );`", "원소 3 하나짜리가 됨"], ["`v[10]` (범위 밖)", "`v.at(10)`", "검사 없이 쓰레기 값 = UB"], ["빈 vector 에서 `v.size() - 1`", "`v.empty()` 먼저 확인", "0 − 1 이 거대한 수"]]},
-{"t": "star", "x": "`{3}` **원소 하나**, `(3)` **세 칸**. `[]` 는 검사 X, `at()` 은 검사 O."},
-{"t": "mem", "x": "**소**괄호 = **수**량(칸 수), **중**괄호 = **줄**줄이 값"}
-]},
-{"id": "p6-3", "title": "크기 바꾸기 · range-for", "ch": "Ch 16.6~16.8", "sum": "추가·삭제는 `push_back` `pop_back` `resize` `clear`. 훑을 땐 **range-for** — 읽기는 **`const T&`**, 고치기는 **`T&`**.", "key": ["push_back · pop_back · resize · clear · empty", "읽기 `const T&`, 고치기 `T&`", "& 없이 고치면 원본 안 바뀜"], "blocks": [
-{"t": "ana", "x": "📸 `for (T x : v)` = 사진을 복사해서 낙서(원본 그대로). `for (T& x : v)` = 원본 사진에 직접 낙서."},
-{"t": "h", "x": "크기 바꾸기"},
-{"t": "tbl", "h": ["함수", "하는 일"], "r": [["`push_back(x)`", "뒤에 추가 (가장 많이 씀)"], ["`pop_back()`", "뒤에서 하나 빼기"], ["`resize(10)`", "길이를 10으로 (늘어난 칸은 0)"], ["`clear()`", "전부 비우기"], ["`empty()`", "비었나? (`size() == 0` 보다 읽기 쉬움)"]]},
-{"t": "h", "x": "range-for 3가지"},
-{"t": "code", "x": "for (const std::string& s : names) std::cout << s;   // 읽기만 → const&\nfor (int& x : scores) x += 5;                         // 고치기 → &\nfor (int x : scores) std::cout << x;                  // 작은 타입 읽기 → 값"},
-{"t": "tbl", "h": ["쓰는 법", "언제", "복사"], "r": [["`for (const T& x : v)`", "읽기만 — **기본**", "없음"], ["`for (T& x : v)`", "원소를 고칠 때", "없음"], ["`for (T x : v)`", "int·double 같은 작은 타입만", "매번"]]},
-{"t": "h", "x": "함정: & 를 빠뜨리면"},
-{"t": "code", "x": "for (std::string s : names) s += \"님\";    // 사본만 바뀜\nstd::cout << names[0];                     // 홍길동     ← 그대로\nfor (std::string& s : names) s += \"님\";   // 원본이 바뀜\nstd::cout << names[0];                     // 홍길동님"},
-{"t": "tip", "x": "range-for 는 인덱스가 없어서 **부호 함정·범위 이탈이 원천 차단**. Python `for x in list` 와 같음."},
-{"t": "trap", "x": [["원소를 고치려는데 `for (T x : v)`", "`for (T& x : v)`", "사본만 바뀌고 원본 그대로 (오류도 없음)"], ["큰 타입을 `for (std::string s : v)` 로 읽기", "`const std::string&`", "매번 복사"]]},
-{"t": "star", "x": "고칠 땐 **`&`**, 읽기만 할 땐 **`const&`**."},
-{"t": "mem", "x": "& 없음 = **복사본에 낙서**, & 있음 = **원본에 낙서**"}
-]},
-{"id": "p6-4", "title": "vector 의 메모리 · 넘기기 · 클래스 담기", "ch": "Ch 16.2, 16.5", "sum": "vector 객체는 **관리 정보 24바이트**뿐, 원소는 **힙**에. 함수엔 **const&** 로, 반환은 **값**으로. 내 클래스도 담을 수 있다.", "key": ["원소는 힙, vector 객체는 24바이트", "인자 const&, 반환은 값", "emplace_back = 안에서 바로 생성"], "blocks": [
-{"t": "ana", "x": "🗺️ vector 객체 = 창고 위치가 적힌 지도 한 장(24바이트). 물건(원소)은 멀리 있는 창고(힙)에 있음."},
-{"t": "h", "x": "메모리 위치"},
-{"t": "out", "x": "sizeof(std::array<int,1000>) = 4000 바이트\nsizeof(std::vector<int>)     = 24 바이트   ← 원소 수와 무관\n&v    = 0x7ffd863a7840 (스택)\n&v[0] = 0x55a5c864f2b0 (힙 — 멀리 있음)", "cap": "실제 실행 결과"},
-{"t": "li", "x": ["vector 안엔 **포인터 3개쯤**(시작·끝·용량 끝)만 → 원소 백만 개여도 24바이트", "원소를 힙에 둬서 크기를 늘릴 수 있음"]},
-{"t": "h", "x": "함수에 넘기기"},
-{"t": "tbl", "h": ["원소 10만 개", "무슨 일"], "r": [["값으로 `f(std::vector<int> v)`", "❌ 약 400KB 통째로 복사"], ["`f(const std::vector<int>& v)`", "✅ 복사 0"], ["값으로 반환 `std::vector<int> make()`", "✅ 만들 때 한 번뿐 (C++17 복사 생략)"]]},
-{"t": "h", "x": "내 클래스 담기"},
-{"t": "code", "x": "std::vector<Student> roster {};\nroster.push_back(Student { \"홍길동\", 90 });   // 만든 객체를 넣음\nroster.push_back(Student { \"김철수\", 75 });\nroster.emplace_back(\"이영희\", 84);            // 생성자 인자로 안에서 바로 만듦"},
-{"t": "fix", "x": "PPT 코드엔 김철수 줄이 없는데 출력엔 있어서 보충함."},
-{"t": "tbl", "h": ["함수", "차이"], "r": [["`push_back`", "이미 만든 객체를 넣음"], ["`emplace_back`", "**생성자 인자**를 받아 안에서 직접 만듦 → 복사 한 번 덜"]]},
-{"t": "out", "x": "  가 생성\n  나 생성\n  (블록 끝)\n  가 소멸    ← vector 의 소멸자가 원소 소멸자를 불러 줌\n  나 소멸", "cap": "vector 가 블록 끝에서 사라질 때"},
-{"t": "trap", "x": [["큰 vector 를 값으로 넘김", "`const std::vector<int>&`", "통째로 복사"], ["큰 걸 반환하면 느릴까 봐 out 매개변수 사용", "값으로 반환", "C++17 부터 반환 복사는 생략됨"]]},
-{"t": "star", "x": "`sizeof(vector)` 는 원소 수와 **무관**. vector 가 사라지면 원소도 **자동 소멸** (RAII)."},
-{"t": "mem", "x": "vector = **창고 지도** (지도는 작고 물건은 창고에)"}
-]},
-{"id": "p6-5", "title": "지우기 · 용량 · 무효화", "ch": "Ch 16.6~16.7", "sum": "가운데를 지우면 뒤가 당겨진다. **size(원소 수) ≠ capacity(의자 수)**. 의자가 모자라면 **통째로 이사** → 옛 주소는 무효.", "key": ["erase 는 비쌈, pop_back 은 쌈", "size ≠ capacity, reserve 로 미리", "추가 후 옛 주소·반복자는 무효"], "blocks": [
-{"t": "ana", "x": "🪑 size = 앉은 사람, capacity = 의자 수. 의자가 모자라면 더 큰 방으로 **전원 이사** — 옛 방 주소로 찾아가면 아무도 없음."},
-{"t": "h", "x": "지우기 · 복사 · 비교"},
-{"t": "code", "x": "v.erase(v.begin() + 1);    // 두 번째 지움 — 뒤를 한 칸씩 당김 (비쌈)\nv.pop_back();              // 마지막 지움 — 쌈\nstd::vector<int> a { 1, 2, 3 };\nstd::vector<int> b { a };  // 통째로 복사 — 서로 남남\nstd::vector<int> c { 1, 2, 3 };\na == c;                    // true — 원소를 하나씩 비교"},
-{"t": "fix", "x": "PPT 코드에서 `c` 가 선언 없이 쓰여 `std::vector<int> c { 1, 2, 3 };` 를 보충함."},
-{"t": "h", "x": "size 와 capacity"},
-{"t": "tbl", "h": ["몇 번째 추가", "size", "capacity", "무슨 일"], "r": [["1", "1", "1", "새 자리로 이사"], ["3", "3", "4", "두 배 (2 → 4)"], ["9", "9", "16", "두 배 (8 → 16)"], ["17", "17", "32", "20개 담는 동안 총 6번 이사"]]},
-{"t": "tip", "x": "대충 개수를 알면 `v.reserve(20);` → 이사 0번. 몰라도 두 배씩 늘어서 크게 느리진 않음."},
-{"t": "h", "x": "함정: 이사 후 옛 주소"},
-{"t": "code", "x": "std::vector<int> v { 1, 2, 3 };\nint* p = &v[0];      // 첫 원소 주소 기억\nv.push_back(4);      // 의자 부족 → 이사\nstd::cout << *p;     // ❌ 옛 주소 — UB"},
-{"t": "out", "x": "추가 전 주소: 0x5577f28452b0, 값 1\n추가 후 주소: 0x5577f28462e0     ← 바뀜\n옛 주소로 읽으면: 1467951173      ← 쓰레기", "cap": "실제 실행 결과"},
-{"t": "trap", "x": [["`push_back` 뒤 옛 포인터·참조·반복자 사용", "추가한 뒤 다시 얻기", "이사(재할당)로 무효 = UB"], ["훑는 반복문 안에서 push_back", "훑는 중엔 크기를 바꾸지 않기", "반복 대상이 이사가 버림"], ["앞쪽에서 자주 erase", "가능하면 pop_back", "뒤를 전부 당겨서 느림"]]},
-{"t": "star", "x": "**훑는 중엔 크기를 바꾸지 마라.** Java 는 예외, C++ 은 **조용히** 망가짐."},
-{"t": "mem", "x": "size = **앉은 사람**, capacity = **의자 수**, 의자 모자라면 **전원 이사**"}
-]},
-{"id": "p6-6", "title": "std::array", "ch": "Ch 17.1", "sum": "개수가 **딱 정해져 있으면** std::array. 쓰는 법은 vector 와 같고 **크기만 못 바꾼다**.", "key": ["`std::array<T, N>` — N 고정", "크기가 타입의 일부", "고민되면 vector"], "blocks": [
-{"t": "ana", "x": "🥚 array = 계란판. 12칸이면 영원히 12칸. vector = 늘어나는 가방."},
-{"t": "h", "x": "기본"},
-{"t": "code", "x": "#include <array>\nstd::array<int, 3> a { 90, 75, 84 };   // 3 이 타입의 일부\na.size();      // 3 (항상)\na.at(1);       // 75 — vector 와 같은 사용법\n// a.push_back(1);   // ❌ 없음"},
-{"t": "li", "x": ["size, at, [], range-for 가 vector 와 똑같이 동작", "`std::array<int,3>` 과 `std::array<int,4>` 는 **다른 타입**"]},
-{"t": "h", "x": "vector vs array"},
-{"t": "tbl", "h": ["", "std::vector", "std::array"], "r": [["크기", "실행 중 변함", "컴파일 때 고정"], ["원소 위치", "힙", "객체 안 (스택 가능)"], ["속도", "거의 같음", "아주 조금 빠름"], ["언제", "**대부분**", "개수가 확실히 고정"], ["예", "학생 명단", "요일 7개, RGB 3채널"]]},
-{"t": "trap", "x": [["나중에 크기가 바뀔 수도 있는데 array", "확실하지 않으면 vector", "바뀌면 전부 고쳐야 함"]]},
-{"t": "star", "x": "크기가 **타입의 일부** — `array<int,3>` ≠ `array<int,4>`. 고민되면 **vector**."},
-{"t": "mem", "x": "array = **계란판** (칸 수 고정)"}
-]},
-{"id": "p6-7", "title": "C 배열 · 배열 감쇠 · C 문자열", "ch": "Ch 17.7~17.10", "sum": "C 배열은 멤버 함수도 범위 검사도 없고, **함수에 넘기면 포인터로 바뀌어 크기를 잃는다**(배열 감쇠).", "key": ["C 배열 크기 = `sizeof(arr)/sizeof(arr[0])`", "함수로 넘기면 포인터로 감쇠", "C 문자열은 `\\0` 으로 끝남"], "blocks": [
-{"t": "ana", "x": "🧳 C 배열이 함수 문을 지나면 짐(크기 정보)은 두고 **주소 쪽지만** 들고 들어감."},
-{"t": "h", "x": "C 배열"},
-{"t": "code", "x": "int arr[5] { 1, 2, 3, 4, 5 };\nsizeof(arr) / sizeof(arr[0]);   // 5 — 크기는 이렇게 구함\n// arr.size();                  // ❌ 멤버 함수 없음"},
-{"t": "tbl", "h": ["", "C 배열", "std::array"], "r": [["크기", "`sizeof(arr)/sizeof(arr[0])`", "`a.size()`"], ["범위 검사", "없음", "`at()`"], ["함수에 넘기면", "**크기 잃음**", "크기 유지"]]},
-{"t": "li", "x": ["새로 쓸 일은 거의 없지만 **읽을 줄은** 알아야 함 (옛 코드, 문자열 리터럴)"]},
-{"t": "h", "x": "배열 감쇠"},
-{"t": "code", "x": "void byCArray(int arr[])   // 사실은 int* 로 받음\n{\n    sizeof(arr);           // 8 — 포인터 크기\n}\nint arr[5] {};\nsizeof(arr);               // 20 — 배열 전체"},
-{"t": "out", "x": "main 안 sizeof(arr) = 20 바이트\n함수 안 sizeof(arr) = 8 바이트  ← 크기 잃음\nwarning: 'sizeof' on array function parameter 'arr' will return size of 'int*'", "cap": "실제 실행 결과 + 경고"},
-{"t": "term", "ko": "배열 감쇠", "en": "array decay", "d": "C 배열이 함수로 넘어가면 첫 원소 포인터로 바뀌는 것"},
-{"t": "h", "x": "C 문자열"},
-{"t": "code", "x": "const char* name { \"홍길동\" };   // 첫 글자를 가리키는 포인터\nchar buf[10] { \"hello\" };        // h e l l o \\0 — 끝에 널 문자\nstd::strlen(buf);                // 5 — \\0 까지 하나씩 셈\nstd::string s { buf };           // string 으로 바꾸면 편함"},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["리터럴 `\"안녕\"` 의 정체", "const char 배열"], ["끝 표시", "`\\0` 한 글자"], ["길이", "매번 세야 함 (strlen) — string 은 기억함"]]},
-{"t": "trap", "x": [["함수 안에서 `sizeof(arr)` 로 개수 구하기", "개수를 따로 넘기거나 array/vector", "포인터 크기(8)가 나옴"], ["C 문자열 끝 `\\0` 누락", "std::string", "끝을 몰라 계속 읽음 (버퍼 오버런)"]]},
-{"t": "star", "x": "main 에선 **20**, 함수 안에선 **8** — 배열 감쇠."},
-{"t": "mem", "x": "감쇠 = 함수 문 통과하며 **크기 기억 상실**"}
-]},
-{"id": "p6-8", "title": "2차원 vector · 무엇을 쓸까", "ch": "Ch 17.12", "sum": "행렬은 **vector 안에 vector**. 결론: 모르면 **vector**, 고정이면 **array**, C 배열은 어쩔 수 없을 때만.", "key": ["`vector<vector<int>> g(행, vector<int>(열, 0))`", "행 수 `g.size()`, 열 수 `g[0].size()`", "모르면 vector, 고정이면 array"], "blocks": [
-{"t": "ana", "x": "🏢 2차원 vector = 아파트. `grid[층][호]` — 바깥 vector 가 층, 안쪽 vector 가 그 층의 호실."},
-{"t": "h", "x": "2차원 vector"},
-{"t": "code", "x": "std::vector<std::vector<int>> grid(3, std::vector<int>(4, 0));   // 3행 4열, 전부 0\ngrid[1][2] = 7;          // 2행 3열 (0부터)\ngrid.size();             // 3 — 행 수\ngrid[0].size();          // 4 — 열 수\nfor (const std::vector<int>& row : grid)\n    for (int x : row) std::cout << x << ' ';"},
-{"t": "out", "x": "0 0 0 0\n0 0 7 0\n0 0 0 0", "cap": "실제 실행 결과"},
-{"t": "tip", "x": "읽기 쉬운 대신 조금 느림. 속도가 중요하면 1차원 vector + `grid[y * 열수 + x]`."},
-{"t": "h", "x": "결론표"},
-{"t": "tbl", "h": ["상황", "쓸 것"], "r": [["개수를 모름", "**std::vector**"], ["개수가 확실히 고정", "std::array"], ["옛 코드·C 라이브러리", "C 배열 (어쩔 수 없을 때만)"], ["문자열", "std::string"], ["고민된다", "**std::vector**"]]},
-{"t": "ref", "x": "다른 언어도 같은 구분 — Java 배열/ArrayList, Python tuple/list."},
-{"t": "trap", "x": [["`grid[1][2]` 를 1행 2열로 읽음", "0부터 세서 2행 3열", "인덱스가 하나씩 밀림"]]},
-{"t": "star", "x": "`grid.size()` = **행 수**, `grid[0].size()` = **열 수**."},
-{"t": "mem", "x": "2차원 vector = **아파트** `grid[층][호]`"}
-]},
-{"id": "p6-9", "title": "Roster 다시 쓰기 · 6회차 함정 모음", "ch": "Ch 16~17", "sum": "배열 두 개 + 개수 → **vector 하나**. 개수를 따로 들고 다닐 일이 없어 **49.8 버그는 만들 수가 없다**.", "key": ["vector 가 개수를 들고 있어 개수 실수 불가", "함정 7개는 이 카드로 복습", "map(키→값), set(중복 X)은 이름만"], "blocks": [
-{"t": "ana", "x": "✅ 4회차의 “개수 잘못 넘기기” 사고를 vector 가 구조적으로 막아 줌."},
-{"t": "h", "x": "vector 로 다시 쓴 Roster"},
-{"t": "code", "x": "class Roster {\n    std::vector<Student> m_list {};\npublic:\n    void add(std::string_view n, int s) { m_list.emplace_back(n, s); }\n    double average() const\n    {\n        if (m_list.empty()) return 0.0;\n        int sum { 0 };\n        for (const Student& st : m_list) sum += st.getScore();\n        return static_cast<double>(sum) / static_cast<double>(m_list.size());\n    }\n};"},
-{"t": "h", "x": "다른 컨테이너 (이름만)"},
-{"t": "tbl", "h": ["컨테이너", "쓰임", "다른 언어"], "r": [["std::vector", "순서대로 여러 개 — 기본", "Python list"], ["std::array", "개수 고정", "Python tuple"], ["std::map", "키로 값 찾기 (학번 → 학생)", "Python dict"], ["std::set", "중복 없이 모으기", "Python set"]]},
-{"t": "ref", "x": "map·set 은 8회차. 넷 다 range-for 가 그대로 통함."},
-{"t": "fix", "x": "장 표지엔 “오늘 나온 함정”이 있지만 모음 슬라이드가 없어 아래에 모음."},
-{"t": "trap", "x": [["`vector<int> v { 3 };` 로 3칸 기대", "`( 3 )`", "원소 3 하나"], ["`v[10]` 범위 밖", "`at()`", "UB"], ["`i < v.size()`", "range-for 또는 size_t", "부호 섞기, 빈 벡터에서 거대한 수"], ["`for (std::string s : v) s += \"님\";`", "`std::string&`", "사본만 바뀜"], ["push_back 뒤 옛 포인터·반복자", "다시 얻기", "재할당으로 무효"], ["C 배열을 함수에 넘기고 sizeof", "개수 따로 넘기기", "포인터 크기 8"], ["C 문자열 `\\0` 누락", "std::string", "버퍼 오버런"]]},
-{"t": "star", "x": "4회차 49.8 버그는 vector 가 **자기 크기를 알아서** 생길 수 없다."},
-{"t": "mem", "x": "6회차 함정 **괄·범·부·복·이·감·널** ({}/(), 범위, 부호, 복사, 이사, 감쇠, \\0)"}
-]}
-]},
-{"id": "c7", "title": "7회차 · 훑고 찾고 정렬하기", "sub": "Ch 18, 20", "parts": [
-{"id": "p7-1", "title": "정렬: 직접 짜기 vs std::sort", "ch": "Ch 18.1, 18.3", "sum": "선택 정렬은 **공부용**. 실제로는 `std::sort(v.begin(), v.end())` 한 줄 — 5만 개에서 **365배** 빠르다.", "key": ["선택 정렬 = 남은 것 중 최소를 앞으로 (n²)", "실제로는 `std::sort(v.begin(), v.end())`", "느린 이유는 알고리즘"], "blocks": [
-{"t": "ana", "x": "🃏 선택 정렬 = 카드 더미에서 매번 제일 작은 카드를 찾아 앞에 놓기. 카드가 많아지면 끝이 안 남."},
-{"t": "h", "x": "선택 정렬"},
-{"t": "code", "x": "void selectionSort(std::vector<int>& v)\n{\n    for (std::size_t i { 0 }; i + 1 < v.size(); ++i)\n    {\n        std::size_t minIdx { i };                       // 남은 것 중 최소 위치\n        for (std::size_t j { i + 1 }; j < v.size(); ++j)\n            if (v[j] < v[minIdx]) minIdx = j;\n        std::swap(v[i], v[minIdx]);                     // 앞으로 보냄\n    }\n}"},
-{"t": "fix", "x": "PPT 에 선택 정렬 설명만 있고 코드가 없어 보충함 (`i + 1 < v.size()` 로 부호 함정 회피)."},
-{"t": "h", "x": "속도 비교"},
-{"t": "tbl", "h": ["원소 수", "선택 정렬", "std::sort"], "r": [["1,000", "0 ms", "0 ms"], ["10,000", "25 ms", "0 ms"], ["50,000", "**730 ms**", "**2 ms**"]]},
-{"t": "code", "x": "std::sort(v.begin(), v.end());   // 한 줄, 실수할 곳 없음"},
-{"t": "li", "x": ["차이의 이유는 실력이 아니라 **알고리즘** — 선택 정렬은 원소 수의 **제곱**에 비례"]},
-{"t": "trap", "x": [["실제 코드에 직접 짠 정렬 사용", "`std::sort`", "느리고 경계 실수가 생기기 쉬움"]]},
-{"t": "star", "x": "5만 개에서 **365배** 차이 — 선택 정렬은 **n² 에 비례**."},
-{"t": "mem", "x": "선택 정렬 = **최소 찾아 앞으로**, 반복"}
-]},
-{"id": "p7-2", "title": "반복자와 range-for 의 정체", "ch": "Ch 18.2", "sum": "반복자 = **위치를 가리키는 것**. `*it` 로 값, `++it` 로 다음. `end()` 는 마지막의 **다음 빈자리**.", "key": ["`*it` 값, `++it` 다음, `it != v.end()`", "end() 는 읽으면 UB", "range-for = 반복자 반복문 축약"], "blocks": [
-{"t": "ana", "x": "👆 반복자 = 줄 선 사람을 가리키는 손가락. `++` 로 다음 사람, `end()` 는 맨 뒤 사람 **뒤의 빈 바닥**."},
-{"t": "h", "x": "기본"},
-{"t": "code", "x": "std::vector<int> v { 90, 75, 84 };\nauto it = v.begin();   // 첫 원소\n*it;                   // 90\n++it;                  // 다음\n*it;                   // 75\nv.end();               // 마지막 다음 자리 — 읽으면 안 됨"},
-{"t": "tbl", "h": ["위치", "begin()", "+1", "+2", "end()"], "r": [["값", "90", "75", "84", "(없음)"]]},
-{"t": "li", "x": ["end() 가 “다음 자리”라서 `it != v.end()` 한 줄로 반복 가능", "빈 컨테이너면 begin() == end() → 반복 0번, 특별 처리 불필요"]},
-{"t": "h", "x": "range-for 의 정체"},
-{"t": "vs", "a": {"h": "우리가 쓰는 것", "x": "for (int x : v)\n{\n    std::cout << x;\n}"}, "b": {"h": "컴파일러가 바꾸는 것", "x": "for (auto it = v.begin();\n     it != v.end(); ++it)\n{\n    int x = *it;\n    std::cout << x;\n}"}},
-{"t": "li", "x": ["begin()/end() 만 있으면 무엇이든 range-for 가능 → vector, array, string, map, set"]},
-{"t": "term", "ko": "반복자", "en": "iterator", "d": "컨테이너 안 위치를 가리킴. 포인터처럼 `*`, `++`"},
-{"t": "trap", "x": [["`*v.end()` 읽기", "end() 는 비교용으로만", "값이 없는 자리 = UB"]]},
-{"t": "star", "x": "end() = **마지막 다음** — 읽으면 UB, 비교용."},
-{"t": "mem", "x": "end() = **줄 맨 뒤의 빈 바닥**"}
-]},
-{"id": "p7-3", "title": "표준 알고리즘 6개", "ch": "Ch 18.3", "sum": "알고리즘은 컨테이너가 아니라 **범위(시작, 끝)** 를 받는다. sort · find · count · max_element · accumulate · reverse.", "key": ["알고리즘은 (begin, end) 를 받음", "find 못 찾으면 end(), max_element 는 위치", "accumulate 는 `<numeric>`"], "blocks": [
-{"t": "ana", "x": "🧰 알고리즘 = 공구. 어떤 상자(vector·array·string)든 “여기서부터 저기까지” 범위만 알려 주면 작업해 줌."},
-{"t": "h", "x": "6개 한눈에 (v = 90 75 84 68 92)"},
-{"t": "tbl", "h": ["하고 싶은 일", "코드", "결과"], "r": [["정렬", "`std::sort(v.begin(), v.end())`", "68 75 84 90 92"], ["찾기", "`std::find(v.begin(), v.end(), 84)`", "위치 (없으면 end())"], ["세기", "`std::count(v.begin(), v.end(), 84)`", "1"], ["최댓값", "`*std::max_element(v.begin(), v.end())`", "92"], ["합", "`std::accumulate(v.begin(), v.end(), 0)`", "409"], ["뒤집기", "`std::reverse(v.begin(), v.end())`", "92 90 84 75 68"]]},
-{"t": "h", "x": "꼭 알 것"},
-{"t": "tbl", "h": ["주의", "내용"], "r": [["`accumulate`", "**`<numeric>`** (나머지는 `<algorithm>`), 셋째 인자 = 시작값"], ["`max_element`", "값이 아니라 **위치** → `*` 붙여 꺼냄"], ["`find`", "못 찾으면 **end()** → 반드시 비교"], ["일부만", "`std::sort(v.begin(), v.begin() + 3)` → 앞 3개만"], ["sort 가능한 것", "vector·array·string (list·map ❌)"]]},
-{"t": "tip", "x": "“조건에 맞는 것”은 `find_if`, `count_if`, sort 셋째 인자 → 조건을 **함수로** 넘김 (람다)."},
-{"t": "trap", "x": [["`std::accumulate` 쓰면서 `<algorithm>` 만 include", "`#include <numeric>`", "컴파일 오류"], ["`std::max_element(...)` 를 값처럼 출력", "`*std::max_element(...)`", "위치(반복자)라서 안 됨"]]},
-{"t": "star", "x": "accumulate 만 **`<numeric>`**. max_element·find 는 **위치**를 돌려준다."},
-{"t": "mem", "x": "알고리즘 = **(시작, 끝)** 두 개만 주면 일하는 공구"}
-]},
-{"id": "p7-4", "title": "반복자 함정 2가지", "ch": "Ch 18.2~18.3", "sum": "**find 결과는 end() 와 비교한 뒤** 쓴다. **훑는 중에 컨테이너 크기를 바꾸지 않는다.**", "key": ["`if (it != v.end())` 후 `*it`", "반복 중 push_back → 무효", "C++ 은 조용히 넘김"], "blocks": [
-{"t": "ana", "x": "🔎 “찾았다!”는 말 없이 손가락이 줄 맨 뒤 빈 바닥(end)을 가리키면, 거기엔 아무도 없음."},
-{"t": "h", "x": "① find 확인"},
-{"t": "vs", "a": {"h": "❌ 바로 읽음", "x": "auto it = std::find(v.begin(),\n                    v.end(), 84);\nstd::cout << *it;\n// 못 찾았으면 end() → UB"}, "b": {"h": "✅ end() 와 비교", "x": "auto it = std::find(v.begin(),\n                    v.end(), 84);\nif (it != v.end())\n    std::cout << *it;\nelse\n    std::cout << \"없음\";"}},
-{"t": "h", "x": "② 훑는 중 수정 금지"},
-{"t": "code", "x": "for (auto it = v.begin(); it != v.end(); ++it)\n    if (*it < 70) v.push_back(0);   // ❌ 이사(재할당) → it 무효"},
-{"t": "out", "x": "추가 전 주소: 0x5577f28452b0\n추가 후 주소: 0x5577f28462e0\n옛 위치로 읽으면: 1467951173", "cap": "6회차 재할당 실험"},
-{"t": "tip", "x": "Java 는 `ConcurrentModificationException`, C++ 은 **조용히** 망가짐 — 규칙은 같음."},
-{"t": "trap", "x": [["`std::cout << *std::find(...)`", "`if (it != v.end())` 로 확인 후", "못 찾으면 end() 읽기 = UB"], ["반복문 안에서 push_back", "반복이 끝난 뒤 추가", "반복자 무효 = UB"]]},
-{"t": "star", "x": "find 직후엔 **반드시 `!= end()` 확인**."},
-{"t": "mem", "x": "find = “**찾았는지 먼저 물어보고** 꺼내기”"}
-]},
-{"id": "p7-5", "title": "조건을 넘기기: 함수 포인터", "ch": "Ch 20.1", "sum": "`std::count` 는 “값이 같은 것”만 센다. “80점 이상” 같은 **조건**은 **함수를 인자로 넘겨야** 한다.", "key": ["조건 = “맞나?”를 답하는 함수", "`bool (*f)(int)`", "넘길 땐 괄호 없이"], "blocks": [
-{"t": "ana", "x": "📝 심사위원(함수)을 함께 보내서 “이 사람 통과?” 판단을 맡기는 것."},
-{"t": "h", "x": "왜 필요해?"},
-{"t": "tbl", "h": ["하고 싶은 것", "count 로 되나"], "r": [["84 인 것 개수", "✅ `std::count(..., 84)`"], ["80 이상 개수", "❌ 값이 아니라 **판단**"], ["70 미만 첫 번째", "❌"], ["높은 순 정렬", "❌"]]},
-{"t": "h", "x": "함수를 인자로"},
-{"t": "code", "x": "bool isEven(int x) { return x % 2 == 0; }\nbool isBig(int x)  { return x >= 80; }\n\nint countIf(const std::vector<int>& v, bool (*test)(int))   // 함수를 받음\n{\n    int n { 0 };\n    for (int x : v) if (test(x)) ++n;\n    return n;\n}\ncountIf(v, isEven);   // 4  — 이름만 넘김 (괄호 X)\ncountIf(v, isBig);    // 3"},
-{"t": "tbl", "h": ["코드", "뜻"], "r": [["`bool (*test)(int)`", "int 받고 bool 주는 **함수를 가리키는 포인터**"], ["`countIf(v, isEven)`", "✅ 이름만"], ["`countIf(v, isEven())`", "❌ 괄호 붙이면 “호출 결과”를 넘기는 것"]]},
-{"t": "trap", "x": [["함수를 넘길 때 `isEven()`", "`isEven`", "괄호를 붙이면 호출해 버림"]]},
-{"t": "warn", "x": "조건마다 함수를 만들고 이름 붙이기 번거로움 → **람다**로 해결."},
-{"t": "star", "x": "함수를 넘길 땐 **괄호 없이 이름만**."},
-{"t": "mem", "x": "함수 포인터 = **심사위원 파견**"}
-]},
-{"id": "p7-6", "title": "람다", "ch": "Ch 20.6", "sum": "람다 = **이름 없이 그 자리에서 만드는 함수**. 모양은 **`[캡처](매개변수){ 본문 }`**.", "key": ["`[캡처](매개변수){ 본문 }`, 반환형 생략", "count_if · find_if · sort 에 람다", "`a > b` = 내림차순"], "blocks": [
-{"t": "ana", "x": "🗒️ 람다 = 포스트잇 메모. 정식 서류(이름 있는 함수) 대신 쓰는 자리에 바로 붙임."},
-{"t": "h", "x": "이름 있는 함수 vs 람다"},
-{"t": "vs", "a": {"h": "따로 정의", "x": "bool isBig(int x)\n{ return x >= 80; }\n// ...한참 아래\nstd::count_if(v.begin(), v.end(),\n              isBig);"}, "b": {"h": "람다로 그 자리에", "x": "std::count_if(v.begin(), v.end(),\n    [](int x){ return x >= 80; });\n// 조건이 바로 보임"}},
-{"t": "h", "x": "람다 뜯어보기"},
-{"t": "code", "x": "[](int x){ return x >= 80; }\n │   │        │\n │   │        └ 본문 — 보통 한 줄\n │   └ 매개변수 — 보통 원소 하나\n └ 캡처 — 바깥 변수를 쓸 때만"},
-{"t": "tbl", "h": ["알아 둘 것", "내용"], "r": [["반환형", "안 써도 됨 (return 보고 추론)"], ["시작 표시", "`[ ]` 가 보이면 람다"], ["변수에 담기", "`auto isBig = [](int x){ return x >= 80; };`"], ["호출", "`isBig(90)`"]]},
-{"t": "h", "x": "알고리즘에 넘기기 (v = 90 75 84 68 92)"},
-{"t": "tbl", "h": ["코드", "결과"], "r": [["`count_if(..., [](int x){ return x >= 80; })`", "3"], ["`find_if(..., [](int x){ return x < 70; })`", "68"], ["`sort(..., [](int a, int b){ return a > b; })`", "92 90 84 75 68 (내림차순)"]]},
-{"t": "trap", "x": [["sort 비교 람다를 “크기 비교”로 생각", "“a 가 앞에 와야 하나?”로 생각", "순서가 반대로 나옴"]]},
-{"t": "star", "x": "sort 비교는 “**a 가 b 보다 앞에 와야 하나?**”. `a > b` = **내림차순**."},
-{"t": "mem", "x": "**[ ] ( ) { }** = **가져올 것 / 받을 것 / 할 일**"}
-]},
-{"id": "p7-7", "title": "캡처: 바깥 변수 쓰기", "ch": "Ch 20.7", "sum": "**`[x]` = 값 복사**(만든 순간 값 고정), **`[&x]` = 참조**(원본을 따라감). 쓰는 것만 하나씩 적자.", "key": ["`[x]` 값 캡처 = 만든 순간 고정", "`[&x]` 참조 캡처 = 원본 따라감, 고칠 때", "하나씩 명시"], "blocks": [
-{"t": "ana", "x": "📷 `[x]` = 만든 순간 찍은 **사진**, `[&x]` = 실시간 **CCTV**."},
-{"t": "h", "x": "값 vs 참조"},
-{"t": "code", "x": "int n { 10 };\nauto byValue = [n]()  { return n; };    // 사진\nauto byRef   = [&n]() { return n; };    // CCTV\nn = 99;"},
-{"t": "tbl", "h": ["캡처", "n = 99 로 바꾼 뒤 호출", "이유"], "r": [["`[n]`", "**10**", "만든 순간 값이 복사됨"], ["`[&n]`", "**99**", "원본을 봄"]]},
-{"t": "h", "x": "언제 뭘 쓰나"},
-{"t": "code", "x": "int cut { 85 };\nstd::count_if(v.begin(), v.end(), [cut](int x){ return x >= cut; });   // 읽기만 → 값\n\nint count { 0 };\nauto tick = [&count]() { ++count; };   // 고쳐야 함 → 참조\ntick(); tick(); tick();                // count == 3"},
-{"t": "tbl", "h": ["쓰는 법", "뜻", "추천"], "r": [["`[ ]`", "바깥 변수 못 씀", "✅ 대부분 이걸로 충분"], ["`[cut]` `[&count]`", "쓰는 것만 하나씩", "✅ 권장"], ["`[=]` / `[&]`", "전부 값 / 전부 참조", "⚠️ 뭘 가져오는지 안 보임"]]},
-{"t": "trap", "x": [["람다 안에서 바깥 변수를 고치려고 `[count]`", "`[&count]`", "값 캡처는 사본이라 원본이 안 바뀜"], ["`[&]` 로 몽땅 캡처", "쓰는 것만 `[cut]`", "무엇을 가져오는지 안 보임"]]},
-{"t": "star", "x": "`[n]` 은 **10**, `[&n]` 은 **99** — 출력 예측 단골."},
-{"t": "mem", "x": "값 캡처 = **사진**, 참조 캡처 = **CCTV**"}
-]},
-{"id": "p7-8", "title": "내 클래스를 정렬하기", "ch": "Ch 18.3, 20.6", "sum": "Student 는 그냥 sort 가 안 된다 (`operator<` 없음). 방법 3가지 — **operator< · 비교 함수 · 람다**.", "key": ["사용자 타입 sort → operator< / 비교 함수 / 람다", "기본 순서 operator<, 여러 기준 함수, 일회용 람다", "max_element + 내림차순 비교 = 최솟값"], "blocks": [
-{"t": "ana", "x": "🏅 줄 세우기 기준표. 기본 기준(operator<)을 정해 두거나, 그때그때 기준표(비교 함수·람다)를 건네줌."},
-{"t": "h", "x": "그냥은 안 됨"},
-{"t": "code", "x": "std::vector<Student> v { {\"홍길동\",92}, {\"김철수\",78}, {\"이영희\",85} };\nstd::sort(v.begin(), v.end());   // ❌"},
-{"t": "out", "x": "error: no match for 'operator<' (operand types are 'Student' and 'Student')", "cap": "GCC 13 실제 출력 (78줄 중 핵심 1줄)"},
-{"t": "tip", "x": "템플릿 오류가 길어도 **“no match for”** 줄 하나만 찾으면 됨."},
-{"t": "h", "x": "방법 3가지"},
-{"t": "code", "x": "// ① operator< — 기본 순서 (클래스 안)\nbool operator<(const Student& o) const { return m_score < o.m_score; }\nstd::sort(v.begin(), v.end());\n\n// ② 비교 함수 — 기준이 여러 개일 때\nbool byScoreDesc(const Student& a, const Student& b) { return a.score() > b.score(); }\nstd::sort(v.begin(), v.end(), byScoreDesc);\n\n// ③ 람다 — 한 번만 쓸 기준\nstd::sort(v.begin(), v.end(), [](const Student& a, const Student& b) { return a.name() < b.name(); });"},
-{"t": "out", "x": "operator< 로   : 김철수(78) 이영희(85) 홍길동(92)\nbyScoreDesc 로 : 홍길동(92) 이영희(85) 김철수(78)\n이름 람다로    : 김철수(78) 이영희(85) 홍길동(92)", "cap": "실제 실행 결과"},
-{"t": "tbl", "h": ["상황", "쓸 것", "이유"], "r": [["자연스러운 기본 순서", "operator<", "max_element·set·map 도 같이 됨"], ["기준이 여러 개", "비교 함수", "이름으로 읽기 쉬움, 재사용"], ["여기서 한 번만", "람다", "조건이 그 자리에 보임"]]},
-{"t": "ref", "x": "operator 오버로딩은 21장(이후 회차)에서 자세히."},
-{"t": "trap", "x": [["`max_element(..., byScoreDesc)` (내림차순 비교)", "오름차순 “a 가 작은가?” 비교", "**최솟값**이 나옴 — 경고도 없음"]]},
-{"t": "star", "x": "비교 함수는 언제나 “**a 가 앞(작은 쪽)인가?**”. max_element 에 내림차순 비교를 넘기면 **최솟값**."},
-{"t": "mem", "x": "비교 함수 = “**a 가 앞이야?**” 질문에 답하는 것"}
-]},
-{"id": "p7-9", "title": "C++20 ranges 와 다른 언어", "ch": "Ch 18.3", "sum": "C++20 부터 **`std::ranges::sort(v)`** 처럼 begin/end 없이 컨테이너를 통째로 넘긴다. 생각하는 방식은 어느 언어나 같다.", "key": ["`std::ranges::sort(v)` — begin/end 생략", "옛 방식과 ranges 둘 다 읽기", "거르기·세기·정렬은 언어 공통"], "blocks": [
-{"t": "ana", "x": "✂️ 매번 “여기부터 저기까지” 말하던 걸 “이거 전부”로 줄인 것."},
-{"t": "h", "x": "옛 방식 vs ranges"},
-{"t": "vs", "a": {"h": "지금까지", "x": "std::sort(v.begin(), v.end());\nstd::find(v.begin(), v.end(), 84);\nstd::count_if(v.begin(), v.end(),\n    [](int x){ return x > 80; });"}, "b": {"h": "C++20 ranges", "x": "std::ranges::sort(v);\nstd::ranges::find(v, 84);\nstd::ranges::count_if(v,\n    [](int x){ return x > 80; });"}},
-{"t": "tbl", "h": ["장점", "내용"], "r": [["짧아짐", "begin/end 두 번 안 씀"], ["안전", "다른 컨테이너의 begin/end 를 섞는 사고 방지"], ["실습", "C++20 프로젝트라 바로 사용 가능"]]},
-{"t": "h", "x": "다른 언어와 비교"},
-{"t": "tbl", "h": ["하고 싶은 일", "C++", "다른 언어"], "r": [["조건 세기", "`count_if(..., 람다)`", "Python `sum(1 for x in v if ...)`"], ["조건 고르기", "`copy_if` / `find_if`", "JS `arr.filter(x => ...)`"], ["기준 정렬", "`sort(..., 람다)`", "Python `sorted(v, key=...)`"], ["전부 더하기", "`accumulate`", "Python `sum(v)`"]]},
-{"t": "ref", "x": "“훑으며 거르고 모은다”는 생각은 어느 언어든 같음 — 문법만 다름."},
-{"t": "trap", "x": [["ranges 만 알고 옛 코드를 못 읽음", "둘 다 읽을 줄 알기", "남의 코드는 아직 옛 방식이 많음"]]},
-{"t": "star", "x": "`std::ranges::sort(v)` = `std::sort(v.begin(), v.end())`."},
-{"t": "mem", "x": "ranges = “**전부**”라고 한 마디로"}
-]}
-]}
-]}</script>
 <script type="application/json" id="quiz-data">{
 "p1-1": [
 {"t": "ox", "q": "링크 오류 메시지에는 보통 파일명과 줄 번호가 찍힌다.", "a": "X", "why": "줄 번호가 찍히는 건 컴파일 오류. 링크 오류는 줄 번호 없이 `undefined reference`.", "id": "p1-1-1"},
@@ -2241,14 +1237,17 @@ dl.bd dt { color: var(--accent); }
 <script>
 (() => {
 'use strict';
-const DATA = JSON.parse(document.getElementById('notes-data').textContent);
+let DATA, PARTS = [], BY_ID = {}, INDEX = null, baseCanon = '';
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-/* ── flat part list ── */
-const PARTS = [];
-DATA.chapters.forEach((c, ci) => c.parts.forEach(p => PARTS.push({ ...p, ci, chapter: c, idx: PARTS.length })));
-const BY_ID = Object.fromEntries(PARTS.map(p => [p.id, p]));
+/* ── flat part list (Object.create → 편집한 값이 바로 보임) ── */
+function setData(d) {
+  DATA = d; PARTS = []; INDEX = null;
+  d.chapters.forEach((c, ci) => c.parts.forEach((p, pi) => PARTS.push(Object.assign(Object.create(p), { ci, pi, chapter: c, idx: PARTS.length }))));
+  BY_ID = Object.fromEntries(PARTS.map(p => [p.id, p]));
+}
+
 const QUIZ = JSON.parse(document.getElementById('quiz-data').textContent);
 const QBY = {};
 Object.entries(QUIZ).forEach(([pid, arr]) => arr.forEach(q => { q.pid = pid; QBY[q.id] = q; }));
@@ -2263,8 +1262,8 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('cppnote:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem('cppnote:' + k, JSON.stringify(v)); } catch {} }
 };
-const read = new Set(store.get('read', []).filter(id => BY_ID[id]));
-const state = { tab: 'notes', part: PARTS[0].id, checkMode: 'stars', pendingCode: null, quiz: null, mission: null, pc: null };
+let read = new Set();
+const state = { tab: 'notes', part: null, checkMode: 'stars', pendingCode: null, quiz: null, mission: null, pc: null };
 const qres = store.get('qres', {});
 Object.keys(qres).forEach(k => { if (!QBY[k]) delete qres[k]; });
 const prac = store.get('prac', {});
@@ -2332,14 +1331,14 @@ function codeBlock(src, opts = {}) {
   </div>`;
 }
 const CO = { star: '⭐ 시험 포인트', warn: '⚠️ 자주 하는 실수', mem: '🧠 외우는 법', tip: '✅ 이렇게 하기', ref: '📎 참고 · 시험 X', fix: '📝 PPT 정정·보충' };
-function block(b) {
+function block(b, bp) {
   switch (b.t) {
-    case 'h': return `<h2 class="bh">${inl(b.x)}</h2>`;
-    case 'p': return `<p class="bp">${inl(b.x)}</p>`;
-    case 'li': return `<ul class="bl">${b.x.map(x => `<li>${inl(x)}</li>`).join('')}</ul>`;
-    case 'dl': return `<dl class="bd">${b.x.map(([k, v]) => `<dt>${inl(k)}</dt><dd>${inl(v)}</dd>`).join('')}</dl>`;
-    case 'term': return `<div class="term"><span class="tg">용어</span><span class="ko">${inl(b.ko)}</span><span class="en">${esc(b.en)}</span><span class="d">${inl(b.d)}</span></div>`;
-    case 'tbl': return `<div class="tw"><table><thead><tr>${b.h.map(h => `<th>${inl(h)}</th>`).join('')}</tr></thead><tbody>${b.r.map(r => `<tr>${r.map(c => `<td>${inl(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    case 'h': return `<h2 class="bh">${E(bp + '.x', b.x)}</h2>`;
+    case 'p': return `<p class="bp">${E(bp + '.x', b.x)}</p>`;
+    case 'li': return `<ul class="bl">${b.x.map((x, i) => `<li>${E(`${bp}.x.${i}`, x)}</li>`).join('')}</ul>`;
+    case 'dl': return `<dl class="bd">${b.x.map(([k, v], i) => `<dt>${E(`${bp}.x.${i}.0`, k)}</dt><dd>${E(`${bp}.x.${i}.1`, v)}</dd>`).join('')}</dl>`;
+    case 'term': return `<div class="term"><span class="tg">용어</span><span class="ko">${E(bp + '.ko', b.ko)}</span><span class="en">${E(bp + '.en', b.en, esc)}</span><span class="d">${E(bp + '.d', b.d)}</span></div>`;
+    case 'tbl': return `<div class="tw"><table><thead><tr>${b.h.map((x, i) => `<th>${E(`${bp}.h.${i}`, x)}</th>`).join('')}</tr></thead><tbody>${b.r.map((r, ri) => `<tr>${r.map((c, ci) => `<td>${E(`${bp}.r.${ri}.${ci}`, c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     case 'code': return codeBlock(b.x);
     case 'out': return `<div class="out"><div class="out-h">${esc(b.cap || '실행 결과')}</div><pre>${esc(b.x)}</pre></div>`;
     case 'vs': {
@@ -2348,9 +1347,9 @@ function block(b) {
         : codeBlock(s.x, { noRun: true })}${s.n ? `<div class="vn">${inl(s.n)}</div>` : ''}</div>`;
       return `<div class="vs">${side(b.a)}${side(b.b)}</div>`;
     }
-    case 'flow': return `<div class="flow">${b.x.map(([a, d]) => `<div class="st"><b>${inl(a)}</b><span>${inl(d)}</span></div>`).join('')}</div>`;
+    case 'flow': return `<div class="flow">${b.x.map(([a, d], i) => `<div class="st"><b>${E(`${bp}.x.${i}.0`, a)}</b><span>${E(`${bp}.x.${i}.1`, d)}</span></div>`).join('')}</div>`;
     default:
-      if (CO[b.t]) return `<div class="co ${b.t}"><span class="lb">${CO[b.t]}</span>${inl(b.x)}</div>`;
+      if (CO[b.t]) return `<div class="co ${b.t}"><span class="lb">${CO[b.t]}</span>${E(bp + '.x', b.x)}</div>`;
       return '';
   }
 }
@@ -2395,34 +1394,37 @@ function renderPart(justRead) {
   const prev = PARTS[p.idx - 1], next = PARTS[p.idx + 1];
   const isRead = read.has(p.id);
   CUR_MISSION = MBYPART[p.id] ? MBYPART[p.id][0].id : null;
-  const pick = t => p.blocks.filter(b => b.t === t);
+  const base = `chapters.${p.ci}.parts.${p.pi}`;
+  const bp = i => `${base}.blocks.${i}`;
+  const pick = t => p.blocks.map((b, i) => ({ b, i })).filter(o => o.b.t === t);
   const stars = pick('star'), mems = pick('mem'), anas = pick('ana');
-  const traps = pick('trap').flatMap(b => b.x);
+  const traps = pick('trap').flatMap(({ b, i }) => b.x.map((row, ri) => ({ row, path: `${bp(i)}.x.${ri}` })));
   const secs = []; let cur = { h: null, blocks: [] };
-  p.blocks.forEach(b => {
+  p.blocks.forEach((b, bi) => {
     if (['star', 'mem', 'ana', 'trap'].includes(b.t)) return;
-    if (b.t === 'h') { if (cur.h || cur.blocks.length) secs.push(cur); cur = { h: b.x, blocks: [] }; }
-    else cur.blocks.push(b);
+    if (b.t === 'h') { if (cur.h || cur.blocks.length) secs.push(cur); cur = { h: b.x, hp: bp(bi) + '.x', blocks: [] }; }
+    else cur.blocks.push([b, bi]);
   });
   if (cur.h || cur.blocks.length) secs.push(cur);
   if (secs.length && !secs[0].h) secs[0].h = '개념 먼저 보기';
-  const cards = secs.map(s => ({ cls: '', h: s.h, body: s.blocks.map(b => `<div class="blk">${block(b)}</div>`).join('') }));
-  if (traps.length) cards.push({ cls: 'trapc', h: '⚠️ 함정 — 이렇게 하면 틀려요', body: traps.map(([bad, good, why]) =>
-    `<div class="trap-row"><div class="bad"><span class="tag">❌ 이렇게 하면</span>${inl(bad)}</div><div class="good"><span class="tag">✅ 이렇게</span>${inl(good)}</div><div class="why">${inl(why)}</div></div>`).join('') });
-  if (stars.length) cards.push({ cls: 'starc', h: '⭐ 시험엔 이렇게 나와요', body: `<ul class="star-list">${stars.map(b => `<li>${inl(b.x)}</li>`).join('')}</ul>` });
-  cards.push({ cls: 'memc', h: '🧠 이것만 외우기', body: `<ol class="mem-keys">${p.key.map(k => `<li><span>${inl(k)}</span></li>`).join('')}</ol>${mems.map(m => `<div class="mem-tip">${inl(m.x)}</div>`).join('')}` });
+  const cards = secs.map(s => ({ cls: '', h: s.h, hp: s.hp, body: s.blocks.map(([b, bi]) => `<div class="blk">${block(b, bp(bi))}</div>`).join('') }));
+  if (traps.length) cards.push({ cls: 'trapc', h: '⚠️ 함정 — 이렇게 하면 틀려요', body: traps.map(({ row: [bad, good, why], path }) =>
+    `<div class="trap-row"><div class="bad"><span class="tag">❌ 이렇게 하면</span>${E(path + '.0', bad)}</div><div class="good"><span class="tag">✅ 이렇게</span>${E(path + '.1', good)}</div><div class="why">${E(path + '.2', why)}</div></div>`).join('') });
+  if (stars.length) cards.push({ cls: 'starc', h: '⭐ 시험엔 이렇게 나와요', body: `<ul class="star-list">${stars.map(({ b, i }) => `<li>${E(bp(i) + '.x', b.x)}</li>`).join('')}</ul>` });
+  cards.push({ cls: 'memc', h: '🧠 이것만 외우기', body: `<ol class="mem-keys">${p.key.map((k, i) => `<li><span>${E(`${base}.key.${i}`, k)}</span></li>`).join('')}</ol>${mems.map(({ b: m, i }) => `<div class="mem-tip">${E(bp(i) + '.x', m.x)}</div>`).join('')}` });
   const num = i => String(i + 1).padStart(2, '0');
   const short = h => String(h).replace(/[`*]/g, '').replace(/^[⚠️⭐🧠\s]+/u, '').split(' — ')[0];
   page.innerHTML = `
+    ${editing ? '<div class="edhint">✏️ <b>편집 모드</b> — 점선 글씨를 눌러 바로 고치세요. <code class="ic">`코드`</code>는 백틱, <b>**굵게**</b>는 별표 두 개. 퀴즈·실습·코드 블록은 편집 대상이 아니에요. 다 고치면 아래 💾 저장.</div>' : ''}
     <div class="crumb"><span>${esc(p.chapter.title.split(' · ')[0])}</span><span>›</span><span>${esc(p.ch)}</span><span>›</span><span>${p.idx + 1}/${PARTS.length}</span>${isRead ? '<span class="rd">✓ 완독</span>' : ''}</div>
-    <h1>${inl(p.title)}</h1>
+    <h1>${E(base + '.title', p.title)}</h1>
     <div class="tldr">
-      <div class="tl-sum"><span class="lb">🎯 한 문장으로</span>${inl(p.sum)}</div>
-      ${anas.map(a => `<div class="tl-ana"><span class="lb">🧩 비유하면</span>${inl(a.x)}</div>`).join('')}
+      <div class="tl-sum"><span class="lb">🎯 한 문장으로</span>${E(base + '.sum', p.sum)}</div>
+      ${anas.map(({ b: a, i }) => `<div class="tl-ana"><span class="lb">🧩 비유하면</span>${E(bp(i) + '.x', a.x)}</div>`).join('')}
     </div>
     <nav class="mini" aria-label="이 파트 목차">${cards.map((c, i) => `<button data-sec="${i}"><b>${num(i)}</b>${esc(short(c.h))}</button>`).join('')}</nav>
     <div class="parts-gap"></div>
-    ${cards.map((c, i) => `<section class="card ${c.cls}" id="sec-${i}"><h2 class="sec-h"><span class="num">${num(i)}</span><span>${inl(c.h)}</span></h2>${c.body}</section>`).join('')}
+    ${cards.map((c, i) => `<section class="card ${c.cls}" id="sec-${i}"><h2 class="sec-h"><span class="num">${num(i)}</span><span>${c.hp ? E(c.hp, c.h) : inl(c.h)}</span></h2>${c.body}</section>`).join('')}
     <div class="acts">
       <button class="btn read${isRead ? ' is-done' : ''}${justRead ? ' just' : ''}" id="readBtn">${CHECK_SVG}${isRead ? '다 읽었어요' : '다 읽었어요 표시'}</button>
       ${MBYPART[p.id] ? `<button class="btn" data-mission="${MBYPART[p.id][0].id}">💻 이 파트 실습하러 가기 <span class="soon">${MBYPART[p.id].filter(m => prac[m.id] && prac[m.id].clear).length}/${MBYPART[p.id].length}</span></button>` : `<button class="btn" data-tabgo="practice">💻 실습 목록</button>`}
@@ -2808,7 +1810,8 @@ page.addEventListener('click', e => {
 /* ── search ── */
 const q = $('#q'), results = $('#results'), sbox = $('#searchBox');
 const strip_ = s => String(s).replace(/[`*]/g, '');
-const INDEX = PARTS.map(p => {
+function getIndex() { return INDEX || (INDEX = buildIndex()); }
+function buildIndex() { return PARTS.map(p => {
   const bits = [p.title, p.sum, ...p.key];
   p.blocks.forEach(b => {
     if (b.x && typeof b.x === 'string') bits.push(b.x);
@@ -2820,13 +1823,13 @@ const INDEX = PARTS.map(p => {
   });
   const text = strip_(bits.join(' \n '));
   return { p, text, low: text.toLowerCase() };
-});
+}); }
 let sel = -1, hits = [];
 function doSearch() {
   const raw = q.value.trim();
   if (!raw) { results.classList.remove('open'); return; }
   const terms = raw.toLowerCase().split(/\s+/).filter(Boolean);
-  hits = INDEX.map(it => {
+  hits = getIndex().map(it => {
     if (!terms.every(t => it.low.includes(t))) return null;
     let score = 0; const tl = (it.p.title + ' ' + it.p.sum).toLowerCase();
     terms.forEach(t => { if (tl.includes(t)) score += 5; score += Math.min(5, it.low.split(t).length - 1); });
@@ -2864,7 +1867,8 @@ $('#scrim').onclick = closeNav;
 
 /* ── keyboard ── */
 document.addEventListener('keydown', e => {
-  if (e.target.matches('input, textarea')) return;
+  if ((e.target.matches && e.target.matches('input, textarea')) || e.target.isContentEditable) return;
+  if (!DATA) return;
   if (e.key === '/') { e.preventDefault(); q.focus(); }
   if (state.tab === 'check' && state.quiz) {
     const Q = state.quiz, cq = QBY[Q.ids[Q.i]];
@@ -2884,8 +1888,224 @@ document.addEventListener('keydown', e => {
 let tt;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800); }
 
-fromHash(); render();
-window.addEventListener('hashchange', () => { fromHash(); render(); });
+/* ── edit mode (노트 글만 · 저장소 notes.json 에 바로 커밋) ──
+   토큰은 변수에만 보관 — 저장소·주소·콘솔·스토리지 어디에도 남기지 않음 */
+let editing = false, token = '', saving = false, askOpen = false;
+
+function E(path, val, fmt = inl) {
+  return editing
+    ? `<span class="ed" contenteditable="true" spellcheck="false" data-p="${path}">${esc(val)}</span>`
+    : fmt(val);
+}
+function setPath(path, text) {
+  const ks = path.split('.'); let o = DATA;
+  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+  o[ks[ks.length - 1]] = text;
+}
+const isDirty = () => !!DATA && JSON.stringify(DATA) !== baseCanon;
+
+/* notes.json 원래 모양(블록 한 줄씩) 그대로 직렬화 → 커밋 diff 가 편집한 줄만 나옴 */
+const pj = v => Array.isArray(v) ? '[' + v.map(pj).join(', ') + ']'
+  : v && typeof v === 'object' ? '{' + Object.keys(v).map(k => JSON.stringify(k) + ': ' + pj(v[k])).join(', ') + '}'
+  : JSON.stringify(v);
+const phead = (o, last) => '{' + Object.keys(o).filter(k => k !== last).map(k => JSON.stringify(k) + ': ' + pj(o[k]) + ', ').join('') + JSON.stringify(last) + ': [';
+function serialize(d) {
+  const cs = d.chapters.map(c => phead(c, 'parts') + '\n' + c.parts.map(p => phead(p, 'blocks') + '\n' + p.blocks.map(pj).join(',\n') + '\n]}').join(',\n') + '\n]}');
+  return '{"course": ' + pj(d.course) + ', "chapters": [\n' + cs.join(',\n') + '\n]}';
+}
+const b64enc = s => { const u = new TextEncoder().encode(s); let bin = ''; for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(bin); };
+const b64dec = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g, '')), c => c.charCodeAt(0)));
+
+/* ── edit bar ── */
+const bar = document.createElement('div');
+bar.className = 'editbar'; bar.hidden = true;
+bar.innerHTML = `<div class="eb-st" id="ebSt" role="status" aria-live="polite"></div>
+  <div class="eb-btns"><button class="eb-save" id="ebSave">💾 저장</button><button id="ebDl">📁 파일로 받기</button><button id="ebTok">🔑 토큰</button><button id="ebOff">✕ 편집 끝내기</button></div>`;
+document.body.append(bar);
+const ebSt = $('#ebSt');
+function setStatus(msg, cls = '') { ebSt.textContent = msg; ebSt.className = 'eb-st ' + cls; }
+function refreshBar() {
+  setStatus((isDirty() ? '✏️ 저장 안 한 변경이 있어요' : '✏️ 편집 중 · 변경 없음') + (token ? ' · 🔑 토큰 입력됨' : ' · 토큰 없음(저장하려면 🔑)'));
+}
+
+/* ── token dialog: Promise<string | '' | null>  ('' = 토큰 없이 편집만, null = 취소) ── */
+function askToken(forEdit) {
+  return new Promise(resolve => {
+    askOpen = true;
+    const prev = document.activeElement;
+    const ov = document.createElement('div'); ov.className = 'modal';
+    ov.innerHTML = `<form class="mbox" role="dialog" aria-modal="true" aria-labelledby="tkT">
+      <h2 id="tkT">🔑 깃허브 토큰</h2>
+      <p>저장하려면 토큰을 붙여넣으세요. 이 화면 메모리에만 있고 어디에도 저장되지 않아요(새로고침·편집 종료 시 사라짐).</p>
+      <ol><li>깃허브 → Settings → Developer settings → Fine-grained tokens</li><li>이 저장소만 선택</li><li>Contents: <b>Read and write</b></li></ol>
+      <input type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="깃허브 토큰">
+      <div class="merr" role="alert"></div>
+      <div class="mact"><button type="submit" class="primary">${forEdit ? '편집 시작' : '확인'}</button>
+        ${forEdit ? '<button type="button" data-k="none">토큰 없이 편집만</button>' : ''}<button type="button" data-k="cancel">취소</button></div>
+    </form>`;
+    document.body.append(ov);
+    const inp = ov.querySelector('input'), err = ov.querySelector('.merr');
+    const done = v => { inp.value = ''; ov.remove(); askOpen = false; document.removeEventListener('keydown', onKey, true); if (prev && prev.focus) prev.focus(); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); done(null); } };
+    document.addEventListener('keydown', onKey, true);
+    ov.querySelector('form').onsubmit = e => {
+      e.preventDefault();
+      const v = inp.value.trim();
+      if (!v) { err.textContent = '토큰을 붙여넣어 주세요.'; return; }
+      done(v);
+    };
+    ov.addEventListener('click', e => {
+      const k = e.target.closest('[data-k]');
+      if (k) done(k.dataset.k === 'none' ? '' : null);
+      else if (e.target === ov) done(null);
+    });
+    inp.focus();
+  });
+}
+
+/* ── enter / leave ── */
+async function enterEdit() {
+  if (editing || askOpen || !DATA) return;
+  const t = await askToken(true);
+  if (t === null) return;
+  token = t; editing = true;
+  document.body.classList.add('editing'); bar.hidden = false;
+  refreshBar(); render({ keepScroll: true });
+  toast('✏️ 편집 모드');
+}
+function exitEdit() {
+  if (!editing || saving) return;
+  const dirty = isDirty();
+  if (dirty && !confirm('저장하지 않은 편집이 있어요. 지금 끝내면 사라져요. 끝낼까요?')) return;
+  if (dirty) setData(JSON.parse(baseCanon));
+  token = ''; editing = false;
+  document.body.classList.remove('editing'); bar.hidden = true;
+  render({ keepScroll: true });
+}
+window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ── typing ── */
+let barT;
+page.addEventListener('input', e => {
+  const el = e.target.closest && e.target.closest('.ed');
+  if (!el) return;
+  setPath(el.dataset.p, el.textContent.replace(/\s*\n\s*/g, ' '));
+  INDEX = null;
+  clearTimeout(barT); barT = setTimeout(refreshBar, 250);
+});
+page.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest && e.target.closest('.ed')) e.preventDefault(); });
+page.addEventListener('paste', e => {
+  const el = e.target.closest && e.target.closest('.ed');
+  if (!el) return;
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\s*\n\s*/g, ' ');
+  document.execCommand('insertText', false, text);
+});
+
+/* ── ,,, (쉼표 3번) ── */
+let commaN = 0, commaAt = 0;
+document.addEventListener('keydown', e => {
+  if (e.isComposing || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+  const t = e.target;
+  if (e.key !== ',' || (t.closest && t.closest('input, textarea, select, [contenteditable="true"]')) || askOpen) { commaN = 0; return; }
+  const now = Date.now();
+  commaN = now - commaAt < 700 ? commaN + 1 : 1; commaAt = now;
+  if (commaN >= 3) { commaN = 0; editing ? exitEdit() : enterEdit(); }
+});
+
+/* ── 📁 파일로 받기 ── */
+function download() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([serialize(DATA)], { type: 'application/json' }));
+  a.download = 'notes.json';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  setStatus('📁 notes.json 으로 받았어요 (저장소에는 아직 반영 안 됨)', 'warn');
+}
+
+/* ── 💾 저장 = GitHub API 로 notes.json 커밋 ── */
+function repoInfo() {
+  const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+  if (!m) return null;
+  let repo = location.pathname.split('/')[1];
+  if (!repo || /\.html?$/i.test(repo)) repo = location.hostname;
+  return { owner: m[1], repo };
+}
+const gh = (url, opts = {}) => fetch('https://api.github.com' + url, {
+  ...opts, cache: 'no-store',
+  headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', Authorization: 'Bearer ' + token, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) }
+});
+const stamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
+const CONFLICT = '⚠️ 다른 곳에서 먼저 저장됐어요(충돌). 📁 파일로 받기로 내 편집을 백업한 뒤 새로고침하세요.';
+function badToken() { token = ''; return '🔒 토큰이 틀렸거나 만료됐어요. 🔑 토큰 버튼으로 다시 입력하세요.'; }
+const NOPERM = '🔒 토큰 권한이 없어요. 이 저장소 · Contents: Read and write 로 만들었는지 확인하세요.';
+
+async function save() {
+  if (saving) return;
+  if (!isDirty()) { setStatus('바뀐 내용이 없어요.'); return; }
+  const info = repoInfo();
+  if (!info) { setStatus('❌ 이 주소(아이디.github.io/저장소)가 아니라서 바로 저장할 수 없어요. 📁 파일로 받기를 쓰세요.', 'err'); return; }
+  if (!token) {
+    const t = await askToken(false);
+    if (!t) { refreshBar(); return; }
+    token = t;
+  }
+  saving = true; $('#ebSave').disabled = true;
+  setStatus('저장 중…');
+  const api = `/repos/${info.owner}/${info.repo}/contents/notes.json`;
+  try {
+    const snap = JSON.stringify(DATA), text = serialize(DATA);
+    const g = await gh(api);
+    if (g.status === 401) { setStatus(badToken(), 'err'); return; }
+    if (g.status === 403 || g.status === 404) { setStatus(NOPERM, 'err'); return; }
+    if (!g.ok) { setStatus(`❌ 저장 실패 (읽기 HTTP ${g.status}) — 저장되지 않았어요.`, 'err'); return; }
+    const cur = await g.json();
+    let remote;
+    try { remote = JSON.stringify(JSON.parse(b64dec(cur.content))); } catch { remote = null; }
+    if (remote !== baseCanon) { setStatus(CONFLICT, 'err'); return; }
+    const p = await gh(api, { method: 'PUT', body: JSON.stringify({ message: `✏️ 노트 편집 (${stamp()})`, content: b64enc(text), sha: cur.sha }) });
+    if (p.status === 401) { setStatus(badToken(), 'err'); return; }
+    if (p.status === 403 || p.status === 404) { setStatus(NOPERM, 'err'); return; }
+    if (p.status === 409) { setStatus(CONFLICT, 'err'); return; }
+    if (!p.ok) { setStatus(`❌ 저장 실패 (HTTP ${p.status}) — 저장되지 않았어요.`, 'err'); return; }
+    baseCanon = snap;
+    setStatus('✅ 저장 완료! 1~2분 뒤 모두에게 반영', 'ok');
+    toast('✅ 저장 완료!');
+  } catch {
+    setStatus('❌ 네트워크 오류 — 저장되지 않았어요. 연결 확인 후 다시 눌러 주세요.', 'err');
+  } finally {
+    saving = false; $('#ebSave').disabled = false;
+  }
+}
+
+$('#ebSave').onclick = save;
+$('#ebDl').onclick = download;
+$('#ebOff').onclick = exitEdit;
+$('#ebTok').onclick = async () => { if (askOpen) return; const t = await askToken(false); if (t) { token = t; refreshBar(); } };
+
+/* ── boot: 열 때마다 notes.json 을 새로 읽음 ── */
+function boot(d) {
+  setData(d); baseCanon = JSON.stringify(d);
+  read = new Set(store.get('read', []).filter(id => BY_ID[id]));
+  state.part = PARTS[0].id;
+  fromHash(); render();
+}
+async function loadNotes() {
+  page.innerHTML = '<p class="lead">노트 불러오는 중…</p>';
+  try {
+    const r = await fetch('notes.json?v=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    boot(await r.json());
+  } catch {
+    page.innerHTML = `<div class="soon-box"><h2>노트를 불러오지 못했어요</h2>
+      <p>notes.json 을 읽지 못했어요. 파일(file://)로 직접 열었다면 웹 주소로 열어야 해요(예: <code class="ic">python3 -m http.server</code>).</p>
+      <p><button class="btn" id="retryBtn">다시 시도</button></p></div>`;
+    $('#retryBtn').onclick = loadNotes;
+  }
+}
+window.addEventListener('hashchange', () => { if (DATA) { fromHash(); render(); } });
+loadNotes();
 })();
 </script>
 </body>
