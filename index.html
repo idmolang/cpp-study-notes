@@ -2073,7 +2073,7 @@ const gh = (url, opts = {}) => fetch('https://api.github.com' + url, {
 const stamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
 const CONFLICT = '⚠️ 다른 곳에서 먼저 저장됐어요(충돌). 📁 파일로 받기로 내 편집을 백업한 뒤 새로고침하세요.';
 function badToken() { token = ''; store.set('tok', ''); return '🔒 토큰이 틀렸거나 만료됐어요. 편집을 끄고 , 3번으로 다시 켜서 새 토큰을 입력하세요.'; }
-const NOPERM = '🔒 토큰 권한이 없어요. 이 저장소 · Contents: Read and write 로 만들었는지 확인하세요.';
+const noperm = (s, i) => `🔒 토큰 권한 문제 (HTTP ${s}, 대상 ${i.owner}/${i.repo}). 토큰이 이 저장소를 선택했는지, Contents: Read and write 인지 확인하세요.`;
 
 async function save() {
   if (saving) return;
@@ -2092,7 +2092,7 @@ async function save() {
     const snap = JSON.stringify(DATA), text = serialize(DATA);
     const g = await gh(api);
     if (g.status === 401) { setStatus(badToken(), 'err'); return; }
-    if (g.status === 403 || g.status === 404) { setStatus(NOPERM, 'err'); return; }
+    if (g.status === 403 || g.status === 404) { setStatus(noperm(g.status, info), 'err'); return; }
     if (!g.ok) { setStatus(`❌ 저장 실패 (읽기 HTTP ${g.status}) — 저장되지 않았어요.`, 'err'); return; }
     const cur = await g.json();
     let remote;
@@ -2100,7 +2100,7 @@ async function save() {
     if (remote !== baseCanon) { setStatus(CONFLICT, 'err'); return; }
     const p = await gh(api, { method: 'PUT', body: JSON.stringify({ message: `✏️ 노트 편집 (${stamp()})`, content: b64enc(text), sha: cur.sha }) });
     if (p.status === 401) { setStatus(badToken(), 'err'); return; }
-    if (p.status === 403 || p.status === 404) { setStatus(NOPERM, 'err'); return; }
+    if (p.status === 403 || p.status === 404) { setStatus(noperm(p.status, info), 'err'); return; }
     if (p.status === 409) { setStatus(CONFLICT, 'err'); return; }
     if (!p.ok) { setStatus(`❌ 저장 실패 (HTTP ${p.status}) — 저장되지 않았어요.`, 'err'); return; }
     baseCanon = snap;
