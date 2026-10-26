@@ -1963,9 +1963,39 @@ function askToken(forEdit) {
   });
 }
 
+/* ── 편집 비밀번호 (화면 잠금용 — 코드가 공개라 진짜 보안은 깃허브 토큰이 맡음) ── */
+const PW_HASH = 'd3cf6b77fdeae5ff43871acc766c91e3bca9b7d3b3a6c8c073d1ec0751df786d';
+const sha256 = async s => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('');
+function askPass() {
+  return new Promise(resolve => {
+    askOpen = true;
+    const prev = document.activeElement;
+    const ov = document.createElement('div'); ov.className = 'modal';
+    ov.innerHTML = `<form class="mbox" role="dialog" aria-modal="true" aria-labelledby="pwT">
+      <h2 id="pwT">🔒 편집 비밀번호</h2>
+      <input type="password" autocomplete="off" inputmode="numeric" aria-label="편집 비밀번호">
+      <div class="merr" role="alert"></div>
+      <div class="mact"><button type="submit" class="primary">확인</button><button type="button" data-k="cancel">취소</button></div>
+    </form>`;
+    document.body.append(ov);
+    const inp = ov.querySelector('input'), err = ov.querySelector('.merr');
+    const done = ok => { inp.value = ''; ov.remove(); askOpen = false; document.removeEventListener('keydown', onKey, true); if (prev && prev.focus) prev.focus(); resolve(ok); };
+    const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); done(false); } };
+    document.addEventListener('keydown', onKey, true);
+    ov.querySelector('form').onsubmit = async e => {
+      e.preventDefault();
+      if (await sha256(inp.value) === PW_HASH) done(true);
+      else { err.textContent = '비밀번호가 달라요.'; inp.value = ''; inp.focus(); }
+    };
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-k]')) done(false); });
+    inp.focus();
+  });
+}
+
 /* ── enter / leave ── */
 async function enterEdit() {
   if (editing || askOpen || !DATA) return;
+  if (!await askPass()) return;
   token = store.get('tok', '');
   if (!token) {
     const t = await askToken(true);
