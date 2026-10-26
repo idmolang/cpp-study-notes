@@ -1,0 +1,66 @@
+@ p3-1
+out ‖ 출력은? ‖ int x { -1 };⏎unsigned int y { 1 };⏎std::cout << (x < y); ‖ 1 ;; 0 ;; -1 ;; 컴파일 오류 ‖ 2 ‖ -1 이 unsigned 로 바뀌어 4294967295 가 되므로 false.
+mc ‖ 값을 잃지 않는 안전한 변환은? ‖ double → int ;; int → short ;; char → int (승격) ;; double → float ‖ 3 ‖ 승격은 작은 타입 → int/double 로, 값 보존.
+mc ‖ `short a{1}, b{2}; auto s { a + b };` 에서 s 의 타입은? ‖ short ;; int ;; long ;; double ‖ 2 ‖ short 끼리 더해도 int 로 승격된 뒤 계산.
+ox ‖ `i < v.size()` (i 는 int) 는 부호 섞기 경고가 날 수 있다. ‖ O ‖ size() 는 부호 없는 size_t.
+mc ‖ 부호 있는 값과 없는 값을 섞으면 보통 어떻게 될까? ‖ 부호 없는 쪽이 부호 있는 쪽으로 ;; 부호 있는 쪽이 부호 없는 쪽으로 ;; 둘 다 double 로 ;; 컴파일 오류 ‖ 2 ‖ 그래서 -1 이 42억이 됨.
+@ p3-2
+mc ‖ 권장되는 명시적 형변환은? ‖ `(double)a` ;; `static_cast<double>(a)` ;; `double(a)` 만 ;; 변환하지 않기 ‖ 2 ‖ 무슨 변환인지 드러나고 위험한 변환은 막아 줌.
+ox ‖ `using Meter = double;` 로 만든 Meter 는 double 과 다른 새 타입이라 섞으면 오류가 난다. ‖ X ‖ 별칭은 이름만 다른 같은 타입. Meter + Second 도 통과.
+mc ‖ `typedef` 대신 요즘 권장되는 별칭 문법은? ‖ `#define` ;; `using 이름 = 타입;` ;; `auto` ;; `alias` ‖ 2 ‖ `using Scores = std::vector<int>;`
+mc ‖ 축소 변환(예: 4.9 → int)을 컴파일 오류로 막아 주는 것은? ‖ `=` 초기화 ;; `{ }` 초기화 ;; `( )` 초기화 ;; static_cast ‖ 2 ‖ 일부러 자를 땐 static_cast 로 명시.
+ox ‖ C 스타일 캐스트 `(int)x` 는 const 를 떼는 위험한 변환도 조용히 해 버릴 수 있다. ‖ O ‖ 그래서 static_cast 를 씀.
+@ p3-3
+ox ‖ 반환 타입만 다른 두 함수는 오버로딩할 수 있다. ‖ X ‖ 반환값을 안 쓰는 호출에서 구분할 수 없어 오류.
+mc ‖ 오버로드를 구분하는 기준으로 맞는 것은? ‖ 반환 타입 ;; 매개변수 이름 ;; 매개변수의 개수와 타입 ;; 함수 위치 ‖ 3 ‖ 개수·타입만.
+mc ‖ `print(int)` 와 `print(double)` 이 있을 때 `print('a')` 는? ‖ print(int) — 승격 ;; print(double) ;; 모호함 오류 ;; 컴파일 오류 ‖ 1 ‖ 승격(char→int)이 표준 변환(char→double)보다 먼저.
+mc ‖ `f(int)`, `f(long)` 만 있을 때 `f(3.0)` 은? ‖ f(int) ;; f(long) ;; 모호함(ambiguous) 오류 ;; 0 반환 ‖ 3 ‖ double→int, double→long 둘 다 같은 등급(표준 변환).
+mc ‖ 오버로드 해석 순서로 맞는 것은? ‖ 승격 → 정확 → 표준 ;; 정확 → 승격 → 표준 → 사용자 → 가변 ;; 표준 → 정확 → 승격 ;; 순서 없음 ‖ 2 ‖ 정·승·표·사·가.
+@ p3-4
+mc ‖ 컴파일 오류가 나는 선언은? ‖ `void f(int a, int b = 0);` ;; `void f(int a = 1, int b);` ;; `void f(int a = 1, int b = 2);` ;; `void f(int a);` ‖ 2 ‖ 기본값은 오른쪽부터 채워야 함.
+ox ‖ 기본 인자는 선언과 정의 양쪽에 모두 적어야 한다. ‖ X ‖ 한 곳에만 (보통 헤더의 선언).
+out ‖ 출력은? ‖ void print(int v, int base = 10) { std::cout << base; }⏎print(15); ‖ 15 ;; 10 ;; 0 ;; 컴파일 오류 ‖ 2 ‖ base 를 안 넘기면 기본값 10.
+mc ‖ `void f(int);` 와 `void f(int, int = 0);` 이 같이 있을 때 `f(1)` 은? ‖ 첫 번째 ;; 두 번째 ;; 모호함 오류 ;; 둘 다 호출 ‖ 3 ‖ 둘 다 딱 맞아서 고를 수 없음.
+ox ‖ 기본값이 있는 매개변수는 오른쪽 끝에 몰려 있어야 한다. ‖ O ‖ 앞 칸을 비우고 뒤만 넘길 수는 없으니까.
+@ p3-5
+mc ‖ rvalue 인 것은? ‖ `x` ;; `arr[0]` ;; `x + 1` ;; `*ptr` ‖ 3 ‖ 계산 결과는 잠깐 생긴 임시 값.
+ox ‖ `5 = x;` 는 컴파일 오류다. ‖ O ‖ rvalue(5)는 `=` 왼쪽에 올 수 없음.
+mc ‖ 함수 안에서 원본의 “다른 이름”이 생기는 전달 방식은? ‖ 값 ;; 참조 ;; 포인터 ;; 셋 다 ‖ 2 ‖ 참조는 별개 객체가 아니라 별명.
+mc ‖ “값 없음(널)”을 표현할 수 있는 전달 방식은? ‖ 값 ;; 참조 ;; 포인터 ;; 없음 ‖ 3 ‖ nullptr 로 없음 표현 가능.
+ox ‖ rvalue 는 `&` 로 주소를 얻을 수 있다. ‖ X ‖ 임시 값엔 주소가 없음. 주소가 있으면 lvalue.
+@ p3-6
+out ‖ 출력은? ‖ int x { 5 };⏎int& ref { x };⏎ref = 10;⏎std::cout << x; ‖ 5 ;; 10 ;; 15 ;; 컴파일 오류 ‖ 2 ‖ ref 는 x 의 별명이라 x 가 바뀜.
+mc ‖ 컴파일 오류가 나는 것은? ‖ `int& r { x };` ;; `const int& r { 5 };` ;; `int& r { 5 };` ;; `const int& r { x };` ‖ 3 ‖ non-const 참조는 임시 값(5)에 붙을 수 없음.
+mc ‖ `int& ref { x }; ref = y;` 가 하는 일은? ‖ ref 가 y 를 가리키게 됨 ;; x 에 y 의 값이 대입됨 ;; 컴파일 오류 ;; y 가 x 로 바뀜 ‖ 2 ‖ 참조는 다른 대상으로 다시 연결할 수 없음.
+mc ‖ std::string 을 읽기만 하는 매개변수로 알맞은 것은? ‖ `std::string s` ;; `const std::string& s` ;; `std::string& s` ;; `std::string* s` ‖ 2 ‖ 복사 없고 리터럴도 받음. (string_view 도 좋음)
+ox ‖ int 같은 기본 자료형은 const& 보다 값으로 받는 게 보통 낫다. ‖ O ‖ 복사가 포인터 크기 이하라 오히려 쌈.
+@ p3-7
+out ‖ 출력은? ‖ int x { 5 };⏎int* p { &x };⏎*p = 10;⏎std::cout << x; ‖ 5 ;; 10 ;; 주소값 ;; 컴파일 오류 ‖ 2 ‖ `*p` 로 따라가 x 를 바꿈.
+mc ‖ `const int* p` 에서 할 수 없는 것은? ‖ `p = &y;` ;; `*p = 10;` ;; `std::cout << *p;` ;; `if (p)` ‖ 2 ‖ const 가 `*` 왼쪽 → 가리키는 값을 잠금.
+mc ‖ `int* const p { &x };` 에서 할 수 없는 것은? ‖ `*p = 10;` ;; `p = &y;` ;; `std::cout << *p;` ;; 없음 ‖ 2 ‖ const 가 `*` 오른쪽 → 포인터 자신을 잠금.
+ox ‖ 초기화 안 한 포인터는 널 포인터보다 안전하다. ‖ X ‖ 쓰레기 주소가 엉뚱한 메모리를 조용히 망가뜨려 더 위험.
+fill ‖ 빈칸에 들어갈 널 검사는? ‖ void update(int* p) {⏎    if (______) return;⏎    *p = 100;⏎} ‖ `!p` ;; `p` ;; `*p` ;; `&p` ‖ 1 ‖ 널이면 돌아가기. `p == nullptr` 도 같은 뜻.
+@ p3-8
+mc ‖ 댕글링(dangling)이 생기는 함수는? ‖ `int f() { int x{5}; return x; }` ;; `int& f() { int x{5}; return x; }` ;; `int& f(int& v) { return v; }` ;; `int f(int v) { return v; }` ‖ 2 ‖ 지역 변수의 참조를 반환 → 함수가 끝나면 x 가 사라짐.
+ox ‖ 인자로 받은 참조를 그대로 돌려주는 것은 안전하다. ‖ O ‖ 호출한 쪽 객체는 함수가 끝나도 살아 있음.
+mc ‖ 결과 두 개(최소, 최대)를 돌려줄 때 더 읽기 쉬운 방법은? ‖ out 매개변수 두 개 ;; struct 로 묶어 값 반환 ;; 전역 변수 ;; 포인터 두 개 반환 ‖ 2 ‖ `auto [lo, hi] = getStats(v);`
+mc ‖ 참조 대신 포인터를 써야 하는 경우는? ‖ 반드시 있는 객체 ;; 읽기만 하는 큰 객체 ;; 없을 수도 있음을 표현할 때 ;; int 하나 받을 때 ‖ 3 ‖ 기본은 참조, 널이 필요할 때만 포인터.
+mc ‖ `const std::string& f() { return "임시"; }` 의 문제는? ‖ 문제없음 ;; 임시 string 이 사라져 댕글링 ;; 컴파일 오류 ;; 느림 ‖ 2 ‖ 반환되는 순간 임시 객체가 소멸.
+@ p3-9
+out ‖ 컴파일될까? ‖ enum Color { red, green };⏎enum Fruit { apple, banana };⏎if (red == apple) std::cout << "같음"; ‖ 컴파일 오류 ;; 컴파일되고 “같음” 출력 ;; 컴파일되고 아무 출력 없음 ;; 실행 중 오류 ‖ 2 ‖ 그냥 enum 은 정수로 변해서 비교됨 (둘 다 0).
+mc ‖ enum class 의 장점은? ‖ 더 빠름 ;; 이름이 새지 않고 정수로 자동 변환 안 됨 ;; 값이 1부터 시작 ;; 문자열로 출력됨 ‖ 2 ‖ 이름 오염·의도치 않은 비교를 막음.
+fill ‖ 빈칸에 들어갈 것은? ‖ enum class Color { red, green, blue };⏎Color c { ______ }; ‖ `green` ;; `Color::green` ;; `1` ;; `"green"` ‖ 2 ‖ enum class 는 범위 지정 필수.
+mc ‖ enum class 값 c 의 정수 값을 출력하려면? ‖ `std::cout << c;` ;; `std::cout << static_cast<int>(c);` ;; `std::cout << int c;` ;; 불가능 ‖ 2 ‖ 자동 변환이 없으니 명시적으로.
+ox ‖ enum 이나 struct 정의 끝의 `;` 를 빠뜨리면 엉뚱한 줄에서 오류가 날 수 있다. ‖ O ‖ `};` 로 끝내기.
+@ p3-10
+mc ‖ 포인터 p 로 Employee 의 name 에 접근하는 법은? ‖ `p.name` ;; `p->name` ;; `*p.name` ;; `&p.name` ‖ 2 ‖ `p->name` = `(*p).name`.
+out ‖ e2.salary 의 값은? ‖ struct Employee { int id {}; std::string name {}; double salary { 0.0 }; };⏎Employee e2 { 2, "김철수" }; ‖ 0 ;; 2 ;; 쓰레기 값 ;; 컴파일 오류 ‖ 1 ‖ 빠진 멤버는 기본값(0.0).
+mc ‖ 같은 멤버인데 sizeof 가 더 작은 순서는? (64비트 기준) ‖ char, double, char ;; double, char, char ;; 둘 다 같음 ;; 알 수 없음 ‖ 2 ‖ 큰 멤버부터 두면 패딩이 줄어 24 → 16.
+ox ‖ struct 의 크기는 항상 멤버 크기의 합과 같다. ‖ X ‖ 정렬을 위한 여백(패딩) 때문에 더 클 수 있음.
+mc ‖ 멤버 순서를 바꿔도 초기화 뜻이 안 바뀌는 방법은? (C++20) ‖ `{ 1, "홍" }` ;; `{ .id = 1, .name = "홍" }` ;; `( 1, "홍" )` ;; `= 1` ‖ 2 ‖ 지정 초기화.
+@ p3-11
+mc ‖ vector 를 함수에서 고쳐야 한다. 매개변수는? ‖ `std::vector<int> v` ;; `const std::vector<int>& v` ;; `std::vector<int>& v` ;; `std::string_view v` ‖ 3 ‖ 바꿔야 하면 참조.
+mc ‖ 큰 Employee 를 읽기만 하는 매개변수는? ‖ `Employee e` ;; `const Employee& e` ;; `Employee& e` ;; `Employee* e` ‖ 2 ‖ 복사 비싸고 읽기만 → const&.
+mc ‖ “부모가 없을 수도 있는” 노드를 받는 매개변수는? ‖ `Node& parent` ;; `Node* parent` ;; `Node parent` ;; `const Node& parent` ‖ 2 ‖ 없을 수 있으면 포인터.
+mc ‖ `for (auto e : v)` 의 문제는? ‖ 문제없음 ;; 원소마다 복사 ;; 컴파일 오류 ;; 역순으로 돎 ‖ 2 ‖ `for (const auto& e : v)` 로.
+mc ‖ 매개변수 결정 순서로 맞는 것은? ‖ 문자열 → 비싼가 → 바꾸나 → 없나 ;; 바꾸나 → 없나 → 비싼가 → 문자열 ;; 비싼가 → 바꾸나 → 없나 ;; 순서 없음 ‖ 2 ‖ 변·없·비·문.

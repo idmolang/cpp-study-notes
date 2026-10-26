@@ -1,0 +1,84 @@
+@ p2-1
+out ‖ 출력은? ‖ int n { 012 };⏎std::cout << n; ‖ 12 ;; 10 ;; 2 ;; 컴파일 오류 ‖ 2 ‖ 0 으로 시작하면 8진수. 012(8) = 10.
+mc ‖ `0xFF` 의 값은? ‖ 15 ;; 255 ;; 256 ;; 0 ‖ 2 ‖ 16진수 FF = 255.
+ox ‖ const 변수의 초기값은 반드시 컴파일할 때 정해져야 한다. ‖ X ‖ const 는 “초기화 후 안 바뀐다”만 보장. 실행 중 값도 OK.
+mc ‖ `3.14f` 의 타입은? ‖ double ;; float ;; long double ;; int ‖ 2 ‖ f 접미사 = float. 그냥 3.14 는 double.
+mc ‖ `int month { 08 };` 이 컴파일 오류인 이유는? ‖ month 는 예약어 ;; 0 으로 시작하면 8진수인데 8진수엔 8이 없음 ;; 중괄호 때문 ;; int 범위 초과 ‖ 2 ‖ 자릿수 맞추려고 0 을 붙이면 8진수가 됨.
+@ p2-2
+mc ‖ 사용자 입력으로 정해지는 값을 담을 수 있는 것은? ‖ `constexpr int r { rows };` ;; `const int r { rows };` ;; 둘 다 ;; 둘 다 안 됨 ‖ 2 ‖ constexpr 은 컴파일할 때 값이 정해져야 함. 실행 중 값은 const.
+ox ‖ constexpr 변수는 자동으로 const 이기도 하다. ‖ O ‖ constexpr ⊃ const.
+mc ‖ 값이 미리 정해진 상수(예: 중력 9.8)에 기본으로 쓸 것은? ‖ 그냥 변수 ;; const ;; constexpr ;; #define ‖ 3 ‖ 미리 아는 값은 constexpr 이 기본.
+fill ‖ 배열 크기로 쓸 수 있게 빈칸을 채우면? ‖ ______ int side { 4 };⏎int arr[side * side]; ‖ `constexpr` ;; `static` ;; `extern` ;; `auto` ‖ 1 ‖ 배열 크기엔 컴파일 타임 상수가 필요.
+mc ‖ 헤더에 상수를 두고 여러 파일에서 “하나만” 공유하려면? ‖ `constexpr` ;; `inline constexpr` ;; `static constexpr` ;; `extern` 만 ‖ 2 ‖ inline 이 있어야 사본이 하나로 합쳐짐 (C++17).
+@ p2-3
+out ‖ “홍 길동” 을 입력했다. name 에 들어가는 것은? ‖ std::string name {};⏎std::cin >> name; ‖ 홍 길동 ;; 홍 ;; 길동 ;; 빈 문자열 ‖ 2 ‖ `cin >>` 은 공백에서 끊김. “길동” 은 버퍼에 남음.
+fill ‖ 공백 포함 한 줄 전체를 받는 코드는? ‖ std::string name {};⏎______ ‖ `std::getline(std::cin >> std::ws, name);` ;; `std::cin >> name;` ;; `std::cin.get(name);` ;; `std::getline(name);` ‖ 1 ‖ getline + ws 를 세트로.
+mc ‖ `cin >> age;` 바로 다음에 `getline(cin, s);` 를 하면 s 는? ‖ 다음 줄 전체 ;; 빈 문자열 ;; age 값 ;; 컴파일 오류 ‖ 2 ‖ 남은 Enter(개행)를 바로 만나 빈 문자열로 끝남 → ws 필요.
+out ‖ 출력은? (UTF-8 환경) ‖ std::string s { "한글" };⏎std::cout << s.length(); ‖ 2 ;; 4 ;; 6 ;; 8 ‖ 3 ‖ length() 는 바이트 수. 한글 한 글자 = 3바이트.
+ox ‖ std::string 을 쓰려면 `<string>` 을 직접 include 하는 게 안전하다. ‖ O ‖ iostream 이 끌어오기도 하지만 표준 보장은 없음.
+@ p2-4
+mc ‖ 문자열을 읽기만 하는 함수 매개변수로 가장 알맞은 것은? ‖ `std::string` ;; `std::string_view` ;; `std::string&` ;; `char` ‖ 2 ‖ 복사 없이 보기만. 리터럴도 그대로 받음.
+mc ‖ 클래스의 멤버 변수로 문자열을 저장할 때는? ‖ std::string ;; std::string_view ;; 둘 다 똑같음 ;; const char ‖ 1 ‖ view 는 원본보다 오래 살면 댕글링.
+ox ‖ 함수 안 지역 std::string 을 string_view 로 반환해도 안전하다. ‖ X ‖ 지역 string 이 사라져 view 가 빈 메모리를 가리킴 → UB.
+ox ‖ string_view 로 보고 있는 문자열을 view 를 통해 수정할 수 있다. ‖ X ‖ string_view 는 읽기 전용.
+mc ‖ string_view 가 실제로 가지고 있는 것은? ‖ 문자열 전체의 사본 ;; 시작 주소와 길이 ;; 문자 하나 ;; 아무것도 없음 ‖ 2 ‖ 소유하지 않고 위치와 길이만 앎 → 복사가 거의 공짜.
+@ p2-5
+ox ‖ 우선순위가 정해져 있으면 피연산자를 계산하는 순서도 정해진다. ‖ X ‖ 우선순위는 묶임만 정함. 계산 순서는 대부분 미지정.
+mc ‖ `i++ + ++i` 의 결과는? ‖ 항상 4 ;; 항상 3 ;; 미정의 동작 (UB) ;; 컴파일 오류 ‖ 3 ‖ 한 식에서 같은 변수를 두 번 바꾸면 UB.
+mc ‖ `a + b * c` 에서 먼저 묶이는 것은? ‖ a + b ;; b * c ;; 왼쪽부터 ;; 정해져 있지 않음 ‖ 2 ‖ `*` 가 `+` 보다 우선순위가 높음.
+mc ‖ 우선순위가 헷갈릴 때 가장 좋은 방법은? ‖ 표를 외운다 ;; 괄호를 친다 ;; 한 줄에 몰아 쓴다 ;; 컴파일러를 믿는다 ‖ 2 ‖ 괄호로 의도를 드러내기.
+ox ‖ `&&` 는 `||` 보다 우선순위가 높다. ‖ O ‖ 섞어 쓸 때는 괄호로 묶는 게 안전.
+@ p2-6
+out ‖ 출력은? ‖ std::cout << -5 % 3; ‖ 1 ;; -2 ;; 2 ;; -1 ‖ 2 ‖ 나머지의 부호는 앞 숫자(-5)를 따름.
+out ‖ 출력은? ‖ int a { 5 };⏎int b { a++ };⏎std::cout << a << ' ' << b; ‖ 6 6 ;; 6 5 ;; 5 6 ;; 5 5 ‖ 2 ‖ 후위 ++ 는 옛 값(5)을 주고 a 를 6 으로.
+out ‖ 출력은? ‖ int x { 5 };⏎int y { ++x };⏎std::cout << x << ' ' << y; ‖ 6 6 ;; 6 5 ;; 5 6 ;; 5 5 ‖ 1 ‖ 전위 ++ 는 먼저 올리고 새 값(6)을 줌.
+mc ‖ 음수까지 맞게 홀수를 판정하는 식은? ‖ `x % 2 == 1` ;; `x % 2 != 0` ;; `x / 2 == 1` ;; `x % 2 == -1` ‖ 2 ‖ `-3 % 2` 는 -1 이라 `== 1` 은 실패.
+ox ‖ `std::pow(3, 2)` 는 int 9 를 돌려준다. ‖ X ‖ double 을 돌려줌. 8.999… 같은 오차가 생길 수 있음.
+@ p2-7
+mc ‖ `ptr` 이 널일 수 있을 때 안전한 조건은? ‖ `ptr->value > 0 && ptr != nullptr` ;; `ptr != nullptr && ptr->value > 0` ;; `ptr->value > 0 || ptr` ;; 둘 다 똑같음 ‖ 2 ‖ 단축 평가 — 왼쪽이 false 면 오른쪽을 안 봄. 널 검사는 왼쪽에.
+ox ‖ `a || b` 에서 a 가 true 면 b 는 계산하지 않는다. ‖ O ‖ 결과가 이미 true 로 확정됨.
+mc ‖ `!(a && b)` 와 같은 것은? ‖ `!a && !b` ;; `!a || !b` ;; `a || b` ;; `a && !b` ‖ 2 ‖ 드모르간: ! 를 안으로 넣으면 && ↔ || 뒤집힘.
+mc ‖ 실수 두 개가 “같은지” 비교하는 올바른 방법은? ‖ `a == b` ;; 차이가 허용 오차 안인지 확인 ;; int 로 바꿔 비교 ;; 문자열로 비교 ‖ 2 ‖ 실수는 근삿값. learncpp 6.7 절 방식.
+out ‖ 출력은? ‖ int x { 3 }, y { 7 };⏎std::cout << (x > y ? x : y); ‖ 3 ;; 7 ;; true ;; 0 ‖ 2 ‖ 조건이 거짓이라 뒤쪽 y.
+@ p2-8
+out ‖ 출력 순서는? ‖ int value { 10 };⏎int main() {⏎    int value { 20 };⏎    { int value { 30 }; std::cout << value; }⏎    std::cout << value << ::value;⏎} ‖ 302010 ;; 102030 ;; 303030 ;; 201030 ‖ 1 ‖ 안쪽 30 → 바깥 지역 20 → `::value` 전역 10.
+mc ‖ “이 이름을 어디서 쓸 수 있나”를 뭐라고 할까? ‖ 수명 ;; 스코프 ;; 링키지 ;; 타입 ‖ 2 ‖ 스코프 = 어디서, 수명 = 언제까지, 링키지 = 파일 간.
+mc ‖ 함수 밖 `static int s { 0 };` 의 링키지는? ‖ 없음 ;; 내부 (이 파일만) ;; 외부 ;; 동적 ‖ 2 ‖ 함수 밖 static = 내부 링키지.
+ox ‖ `extern int g_count;` 는 변수를 정의(메모리 확보)한다. ‖ X ‖ extern 은 “다른 곳에 있다”는 선언만.
+ox ‖ 함수 밖 `const int g_max { 100 };` 은 기본적으로 다른 파일에서도 보인다. ‖ X ‖ const 전역은 기본이 내부 링키지.
+@ p2-9
+out ‖ 출력은? ‖ void counter() {⏎    static int calls { 0 };⏎    ++calls;⏎    std::cout << calls;⏎}⏎int main() { counter(); counter(); counter(); } ‖ 111 ;; 123 ;; 000 ;; 333 ‖ 2 ‖ static 지역 변수는 한 번만 초기화되고 값이 유지됨.
+mc ‖ 함수 안 static 변수에서 바뀌는 것은? ‖ 스코프 ;; 수명 ;; 링키지 ;; 타입 ‖ 2 ‖ 보이는 곳은 그대로, 수명만 프로그램 끝까지.
+mc ‖ 요즘 C++ 에서 `inline` 변수의 뜻은? ‖ 호출 지점에 코드를 펼쳐라 ;; 같은 정의가 여러 파일에 있어도 ODR 위반 아님 ;; 빠르게 실행 ;; 읽기 전용 ‖ 2 ‖ 그래서 헤더 상수에 `inline constexpr`.
+ox ‖ `static` 은 함수 안에서 쓰든 밖에서 쓰든 뜻이 같다. ‖ X ‖ 안: 수명을 정적으로, 밖: 링키지를 내부로.
+mc ‖ 가장 안전한 using 은? ‖ 헤더에 `using namespace std;` ;; cpp 맨 위 `using namespace std;` ;; 함수 안 `using std::cout;` ;; `#define cout std::cout` ‖ 3 ‖ 필요한 이름만, 좁은 범위에서.
+@ p2-10
+out ‖ x 가 3 일 때 출력은? ‖ if (x > 5);⏎    std::cout << "큼"; ‖ 아무것도 안 나옴 ;; 큼 ;; 컴파일 오류 ;; 3 ‖ 2 ‖ `;` 에서 if 가 끝나서 아래 줄은 항상 실행.
+out ‖ grade 가 'A' 일 때 출력은? ‖ switch (grade) {⏎    case 'A': std::cout << "우수 ";⏎    case 'B': std::cout << "보통 "; break;⏎    default:  std::cout << "기타 ";⏎} ‖ 우수 ;; 우수 보통 ;; 우수 보통 기타 ;; 보통 ‖ 2 ‖ A 에 break 가 없어 B 로 흘러내리고, B 의 break 에서 멈춤.
+mc ‖ switch 조건으로 쓸 수 없는 타입은? ‖ int ;; char ;; enum ;; std::string ‖ 4 ‖ switch 는 정수·열거형만.
+mc ‖ 일부러 다음 case 로 흘려보낼 때 붙이는 표시는? ‖ `continue;` ;; `[[fallthrough]];` ;; `goto next;` ;; `// next` ‖ 2 ‖ C++17. 경고도 사라짐.
+ox ‖ else 는 들여쓰기에 맞춰 바깥 if 와 짝지어진다. ‖ X ‖ else 는 가장 가까운 if 와 짝. 들여쓰기는 컴파일러가 안 봄.
+@ p2-11
+mc ‖ 메뉴처럼 “최소 한 번은 실행”해야 할 때 알맞은 반복문은? ‖ for ;; while ;; do-while ;; switch ‖ 3 ‖ do-while 은 본문을 먼저 실행하고 조건을 봄.
+mc ‖ 반복문에서 이번 회차만 건너뛰고 계속하려면? ‖ break ;; continue ;; return ;; exit ‖ 2 ‖ break 는 반복 전체 탈출.
+mc ‖ 지역 객체까지 모두 정리하며 끝나는 가장 안전한 종료는? ‖ main 에서 return ;; std::exit ;; std::abort ;; 무한 루프 ‖ 1 ‖ exit 는 현재 함수의 지역 객체를 정리 안 함, abort 는 아무것도 안 함.
+ox ‖ `rand() % 6 + 1` 은 1~6 이 고르게 나오는 좋은 방법이다. ‖ X ‖ 품질이 나쁘고 `%` 로 자르면 분포가 치우침. `<random>` 사용.
+mc ‖ 난수 엔진(mt19937)을 다루는 올바른 방법은? ‖ 호출할 때마다 새로 만들기 ;; 한 번 만들어 재사용 ;; 매번 시드 0 ;; 쓰지 않기 ‖ 2 ‖ 매번 새로 만들면 같은 값이 반복될 수 있음.
+@ p2-12
+mc ‖ 테스트에서 특히 꼭 확인해야 하는 값은? ‖ 평범한 중간값만 ;; 경계값 (0, 음수, 최댓값, 빈 입력) ;; 랜덤 값만 ;; 아무 값이나 하나 ‖ 2 ‖ 버그는 대부분 경계에 숨어 있음.
+mc ‖ if 의 참·거짓 양쪽이 다 실행됐는지 보는 것은? ‖ 문장 커버리지 ;; 분기 커버리지 ;; 반복 커버리지 ;; 코드 리뷰 ‖ 2 ‖ 분기 = 갈림길 양쪽.
+ox ‖ 테스트의 큰 쓸모 중 하나는 고친 버그가 다시 살아나지 않게 막는 것이다. ‖ O ‖ 버그 하나 고칠 때마다 재현 테스트 하나.
+mc ‖ 오류 처리 중 가장 나쁜 선택은? ‖ 함수 안에서 해결 ;; 부른 쪽에 알림 ;; 프로그램 종료 ;; 조용히 무시 ‖ 4 ‖ 잘못된 값이 섞여 원인에서 먼 곳에서 터짐.
+ox ‖ 예외 던지기는 이 과정의 시험 범위 핵심이다. ‖ X ‖ 📎 이 과정 범위 밖으로 안내됨.
+@ p2-13
+mc ‖ 숫자 대신 문자를 입력해 cin 이 실패했다. 가장 먼저 할 일은? ‖ `std::cin.ignore(...)` ;; `std::cin.clear()` ;; 다시 `cin >> x` ;; return ‖ 2 ‖ clear 로 실패 깃발을 먼저 내려야 ignore 도 동작.
+mc ‖ 실패 후 `clear()` 만 하고 `ignore()` 를 빼먹으면? ‖ 정상 동작 ;; 같은 잘못된 문자를 또 읽어 무한 루프 ;; 컴파일 오류 ;; 프로그램 종료 ‖ 2 ‖ 버퍼에 남은 쓰레기를 치워야 함.
+ox ‖ assert 는 Release 빌드(NDEBUG)에서도 그대로 검사된다. ‖ X ‖ NDEBUG 면 전부 사라짐. static_assert 는 항상 검사.
+mc ‖ `assert(++i < 10);` 의 문제는? ‖ 문제없음 ;; Release 에서 assert 가 사라지며 ++i 도 사라짐 ;; 컴파일 오류 ;; 항상 실패 ‖ 2 ‖ assert 안에 부작용 금지.
+mc ‖ 컴파일할 때 검사하는 것은? ‖ assert ;; static_assert ;; if ;; cin ‖ 2 ‖ static_assert 실패 = 컴파일 오류.
+@ p2-14
+mc ‖ 헤더에 `constexpr double g { 9.8 };` 을 두면? ‖ 프로그램 전체에 하나 ;; 포함한 파일마다 사본 ;; 컴파일 오류 ;; 링크 오류 ‖ 2 ‖ `inline constexpr` 로 하나로.
+mc ‖ if 본문에 중괄호를 생략하면 생기는 함정은? ‖ 느려짐 ;; 줄을 추가하면 조용히 if 밖이 됨 ;; 컴파일 오류 ;; 없음 ‖ 2 ‖ 항상 중괄호.
+mc ‖ string_view 를 반환하면 생기는 위험은? ‖ 느려짐 ;; 원본이 사라져 댕글링 ;; 컴파일 오류 ;; 없음 ‖ 2 ‖ 반환은 std::string.
+ox ‖ break 를 빠뜨린 switch 는 컴파일러가 오류로 막아 준다. ‖ X ‖ 오류가 아님. `-Wimplicit-fallthrough` 경고를 켜야 알려 줌.
+mc ‖ 다음 중 2회차 함정의 짝이 틀린 것은? ‖ cin >> name → getline + ws ;; rand() % n → `<random>` ;; x % 2 == 1 → x % 2 != 0 ;; inline constexpr → constexpr ‖ 4 ‖ 반대. 헤더 상수는 constexpr → `inline constexpr` 로 고침.

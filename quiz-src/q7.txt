@@ -1,0 +1,54 @@
+@ p7-1
+mc ‖ 선택 정렬의 원리는? ‖ 이웃끼리 계속 바꿈 ;; 남은 것 중 가장 작은 것을 골라 앞으로 ;; 반으로 나눠 정렬 ;; 무작위로 섞음 ‖ 2 ‖ 매번 최소를 찾아 앞으로 보냄.
+mc ‖ 5만 개 정렬에서 선택 정렬이 std::sort 보다 훨씬 느린 이유는? ‖ 코드를 못 짜서 ;; 알고리즘 차이 — 선택 정렬은 원소 수의 제곱에 비례 ;; 컴파일러 차이 ;; 메모리 부족 ‖ 2 ‖ 실력이 아니라 알고리즘.
+fill ‖ vector v 전체를 정렬하는 코드는? ‖ ______ ‖ `std::sort(v.begin(), v.end());` ;; `v.sort();` ;; `std::sort(v);` ;; `sort(v.size());` ‖ 1 ‖ 범위(시작, 끝)를 넘김.
+ox ‖ 실제 프로그램에서는 직접 짠 정렬보다 std::sort 를 쓰는 게 좋다. ‖ O ‖ 빠르고 실수할 곳이 없음.
+mc ‖ 선택 정렬 바깥 반복의 조건으로 부호 함정을 피한 것은? ‖ `i < v.size() - 1` ;; `i + 1 < v.size()` ;; `i <= v.size()` ;; `i < -1` ‖ 2 ‖ 빈 vector 에서 `size() - 1` 은 거대한 수가 됨.
+@ p7-2
+mc ‖ `v.end()` 가 가리키는 곳은? ‖ 마지막 원소 ;; 마지막 원소의 “다음” 자리 ;; 첫 원소 ;; nullptr ‖ 2 ‖ 값이 없는 자리 — 읽으면 UB.
+out ‖ 출력은? ‖ std::vector<int> v { 90, 75, 84 };⏎auto it = v.begin();⏎++it;⏎std::cout << *it; ‖ 90 ;; 75 ;; 84 ;; 주소값 ‖ 2 ‖ ++ 로 다음 자리, * 로 값.
+ox ‖ 빈 vector 에서는 begin() 과 end() 가 같다. ‖ O ‖ 그래서 반복이 0번 돌고 특별 처리가 필요 없음.
+mc ‖ range-based for 의 정체는? ‖ 완전히 새로운 기능 ;; begin()/end() 반복자 반복문을 짧게 쓴 것 ;; while 문 ;; 재귀 ‖ 2 ‖ begin/end 만 있으면 무엇이든 사용 가능.
+mc ‖ 반복자로 값을 꺼낼 때 쓰는 기호는? ‖ `&it` ;; `*it` ;; `it.value` ;; `it[]` ‖ 2 ‖ 포인터와 같은 모양.
+@ p7-3
+mc ‖ `std::accumulate` 를 쓰려면 include 할 헤더는? ‖ `<algorithm>` ;; `<numeric>` ;; `<vector>` ;; `<iostream>` ‖ 2 ‖ 나머지 알고리즘은 `<algorithm>`.
+out ‖ 출력은? (v = 90 75 84 68 92) ‖ std::cout << std::accumulate(v.begin(), v.end(), 0); ‖ 409 ;; 92 ;; 5 ;; 0 ‖ 1 ‖ 전부 더하기, 셋째 인자 0 은 시작값.
+mc ‖ `std::max_element(v.begin(), v.end())` 가 돌려주는 것은? ‖ 최댓값 ;; 최댓값의 위치(반복자) ;; 최댓값의 인덱스 int ;; bool ‖ 2 ‖ 값은 `*` 를 붙여 꺼냄.
+mc ‖ std::find 가 값을 못 찾으면 돌려주는 것은? ‖ -1 ;; nullptr ;; end() ;; 0 ‖ 3 ‖ 그래서 반드시 end() 와 비교.
+mc ‖ 앞의 세 개만 정렬하는 코드는? ‖ `std::sort(v.begin(), 3)` ;; `std::sort(v.begin(), v.begin() + 3)` ;; `std::sort(v, 3)` ;; `std::sort(3)` ‖ 2 ‖ 범위를 원하는 만큼만.
+@ p7-4
+fill ‖ 안전하게 출력하려면 빈칸은? ‖ auto it = std::find(v.begin(), v.end(), 84);⏎if (______) std::cout << *it; ‖ `it` ;; `it != v.end()` ;; `*it` ;; `it == v.end()` ‖ 2 ‖ 찾았는지 먼저 확인.
+ox ‖ find 결과를 확인 없이 `*it` 로 읽어도, 못 찾았으면 0 이 나와 안전하다. ‖ X ‖ end() 를 읽는 건 UB.
+mc ‖ 반복자로 훑는 중에 `v.push_back(0);` 을 하면? ‖ 정상 ;; 재할당으로 반복자가 무효 → UB ;; 컴파일 오류 ;; 자동으로 다시 시작 ‖ 2 ‖ 훑는 중엔 크기를 바꾸지 않기.
+mc ‖ 같은 실수를 Java 에서 하면? ‖ 조용히 망가짐 ;; ConcurrentModificationException 예외 ;; 컴파일 오류 ;; 아무 일 없음 ‖ 2 ‖ C++ 은 예외 없이 조용히 망가짐.
+mc ‖ 반복자가 무효가 되는 원인은? ‖ 읽기만 함 ;; 원소 추가로 메모리 이사(재할당) ;; const 사용 ;; range-for 사용 ‖ 2 ‖ 6회차 주소 무효화와 같은 현상.
+@ p7-5
+mc ‖ “80점 이상 개수”를 std::count 로 바로 못 세는 이유는? ‖ 80 이 너무 큼 ;; count 는 값이 같은 것만 셈 — 조건은 판단이 필요 ;; count 는 vector 불가 ;; 정렬이 필요 ‖ 2 ‖ 조건은 함수로 넘겨야 함.
+mc ‖ `bool (*test)(int)` 의 뜻은? ‖ bool 변수 ;; int 를 받아 bool 을 주는 함수를 가리키는 포인터 ;; int 배열 ;; 템플릿 ‖ 2 ‖ 함수 포인터.
+fill ‖ isEven 함수를 넘기는 올바른 코드는? ‖ countIf(v, ______); ‖ `isEven` ;; `isEven()` ;; `&isEven()` ;; `*isEven` ‖ 1 ‖ 괄호를 붙이면 호출 결과를 넘기게 됨.
+out ‖ 출력은? (v = 90 75 84 68 92, isBig = 80 이상) ‖ std::cout << countIf(v, isBig); ‖ 2 ;; 3 ;; 4 ;; 5 ‖ 2 ‖ 90, 84, 92.
+ox ‖ 조건마다 이름 있는 함수를 만들기 번거로운 문제를 람다가 해결한다. ‖ O ‖ 쓰는 자리에서 바로 만듦.
+@ p7-6
+mc ‖ 람다의 기본 모양은? ‖ `(캡처)[매개변수]{본문}` ;; `[캡처](매개변수){ 본문 }` ;; `{캡처}(매개변수)[본문]` ;; `lambda(x): 본문` ‖ 2 ‖ 대·소·중 괄호 순서.
+out ‖ 출력은? (v = 90 75 84 68 92) ‖ std::sort(v.begin(), v.end(), [](int a, int b){ return a > b; });⏎std::cout << v[0]; ‖ 68 ;; 92 ;; 90 ;; 75 ‖ 2 ‖ `a > b` = 큰 게 앞 → 내림차순.
+out ‖ 출력은? (v = 90 75 84 68 92) ‖ auto it = std::find_if(v.begin(), v.end(), [](int x){ return x < 70; });⏎std::cout << *it; ‖ 90 ;; 75 ;; 68 ;; 92 ‖ 3 ‖ 70 미만인 첫 번째.
+ox ‖ 람다의 반환형은 반드시 적어야 한다. ‖ X ‖ return 문을 보고 컴파일러가 추론.
+mc ‖ sort 비교 함수가 답하는 질문은? ‖ a 가 b 보다 큰가? ;; a 가 b 보다 앞에 와야 하나? ;; a 와 b 가 같은가? ;; a 가 맨 앞인가? ‖ 2 ‖ 크기 비교가 아니라 순서 결정.
+@ p7-7
+out ‖ 출력은? ‖ int n { 10 };⏎auto f = [n]() { return n; };⏎n = 99;⏎std::cout << f(); ‖ 10 ;; 99 ;; 0 ;; 컴파일 오류 ‖ 1 ‖ 값 캡처는 만든 순간 값을 복사(사진).
+out ‖ 출력은? ‖ int n { 10 };⏎auto f = [&n]() { return n; };⏎n = 99;⏎std::cout << f(); ‖ 10 ;; 99 ;; 0 ;; 컴파일 오류 ‖ 2 ‖ 참조 캡처는 원본을 봄(CCTV).
+fill ‖ 람다 안에서 count 를 늘리려면 빈칸은? ‖ int count { 0 };⏎auto tick = [______]() { ++count; }; ‖ `count` ;; `&count` ;; 비워 둠 ;; `*count` ‖ 2 ‖ 바꾸려면 참조 캡처.
+mc ‖ `[]` (빈 캡처) 람다 안에서 바깥 지역 변수 cut 을 쓰면? ‖ 정상 ;; 컴파일 오류 — 캡처 안 됨 ;; 0 으로 취급 ;; 전역으로 취급 ‖ 2 ‖ `[cut]` 처럼 캡처해야 함.
+mc ‖ 권장되는 캡처 방식은? ‖ 항상 `[=]` ;; 항상 `[&]` ;; 쓰는 것만 하나씩 `[cut]`, `[&count]` ;; 캡처 금지 ‖ 3 ‖ 무엇을 가져오는지 보이게.
+@ p7-8
+mc ‖ `std::sort(v.begin(), v.end());` 가 Student vector 에서 컴파일 오류 나는 이유는? ‖ vector 가 아니라서 ;; Student 에 operator< 가 없어서 ;; 원소가 3개라서 ;; string 멤버 때문 ‖ 2 ‖ no match for 'operator<'.
+mc ‖ 점수순·이름순처럼 기준이 여러 개일 때 알맞은 것은? ‖ operator< 하나 ;; 이름 붙인 비교 함수들 ;; 매크로 ;; 전역 변수 ‖ 2 ‖ 재사용·가독성.
+mc ‖ max_element 에 내림차순 비교(a > b)를 넘기면? ‖ 최댓값 ;; 최솟값 ;; 컴파일 오류 ;; 랜덤 ‖ 2 ‖ 비교는 “a 가 작은가?”여야 함. 경고도 없음.
+mc ‖ operator< 를 정의하면 좋은 점은? ‖ 정렬이 더 빨라짐 ;; sort 뿐 아니라 max_element·set·map 에도 그대로 쓰임 ;; 메모리 절약 ;; 없음 ‖ 2 ‖ 그 타입의 기본 순서가 생김.
+ox ‖ 템플릿 오류가 78줄이어도 “no match for” 같은 핵심 한 줄을 찾으면 된다. ‖ O ‖ 나머지는 내부 파일 경로 나열.
+@ p7-9
+fill ‖ C++20 ranges 로 v 전체를 정렬하면? ‖ ______ ‖ `std::ranges::sort(v);` ;; `std::sort(v);` ;; `v.ranges_sort();` ;; `std::ranges(v).sort();` ‖ 1 ‖ begin/end 생략.
+ox ‖ ranges 를 알면 옛 begin/end 방식은 몰라도 된다. ‖ X ‖ 남의 코드엔 옛 방식이 많아 둘 다 읽어야 함.
+mc ‖ ranges 의 장점이 아닌 것은? ‖ begin/end 를 두 번 안 씀 ;; 다른 컨테이너의 begin/end 를 섞는 사고 방지 ;; 실행 속도가 항상 2배 ;; 코드가 짧아짐 ‖ 3 ‖ 속도 보장은 없음.
+mc ‖ Python `sorted(v, key=...)` 와 비슷한 C++ 은? ‖ `accumulate` ;; `sort(..., 람다)` ;; `count_if` ;; `find` ‖ 2 ‖ 기준을 정해 정렬.
+mc ‖ Python `sum(v)` 와 같은 C++ 알고리즘은? ‖ `std::count` ;; `std::accumulate` ;; `std::max_element` ;; `std::reverse` ‖ 2 ‖ 전부 더하기.

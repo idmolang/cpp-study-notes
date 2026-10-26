@@ -1,0 +1,72 @@
+@ p5-1
+mc ‖ 5회차에서 비중이 가장 큰 두 도구는? ‖ this, friend ;; 소멸자, 템플릿 ;; static, friend ;; this, static ‖ 2 ‖ 소멸자(자동 뒷정리)와 템플릿(타입 일반화).
+mc ‖ “클래스 전체에 하나만 있는 변수”를 만드는 도구는? ‖ this ;; static 멤버 ;; friend ;; 템플릿 ‖ 2 ‖ 객체 수·다음 번호 같은 공유 값.
+mc ‖ “바깥 함수 하나에게만 private 을 보여 주기”는? ‖ public ;; friend ;; static ;; protected ‖ 2 ‖ 클래스가 친구를 고름.
+ox ‖ 템플릿은 타입을 빈칸으로 둔 함수·클래스다. ‖ O ‖ std::vector 의 정체.
+mc ‖ 객체가 사라질 때 자동으로 불리는 함수는? ‖ 생성자 ;; 소멸자 ;; getter ;; main ‖ 2 ‖ 생성자의 짝.
+@ p5-2
+mc ‖ `a.whoAmI()` 안에서 this 의 값은? ‖ nullptr ;; &a (a 의 주소) ;; a 의 복사본 ;; 클래스 이름 ‖ 2 ‖ 부른 객체의 주소가 몰래 넘어감.
+out ‖ setAll("홍길동", 90) 후 print 의 출력은? (멤버 name·score 는 처음에 빈 값) ‖ void setAll(std::string_view name, int score) {⏎    name = name;⏎    score = score;⏎} ‖ 홍길동 (90점) ;;  (0점) ;; 컴파일 오류 ;; 홍길동 (0점) ‖ 2 ‖ 매개변수가 자기 자신에게 대입될 뿐, 멤버는 그대로.
+fill ‖ 멤버에 제대로 넣으려면? ‖ void setAll(std::string_view name, int score) {⏎    ______ = name;⏎} ‖ `this->name` ;; `this.name` ;; `*name` ;; `name.this` ‖ 1 ‖ this 는 포인터라 `->`.
+ox ‖ `name = name;` 은 컴파일 오류가 난다. ‖ X ‖ 문법상 정상이라 조용히 넘어감 (VS /W4 는 경고).
+mc ‖ 이 버그를 예방하는 가장 쉬운 습관은? ‖ 멤버를 public 으로 ;; 매개변수 이름을 멤버와 다르게 (m_ 접두어) ;; 전역 변수 사용 ;; static 사용 ‖ 2 ‖ 같게 쓰려면 반드시 this->.
+@ p5-3
+mc ‖ 소멸자의 모양으로 맞는 것은? ‖ `void ~Student()` ;; `~Student()` ;; `~Student(int)` ;; `Student~()` ‖ 2 ‖ 인자·반환형 없음.
+mc ‖ 소멸자는 몇 개 만들 수 있나? ‖ 여러 개 ;; 딱 하나 ;; 0 개 ;; 생성자 수만큼 ‖ 2 ‖ 인자가 없으니 오버로드 불가.
+out ‖ 출력 순서는? ‖ Guard a { "첫째" };   // 생성/소멸 때 이름 출력⏎{ Guard b { "둘째" }; }⏎std::cout << "끝 "; ‖ 첫째생성 둘째생성 둘째소멸 끝 첫째소멸 ;; 첫째생성 둘째생성 끝 첫째소멸 둘째소멸 ;; 첫째생성 둘째생성 첫째소멸 둘째소멸 끝 ;; 둘째생성 첫째생성 끝 ‖ 1 ‖ 블록 끝에서 b 소멸, main 끝에서 a 소멸.
+mc ‖ Machine 안에 엔진·바퀴 멤버가 있을 때 소멸 순서는? ‖ 엔진 → 바퀴 → 기계 ;; 기계 → 바퀴 → 엔진 ;; 바퀴 → 엔진 → 기계 ;; 기계 → 엔진 → 바퀴 ‖ 2 ‖ 자신 먼저, 멤버는 선언의 역순.
+ox ‖ 멤버가 std::string 과 vector 뿐인 클래스도 소멸자를 꼭 직접 써야 한다. ‖ X ‖ 멤버가 각자 알아서 정리함.
+@ p5-4
+mc ‖ RAII 의 핵심 생각은? ‖ 직접 메모리 해제 ;; 뒷정리를 객체 수명(소멸자)에 맡김 ;; 전역 변수로 관리 ;; 가비지 컬렉터 ‖ 2 ‖ 생성자에서 시작, 소멸자에서 끝.
+ox ‖ 함수에서 중간에 return 해도 지역 객체의 소멸자는 불린다. ‖ O ‖ 어디로 빠져나가든 반드시 불림.
+mc ‖ `a.~Student();` 처럼 소멸자를 직접 부르면? ‖ 안전하게 정리 ;; 나중에 자동으로 한 번 더 불려 두 번 소멸 ;; 컴파일 오류 ;; 아무 일 없음 ‖ 2 ‖ 소멸자는 컴파일러에 맡기기.
+mc ‖ 소멸자를 직접 써야 하는 경우는? ‖ 멤버가 int 뿐일 때 ;; 생성자에서 뭔가 “시작”했을 때 (Timer) ;; 항상 ;; 절대 안 씀 ‖ 2 ‖ 시작한 게 없으면 안 쓰는 것도 결정.
+out ‖ 출력의 마지막 줄은? ‖ int main() {⏎    Timer whole { "전체" };⏎    { Timer p { "1단계" }; work(120); }⏎    { Timer p { "2단계" }; work(80); }⏎} ‖ [1단계] 끝 - 120 ms ;; [2단계] 끝 - 80 ms ;; [전체] 끝 - 200 ms ;; [전체] 시작 ‖ 3 ‖ main 이 끝날 때 whole 이 가장 마지막에 소멸.
+@ p5-5
+mc ‖ `inline static int s_count { 0 };` 은 몇 개 존재하나? (객체 3개일 때) ‖ 3 개 ;; 1 개 ;; 0 개 ;; 4 개 ‖ 2 ‖ 클래스 전체에 하나.
+ox ‖ 객체를 하나도 안 만들어도 static 멤버 변수는 존재한다. ‖ O ‖ 프로그램 시작부터 끝까지.
+mc ‖ static 멤버 함수 안에서 할 수 없는 것은? ‖ static 멤버 읽기 ;; 지역 변수 사용 ;; `m_name` 같은 일반 멤버 사용 ;; 인자로 받은 객체의 멤버 사용 ‖ 3 ‖ this 가 없어서 어느 객체인지 모름.
+mc ‖ static 멤버 함수 count() 를 부르는 법은? ‖ `Student.count()` ;; `Student::count()` ;; `count(Student)` ;; `this->count()` ‖ 2 ‖ 객체 없이 클래스 이름으로.
+ox ‖ static 멤버 함수에도 const 를 붙일 수 있다. ‖ X ‖ 지킬 객체(this)가 없어서 못 붙임.
+@ p5-6
+out ‖ c 의 학번은? (s_nextId 시작값 20250001) ‖ Student(std::string_view n) : m_name { n }, m_id { s_nextId++ } { }⏎Student a { "홍" }, b { "김" }, c { "이" }; ‖ 20250001 ;; 20250002 ;; 20250003 ;; 20250004 ‖ 3 ‖ 후위 ++ 라 a=…01, b=…02, c=…03.
+out ‖ 블록 밖 출력은? ‖ Student a { "홍" }, b { "김" };⏎{ Student c { "이" }; }⏎std::cout << Student::count(); ‖ 3 ;; 2 ;; 1 ;; 0 ‖ 2 ‖ c 의 소멸자가 --s_count.
+mc ‖ `m_id { ++s_nextId }` (전위)로 쓰면 첫 학번은? ‖ 20250001 ;; 20250002 ;; 0 ;; 컴파일 오류 ‖ 2 ‖ 먼저 올리고 주니까 하나씩 밀림.
+ox ‖ 학생이 소멸되면 그 학번이 다음 학생에게 다시 주어진다. ‖ X ‖ s_nextId 는 소멸자에서 안 건드림. 한 번 준 번호는 다시 안 나옴.
+mc ‖ 인원 수가 자동으로 맞는 이유는? ‖ 전역 변수 ;; 생성자 ++, 소멸자 -- ;; vector 가 셈 ;; 컴파일러가 셈 ‖ 2 ‖ 태어나면 +1, 사라지면 -1.
+@ p5-7
+fill ‖ 빈칸에 들어갈 것은? ‖ ______⏎T larger(T a, T b) { return a > b ? a : b; } ‖ `template <typename T>` ;; `typename T;` ;; `class T;` ;; `#define T auto` ‖ 1 ‖ 함수 바로 앞에 템플릿 선언.
+mc ‖ `larger(3, 7.5)` 가 컴파일 오류인 이유는? ‖ 7.5 가 너무 큼 ;; T 를 int 와 double 중 하나로 못 정함 ;; 템플릿은 double 불가 ;; 인자가 두 개라서 ‖ 2 ‖ deduced conflicting types.
+mc ‖ 위 오류를 고치는 법은? ‖ `larger(3, 7)` 만 쓰기 ;; `larger(3.0, 7.5)` 처럼 타입 맞추기 ;; 템플릿 삭제 ;; 둘 다 string 으로 ‖ 2 ‖ 두 인자의 타입을 같게.
+ox ‖ 함수 템플릿을 쓰면 컴파일러가 쓰이는 타입마다 함수를 찍어낸다. ‖ O ‖ 템플릿은 함수가 아니라 함수를 찍는 틀.
+out ‖ 출력은? ‖ std::cout << larger(2.5, 1.5); ‖ 2 ;; 2.5 ;; 1.5 ;; 컴파일 오류 ‖ 2 ‖ T = double.
+@ p5-8
+mc ‖ 클래스 템플릿 Pair 로 int 쌍을 만드는 코드는? ‖ `Pair p { 3, 7 };` 만 가능 ;; `Pair<int> p { 3, 7 };` ;; `Pair(int) p { 3, 7 };` ;; `int Pair p { 3, 7 };` ‖ 2 ‖ 보통 < > 안에 타입을 직접 적음.
+ox ‖ `Pair<int>` 와 `Pair<std::string>` 은 같은 타입이라 서로 대입할 수 있다. ‖ X ‖ 완전히 다른 타입.
+mc ‖ 템플릿 정의를 .cpp 에, 선언을 .h 에 나누면? ‖ 정상 ;; 링크 오류 (undefined reference) ;; 컴파일 오류 ;; 느려짐 ‖ 2 ‖ 찍어내려면 정의를 봐야 하는데 main.cpp 컴파일 때 .cpp 를 못 봄.
+mc ‖ 다음 중 클래스 템플릿인 것은? ‖ `std::max` ;; `std::vector` ;; `main` ;; `std::cout` ‖ 2 ‖ `std::max` 는 함수 템플릿.
+ox ‖ 템플릿 오류 메시지가 길면 첫 줄과 마지막 줄을 먼저 보면 된다. ‖ O ‖ 중간은 “어떤 타입으로 찍다가” 실패했는지 나열.
+@ p5-9
+mc ‖ friend 함수에 대해 맞는 것은? ‖ 멤버 함수다 ;; this 가 있다 ;; 클래스가 선언해 private 접근을 허락한 바깥 함수 ;; public 에만 선언 가능 ‖ 3 ‖ 멤버가 아니라 this 없음, 위치 무관.
+ox ‖ 바깥 함수가 스스로 friend 가 될 수 있다. ‖ X ‖ 친구는 클래스가 고름.
+mc ‖ private 값을 바깥 함수가 읽어야 할 때 기본 선택은? ‖ friend ;; getter ;; 멤버를 public 으로 ;; 전역 변수 ‖ 2 ‖ friend 는 최후의 수단.
+mc ‖ friend 를 아껴 써야 하는 이유는? ‖ 느려서 ;; 캡슐화에 구멍이 생겨서 ;; 컴파일이 안 돼서 ;; 메모리를 많이 써서 ‖ 2 ‖ 내부를 바꿔도 밖이 안 깨진다는 장점이 사라짐.
+mc ‖ 바깥 함수에서 private 에 접근하면 나오는 오류는? ‖ undefined reference ;; is private within this context ;; segmentation fault ;; narrowing conversion ‖ 2 ‖ 컴파일 오류.
+@ p5-10
+mc ‖ 반드시 헤더(.h)에 전부 둬야 하는 것은? ‖ 긴 멤버 함수 ;; 템플릿 ;; main ;; 지역 변수 ‖ 2 ‖ .cpp 에 두면 링크 오류.
+mc ‖ 클래스 안의 `enum class Grade` 를 밖에서 쓰는 법은? ‖ `Grade::A` ;; `Student::Grade::A` ;; `A` ;; `Student.Grade.A` ‖ 2 ‖ 클래스 이름:: 을 붙임.
+ox ‖ 클래스 안에 정의한 짧은 멤버 함수는 자동으로 inline 이 된다. ‖ O ‖ 그래서 헤더에 둬도 ODR 문제 없음.
+mc ‖ `#pragma once` 의 역할은? ‖ 한 번만 실행 ;; 같은 헤더가 두 번 포함되는 것 방지 ;; 최적화 ;; 주석 ‖ 2 ‖ 헤더 가드와 같은 역할.
+mc ‖ 완성된 Student 의 소멸자가 `--s_count;` 하나뿐인 이유는? ‖ 귀찮아서 ;; m_name 은 string 이 알아서 정리하고, 직접 시작한 건 인원 세기뿐 ;; 소멸자는 한 줄만 가능 ;; 컴파일러가 막아서 ‖ 2 ‖ 소멸자는 “내가 시작한 것”만 되돌림.
+@ p5-11
+mc ‖ 컴파일러가 잡지 못하는(조용히 틀리는) 함정은? ‖ static 함수에서 m_name ;; `larger(3, 7.5)` ;; `name = name;` ;; 바깥 함수의 private 접근 ‖ 3 ‖ 소멸자 직접 호출도 조용히 깨짐.
+mc ‖ “링크” 단계에서 걸리는 함정은? ‖ `name = name;` ;; 템플릿 정의를 .cpp 에 둠 ;; private 접근 ;; `larger(3, 7.5)` ‖ 2 ‖ undefined reference.
+mc ‖ `std::string::npos` 는 무엇인가? ‖ 멤버 함수 ;; static 멤버 변수 ;; 소멸자 ;; 템플릿 ‖ 2 ‖ 객체 없이 클래스 이름으로 접근.
+ox ‖ 갱신된 8단계에서 “시작한 게 없으면 소멸자를 쓰지 않는다”도 판단에 포함된다. ‖ O ‖ 5단계: 시작했으면 끝내기.
+mc ‖ 갱신된 8단계 중 friend 는 몇 번째? ‖ 1 ;; 4 ;; 7 ;; 8 (마지막) ‖ 4 ‖ getter 로 되면 getter, 안 되는 함수 하나에게만.
+@ p5-12
+mc ‖ 과제 4 Stack<T> 의 정의를 두는 곳은? ‖ .h 와 .cpp 로 나눔 ;; 헤더 하나에 전부 ;; main.cpp 에만 ;; 어디든 상관없음 ‖ 2 ‖ 템플릿이라 헤더에 전부.
+mc ‖ Stack<T> 를 어떤 타입으로 시험하라고 했나? ‖ int 만 ;; int 와 std::string 둘 다 ;; double 만 ;; char 만 ‖ 2 ‖ 두 타입으로 찍혀도 되는지 확인.
+ox ‖ 빈 스택에서 top() 을 부르기 전에 empty() 를 확인하는 게 안전하다. ‖ O ‖ 범위 밖 접근을 막음.
+mc ‖ 과제 1 의 목적은? ‖ 템플릿 연습 ;; this 와 객체 주소가 같은지 확인, name = name 버그 재현 ;; 파일 입출력 ;; 정렬 ‖ 2 ‖ this 눈으로 보기.
+mc ‖ 과제 Stack 의 내부 저장소 크기는? ‖ 5 ;; 10 ;; 100 ;; 무한 ‖ 2 ‖ 크기 10 배열 (4회차 Roster 배열은 100).

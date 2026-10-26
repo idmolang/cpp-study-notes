@@ -1,0 +1,709 @@
+# 실습 미션 데이터. ⟦n⟧ = n번째 빈칸 (1부터)
+INF_CIN = "정수: 숫자가 아니에요\n정수: 숫자가 아니에요\n정수: 숫자가 아니에요\n… (무한 반복 — 멈추지 않아요)"
+UB_END = "찾음: (쓰레기 값 — end() 를 읽음, UB)"
+M = []
+
+M.append(dict(id='m1-1', part='p1-4', title='중괄호로 초기화하기',
+ goal='score 는 0, bonus 는 5 로 — 둘 다 { } 방식으로 초기화하세요.',
+ code='''#include <iostream>
+
+int main()
+{
+    int score ⟦1⟧;      // 0 으로 초기화
+    int bonus ⟦2⟧;      // 5 로 초기화
+    score = score + bonus;
+    std::cout << score << '\\n';
+    return 0;
+}''',
+ blanks=[
+  dict(ans='{}', accept=['{}', '{0}'], wrong=[
+    dict(p='', out='(쓰레기 값 — 초기화 안 한 score 를 읽음, UB)', note='값을 안 넣으면 메모리에 남아 있던 아무 값이나 읽혀요.'),
+    dict(p='=0', soft=True, note='`=` 도 되지만, `{ }` 는 실수(축소 변환)를 컴파일 오류로 막아 줘요.'),
+    dict(p='(0)', soft=True, note='`( )` 도 되지만, 이 과정에선 `{ }` 를 기본으로 써요.')]),
+  dict(ans='{ 5 }', accept=['{5}'], wrong=[
+    dict(p='', out='(쓰레기 값 — 초기화 안 한 bonus 를 읽음, UB)'),
+    dict(p='=5', soft=True, note='`=` 도 되지만, `{ }` 는 실수(축소 변환)를 컴파일 오류로 막아 줘요.'),
+    dict(p='(5)', soft=True, note='`( )` 도 되지만, 이 과정에선 `{ }` 를 기본으로 써요.'),
+    dict(p='re:^\\{5\\.\\d+\\}$', err=dict(raw="error: narrowing conversion of '5.9e+0' from 'double' to 'int' [-Wnarrowing]", ko='{line}번째 줄: { } 는 소수를 int 에 못 넣어요 (축소 변환)'))])],
+ tests=[dict(name='출력이 5', out='5'), dict(name='조건: 둘 다 { } 초기화', cond=[0, 1])],
+ hints=['값을 넣는 방법이 여러 가지인데, 1회차에서 “이걸 쓴다”고 한 방식이 있어요.', '중괄호 초기화: `int x { 값 };` — 값이 없으면 `{}` 는 0.', '첫 칸은 `{}`, 둘째 칸은 `{ 5 }`.']))
+
+M.append(dict(id='m1-2', part='p1-10', title='평균을 3.5 로 만들기',
+ goal='sum 과 count 로 평균을 계산해 3.5 가 나오게 하세요. (static_cast 사용)',
+ code='''#include <iostream>
+
+int main()
+{
+    int sum { 7 };
+    int count { 2 };
+    std::cout << ⟦1⟧ << '\\n';   // 평균 3.5 출력
+    return 0;
+}''',
+ blanks=[dict(ans='static_cast<double>(sum) / count', accept=['static_cast<double>(sum)/count', 'static_cast<double>(sum)/static_cast<double>(count)', 'sum/static_cast<double>(count)'], wrong=[
+    dict(p='sum/count', out='3', note='int 끼리 나누면 소수점을 버려요 (7 / 2 = 3).'),
+    dict(p='static_cast<double>(sum/count)', out='3', note='괄호 안 나눗셈이 먼저 끝나서 이미 3 이 된 뒤에 바꾼 거예요.'),
+    dict(p='(double)sum/count', soft=True, note='C 스타일 캐스트 `(double)` 대신 `static_cast<double>` 을 써요.'),
+    dict(p='sum/(double)count', soft=True, note='C 스타일 캐스트 `(double)` 대신 `static_cast<double>` 을 써요.'),
+    dict(p='1.0*sum/count', soft=True, note='맞는 방법이지만, 변환을 드러내는 `static_cast<double>` 이 미션 조건이에요.'),
+    dict(p='3.5', soft=True, note='숫자를 직접 쓰면 sum 이 바뀌어도 3.5 예요. sum 과 count 로 계산해 보세요.')])],
+ tests=[dict(name='출력이 3.5', out='3.5'), dict(name='조건: static_cast 로 계산', cond=[0])],
+ hints=['정수끼리 나누면 소수점이 사라져요. 한쪽을 실수로 바꿔야 해요.', '`static_cast<double>(값)` 으로 double 로 바꿀 수 있어요.', '`static_cast<double>(sum) / count`']))
+
+M.append(dict(id='m1-3', part='p1-11', title='char 는 작은 정수', perLine=True,
+ goal='첫 줄엔 ch 의 문자 코드(65), 둘째 줄엔 ch 다음 글자(B)를 출력하세요.',
+ code='''#include <iostream>
+
+int main()
+{
+    char ch { 'A' };
+    std::cout << ⟦1⟧ << '\\n';   // 65 출력 (문자 코드)
+    std::cout << ⟦2⟧ << '\\n';   // B 출력 (ch 다음 글자)
+    return 0;
+}''',
+ blanks=[
+  dict(line=0, ans='static_cast<int>(ch)', accept=['static_cast<int>(ch)'], wrong=[
+    dict(p='ch', out='A', note='char 는 출력할 때 글자로 보여요. 숫자로 보려면 int 로 바꿔야 해요.'),
+    dict(p="'A'", out='A'),
+    dict(p='(int)ch', soft=True, note='C 스타일 캐스트 대신 `static_cast<int>(ch)`.'),
+    dict(p='int(ch)', soft=True, note='`static_cast<int>(ch)` 가 변환을 더 분명히 보여 줘요.'),
+    dict(p='65', soft=True, note='숫자를 직접 쓰면 ch 가 바뀌어도 65 예요. ch 에서 계산해 보세요.')]),
+  dict(line=1, ans='static_cast<char>(ch + 1)', accept=['static_cast<char>(ch+1)'], wrong=[
+    dict(p='ch+1', out='66', note="`'A' + 1` 은 int 로 승격돼서 66 이 돼요. 다시 char 로 바꿔야 B."),
+    dict(p='static_cast<char>(ch)+1', out='66', note='더하기가 바깥에 있어서 다시 int 가 돼요.'),
+    dict(p='(char)(ch+1)', soft=True, note='C 스타일 캐스트 대신 `static_cast<char>(ch + 1)`.'),
+    dict(p='char(ch+1)', soft=True, note='`static_cast<char>(ch + 1)` 가 변환을 더 분명히 보여 줘요.'),
+    dict(p="'B'", soft=True, note='글자를 직접 쓰면 ch 가 바뀌어도 B 예요. ch 에서 계산해 보세요.')])],
+ tests=[dict(name='출력이 65 / B', out='65\nB'), dict(name='조건: ch 에서 static_cast 로 계산', cond=[0, 1])],
+ hints=['char 는 사실 작은 정수예요. 출력할 때만 글자로 보여요.', "숫자로 보기: `static_cast<int>(ch)`. `ch + 1` 은 int 가 돼요.", '`static_cast<int>(ch)` 와 `static_cast<char>(ch + 1)`']))
+
+M.append(dict(id='m1-4', part='p1-7', title='전방 선언 한 줄',
+ goal='main 이 아래에 있는 add 를 쓸 수 있도록 전방 선언을 쓰세요.',
+ code='''#include <iostream>
+
+⟦1⟧                         // add 의 전방 선언
+
+int main()
+{
+    std::cout << add(3, 4) << '\\n';
+    return 0;
+}
+
+int add(int a, int b)
+{
+    return a + b;
+}''',
+ blanks=[dict(ans='int add(int a, int b);', accept=['re:^int add\\(int( \\w+)?,int( \\w+)?\\);$'], wrong=[
+    dict(p='', err=dict(raw="error: 'add' was not declared in this scope", ko='{at:add(3, 4)}번째 줄: add 를 아직 몰라요 — main 보다 위에 전방 선언이 필요해요')),
+    dict(p='re:^int add\\(int( \\w+)?,int( \\w+)?\\)\\{.*\\}$', err=dict(raw="error: redefinition of 'int add(int, int)'", ko='add 가 두 번 정의됐어요 (ODR) — 선언은 몸통 없이 ; 로 끝내요')),
+    dict(p='re:^add\\(.*\\);$', err=dict(raw="error: expected constructor, destructor, or type conversion before '(' token", ko='{line}번째 줄: 반환형(int)이 빠졌어요'))])],
+ tests=[dict(name='출력이 7', out='7')],
+ hints=['컴파일러는 위에서 아래로 한 번만 읽어요. add 를 먼저 알려 줘야 해요.', '함수의 머리 부분(반환형·이름·매개변수)만 쓰고 몸통 대신 세미콜론.', '`int add(int a, int b);`']))
+
+M.append(dict(id='m2-1', part='p2-3', title='공백 있는 이름 받기',
+ goal='“홍 길동” 처럼 공백이 있는 이름을 한 줄 전체로 읽으세요. (std::ws 포함)',
+ code='''#include <iostream>
+#include <string>
+
+int main()
+{
+    std::string name {};
+    std::cout << "이름: ";
+    ⟦1⟧                                  // 한 줄 전체 읽기
+    std::cout << name << "님 안녕하세요\\n";
+    return 0;
+}''',
+ blanks=[dict(ans='std::getline(std::cin >> std::ws, name);', accept=['re:^(std::)?getline\\(std::cin>>std::ws,name\\);$'], wrong=[
+    dict(p='std::cin>>name;', outs=['이름: 홍님 안녕하세요', None], note='`cin >>` 은 공백에서 끊겨요. “길동” 은 버퍼에 남아요.'),
+    dict(p='re:^(std::)?getline\\(std::cin,name\\);$', soft=True, note='지금은 앞에 다른 입력이 없어서 괜찮지만, 앞에서 `cin >>` 을 썼다면 남은 개행 때문에 빈 줄이 읽혀요. `std::ws` 까지 세트로.')])],
+ tests=[dict(name='공백 있는 이름', inp='홍 길동', out='이름: 홍 길동님 안녕하세요'), dict(name='공백 없는 이름', inp='김철수', out='이름: 김철수님 안녕하세요'), dict(name='조건: std::ws 로 남은 개행 정리', cond=[0])],
+ hints=['`cin >>` 은 띄어쓰기에서 끊겨요. 한 줄 전체를 읽는 함수가 있어요.', '`std::getline(입력, 변수)` — 입력 자리에 `std::cin >> std::ws`.', '`std::getline(std::cin >> std::ws, name);`']))
+
+M.append(dict(id='m2-2', part='p2-13', title='잘못된 입력에서 살아남기',
+ goal='숫자 대신 문자가 들어와도 무한 반복 없이 다시 입력받게 두 줄을 채우세요.',
+ code='''#include <iostream>
+#include <limits>
+
+int main()
+{
+    int x {};
+    while (true)
+    {
+        std::cout << "정수: ";
+        std::cin >> x;
+        if (!std::cin)
+        {
+            ⟦1⟧          // ① 실패 상태 지우기
+            ⟦2⟧          // ② 남은 줄 버리기
+            std::cout << "숫자가 아니에요\\n";
+            continue;
+        }
+        break;
+    }
+    std::cout << x << '\\n';
+    return 0;
+}''',
+ blanks=[
+  dict(ans='std::cin.clear();', accept=['std::cin.clear();'], wrong=[
+    dict(p='', outs=[INF_CIN, None], note='clear 를 안 하면 cin 이 실패 상태로 남아 이후 입력을 전부 무시해요.'),
+    dict(p="re:^std::cin\\.ignore\\(.*\\);$", outs=[INF_CIN, None], note='순서가 반대예요. 실패 상태에선 ignore 도 안 먹혀요 — clear 먼저.')]),
+  dict(ans="std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\\n');", accept=["std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\\n');"], wrong=[
+    dict(p='', outs=[INF_CIN, None], note='ignore 를 안 하면 버퍼에 남은 “abc” 를 다시 읽고 또 실패해요.'),
+    dict(p='std::cin.clear();', outs=[INF_CIN, None], note='clear 는 ① 에 한 번이면 돼요. ② 에선 남은 글자를 버려야 해요.'),
+    dict(p="re:^std::cin\\.ignore\\(\\d+,'\\\\n'\\);$", soft=True, note='숫자를 직접 쓰면 그보다 긴 입력에서 실패할 수 있어요. `numeric_limits<std::streamsize>::max()` 가 정석.')])],
+ tests=[dict(name='문자 입력 후 숫자', inp='abc\n42', out='정수: 숫자가 아니에요\n정수: 42'), dict(name='바로 숫자', inp='7', out='정수: 7'), dict(name='조건: max() 까지 버리기', cond=[1])],
+ hints=['cin 이 실패하면 빨간 깃발을 들고 멈춰요. 깃발을 내리고 쓰레기를 치워야 해요.', '깃발 내리기 = `std::cin.clear();`, 쓰레기 치우기 = `std::cin.ignore(…, \'\\n\');`', "② `std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\\n');`"]))
+
+M.append(dict(id='m2-3', part='p2-6', title='음수도 맞는 홀수 판정',
+ goal='음수가 들어와도 홀수를 정확히 판정하는 조건을 쓰세요.',
+ code='''#include <iostream>
+
+bool isOdd(int x)
+{
+    return ⟦1⟧;
+}
+
+int main()
+{
+    int x {};
+    std::cin >> x;
+    std::cout << std::boolalpha << isOdd(x) << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='x % 2 != 0', accept=['x%2!=0', '(x%2)!=0', 'x%2', '0!=x%2'], wrong=[
+    dict(p='x%2==1', outs=[None, 'false', None, None], note='-3 % 2 는 -1 이라서 == 1 이 실패해요.'),
+    dict(p='x%2==0', outs=['false', 'false', 'true', 'true'], note='이건 짝수 판정이에요.'),
+    dict(p='x/2==1', outs=['true', 'false', 'true', 'false'])])],
+ tests=[dict(name='3 → true', inp='3', out='true'), dict(name='-3 → true', inp='-3', out='true'), dict(name='4 → false', inp='4', out='false'), dict(name='0 → false', inp='0', out='false')],
+ hints=['나머지 연산자 % 를 써요. 그런데 음수의 나머지는 음수예요.', '`-3 % 2` 는 -1. 그래서 “1 과 같다” 대신 “0 이 아니다”로.', '`x % 2 != 0`']))
+
+M.append(dict(id='m2-4', part='p2-10', title='switch 흘러내림 막기',
+ goal="A 를 넣으면 “우수” 만 나오도록 빈칸을 채우세요.",
+ code='''#include <iostream>
+
+int main()
+{
+    char g {};
+    std::cin >> g;
+    switch (g)
+    {
+        case 'A':
+            std::cout << "우수\\n";
+            ⟦1⟧
+        case 'B':
+            std::cout << "보통\\n";
+            break;
+        default:
+            std::cout << "기타\\n";
+            break;
+    }
+    return 0;
+}''',
+ blanks=[dict(ans='break;', accept=['break;'], wrong=[
+    dict(p='', outs=['우수\n보통', None, None], note='break 가 없으면 아래 case 로 흘러내려요 (오류가 아니라 컴파일러가 안 막아요).'),
+    dict(p='[[fallthrough]];', outs=['우수\n보통', None, None], note='`[[fallthrough]]` 는 “일부러 흘려보낸다”는 표시예요. 멈추려면 break.'),
+    dict(p='continue;', err=dict(raw='error: continue statement not within a loop', ko='{line}번째 줄: continue 는 반복문 안에서만 — switch 를 끝내려면 break'))])],
+ tests=[dict(name='A → 우수', inp='A', out='우수'), dict(name='B → 보통', inp='B', out='보통'), dict(name='C → 기타', inp='C', out='기타')],
+ hints=['A 를 넣으면 지금은 “보통” 까지 같이 나와요. 왜 아래로 내려갈까요?', 'case 끝을 막는 한 단어 + 세미콜론.', '`break;`']))
+
+M.append(dict(id='m3-1', part='p3-6', title='참조로 원본 바꾸기',
+ goal='addBonus 가 호출한 쪽의 s 를 직접 5 올리도록 매개변수 타입을 정하세요.',
+ code='''#include <iostream>
+
+void addBonus(⟦1⟧ score)
+{
+    score += 5;
+}
+
+int main()
+{
+    int s { 90 };
+    addBonus(s);
+    std::cout << s << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='int&', accept=['int&', 'auto&'], wrong=[
+    dict(p='int', out='90', note='값으로 받으면 복사본만 바뀌고 원본 s 는 그대로예요.'),
+    dict(p='auto', out='90', note='값으로 받으면 복사본만 바뀌어요.'),
+    dict(p='const int&', err=dict(raw="error: assignment of read-only reference 'score'", ko='{at:score += 5}번째 줄: const 참조는 값을 못 바꿔요')),
+    dict(p='int*', err=dict(raw="error: invalid conversion from 'int' to 'int*' [-fpermissive]", ko='{at:addBonus(s)}번째 줄: 포인터로 받으면 `addBonus(&s)` 로 넘기고 안에서 `*score` 를 써야 해요'))])],
+ tests=[dict(name='출력이 95', out='95')],
+ hints=['지금 매개변수는 복사본이라 원본이 안 바뀌어요.', '원본의 “다른 이름”을 받는 방법 — 타입 뒤에 기호 하나.', '`int&`']))
+
+M.append(dict(id='m3-2', part='p3-7', title='널 검사하고 포인터 따라가기',
+ goal='널이면 그냥 돌아가고, 아니면 가리키는 값을 100 으로 바꾸세요.',
+ code='''#include <iostream>
+
+void update(int* p)
+{
+    if (⟦1⟧) return;    // 널이면 그냥 돌아가기
+    ⟦2⟧ = 100;          // 가리키는 값을 100 으로
+}
+
+int main()
+{
+    int x { 5 };
+    update(&x);
+    update(nullptr);
+    std::cout << x << '\\n';
+    return 0;
+}''',
+ blanks=[
+  dict(ans='!p', accept=['!p', 'p==nullptr', 'nullptr==p'], wrong=[
+    dict(p='p', out='Segmentation fault (core dumped)\n→ 널 포인터를 따라가서 멈췄어요', note='거꾸로예요. 널이 아닐 때 돌아가고, 널일 때 *p 를 해 버려요.'),
+    dict(p='p!=nullptr', out='Segmentation fault (core dumped)\n→ 널 포인터를 따라가서 멈췄어요', note='거꾸로예요. 널일 때 돌아가야 해요.'),
+    dict(p='p==NULL', soft=True, note='C++ 에선 NULL 대신 nullptr.'),
+    dict(p='p==0', soft=True, note='0 대신 nullptr 가 의도를 분명히 보여 줘요.')]),
+  dict(ans='*p', accept=['*p'], wrong=[
+    dict(p='p', err=dict(raw="error: invalid conversion from 'int' to 'int*' [-fpermissive]", ko='{line}번째 줄: p 는 주소예요. 가리키는 값을 바꾸려면 *p')),
+    dict(p='&p', err=dict(raw='error: lvalue required as left operand of assignment', ko='{line}번째 줄: &p 는 p 자신의 주소라 대입할 수 없어요 — *p'))])],
+ tests=[dict(name='출력이 100 (그리고 멈추지 않음)', out='100')],
+ hints=['포인터가 비었는지 먼저 보고, 비어 있지 않을 때만 따라가요.', '“널이면” = `!p` 또는 `p == nullptr`. 따라가기 = `*`.', '① `!p`  ② `*p`']))
+
+M.append(dict(id='m3-3', part='p3-9', title='enum class 쓰고 숫자로 보기',
+ goal='c 를 green 으로 만들고, c 의 정수 값을 출력하세요.',
+ code='''#include <iostream>
+
+enum class Color { red, green, blue };
+
+int main()
+{
+    Color c { ⟦1⟧ };                 // green 으로
+    std::cout << ⟦2⟧ << '\\n';        // c 의 정수 값 출력
+    return 0;
+}''',
+ blanks=[
+  dict(ans='Color::green', accept=['Color::green'], wrong=[
+    dict(p='green', err=dict(raw="error: 'green' was not declared in this scope", ko='{line}번째 줄: enum class 는 `Color::` 를 붙여야 해요')),
+    dict(p='1', err=dict(raw="error: cannot convert 'int' to 'Color' in initialization", ko='{line}번째 줄: enum class 는 정수에서 자동으로 안 바뀌어요')),
+    dict(p='Color::red', out='0'),
+    dict(p='Color::blue', out='2')]),
+  dict(ans='static_cast<int>(c)', accept=['static_cast<int>(c)'], wrong=[
+    dict(p='c', err=dict(raw="error: no match for 'operator<<' (operand types are 'std::ostream' and 'Color')", ko='{line}번째 줄: enum class 는 정수로 자동 변환이 안 돼서 바로 출력 못 해요')),
+    dict(p='(int)c', soft=True, note='C 스타일 캐스트 대신 `static_cast<int>(c)`.'),
+    dict(p='int(c)', soft=True, note='`static_cast<int>(c)` 가 변환을 더 분명히 보여 줘요.')])],
+ tests=[dict(name='출력이 1', out='1'), dict(name='조건: static_cast 로 변환', cond=[1])],
+ hints=['enum class 는 이름이 밖으로 새지 않아요. 앞에 무언가를 붙여야 해요.', '`Color::이름`. 정수로 보려면 `static_cast<int>(…)`.', '① `Color::green`  ② `static_cast<int>(c)`']))
+
+M.append(dict(id='m3-4', part='p3-10', title='포인터로 struct 멤버 읽기',
+ goal='포인터 p 를 써서 직원 이름을 출력하세요.',
+ code='''#include <iostream>
+#include <string>
+
+struct Employee
+{
+    int id {};
+    std::string name {};
+};
+
+int main()
+{
+    Employee e { 1, "홍길동" };
+    Employee* p { &e };
+    std::cout << ⟦1⟧ << '\\n';    // 포인터 p 로 이름 출력
+    return 0;
+}''',
+ blanks=[dict(ans='p->name', accept=['p->name'], wrong=[
+    dict(p='p.name', err=dict(raw="error: request for member 'name' in 'p', which is of pointer type 'Employee*' (maybe you meant to use '->' ?)", ko='{line}번째 줄: p 는 포인터라서 . 대신 -> 를 써요')),
+    dict(p='*p.name', err=dict(raw="error: request for member 'name' in 'p', which is of pointer type 'Employee*' (maybe you meant to use '->' ?)", ko='{line}번째 줄: . 이 * 보다 먼저 묶여요 — (*p).name 이나 p->name')),
+    dict(p='(*p).name', soft=True, note='맞는 코드예요! 같은 뜻인 `p->name` 이 더 짧고 흔해요.'),
+    dict(p='e.name', soft=True, note='맞는 값이지만 미션은 포인터 p 로 접근하기예요.')])],
+ tests=[dict(name='출력이 홍길동', out='홍길동'), dict(name='조건: p-> 로 접근', cond=[0])],
+ hints=['p 는 객체가 아니라 주소예요.', '포인터가 가리키는 객체의 멤버 = 화살표.', '`p->name`']))
+
+M.append(dict(id='m4-1', part='p4-6', title='멤버 초기화 리스트',
+ goal='생성자에서 초기화 리스트로 m_name 과 m_score 를 채우세요.',
+ code='''#include <iostream>
+#include <string>
+#include <string_view>
+
+class Student {
+    std::string m_name {};
+    int m_score {};
+public:
+    Student(std::string_view n, int s)
+        ⟦1⟧          // 초기화 리스트
+    { }
+    void print() const { std::cout << m_name << " (" << m_score << "점)\\n"; }
+};
+
+int main()
+{
+    Student a { "홍길동", 90 };
+    a.print();
+    return 0;
+}''',
+ blanks=[dict(ans=': m_name { n }, m_score { s }', accept=[':m_name{n},m_score{s}'], wrong=[
+    dict(p='', out=' (0점)', note='초기화 리스트가 비면 멤버는 기본값(빈 문자열, 0) 그대로예요.'),
+    dict(p='m_name{n},m_score{s}', err=dict(raw="error: expected '{' before 'm_name'", ko='{line}번째 줄: 초기화 리스트는 콜론(:)으로 시작해요')),
+    dict(p=':m_name=n,m_score=s', err=dict(raw="error: expected '(' or '{' before '=' token", ko='{line}번째 줄: 초기화 리스트는 = 가 아니라 { } 로')),
+    dict(p=':m_name(n),m_score(s)', soft=True, note='`( )` 도 되지만, 이 과정에선 `{ }` 를 권장해요.'),
+    dict(p=':m_score{s},m_name{n}', soft=True, note='멤버 선언 순서(m_name → m_score)대로 쓰는 게 좋아요. 순서가 다르면 -Wreorder 경고.')])],
+ tests=[dict(name='출력이 홍길동 (90점)', out='홍길동 (90점)'), dict(name='조건: : 멤버 { 값 } 형태', cond=[0])],
+ hints=['생성자 괄호와 본문 { } 사이에 쓰는 목록이에요.', '`: 멤버 { 값 }, 멤버 { 값 }` — 콜론으로 시작, 쉼표로 나열.', '`: m_name { n }, m_score { s }`']))
+
+M.append(dict(id='m4-2', part='p4-6', title='사라진 기본 생성자 되살리기',
+ goal='`Student a {};` 가 컴파일되도록 기본 생성자를 되살리세요.',
+ code='''#include <iostream>
+#include <string>
+#include <string_view>
+
+class Student {
+    std::string m_name {};
+    int m_score {};
+public:
+    ⟦1⟧                                    // 인자 없이도 만들 수 있게
+    Student(std::string_view n, int s) : m_name { n }, m_score { s } { }
+    int getScore() const { return m_score; }
+};
+
+int main()
+{
+    Student a {};
+    Student b { "홍길동", 90 };
+    std::cout << a.getScore() << ' ' << b.getScore() << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='Student() = default;', accept=['Student()=default;'], wrong=[
+    dict(p='', err=dict(raw="error: no matching function for call to 'Student::Student(<brace-enclosed initializer list>)'", ko='{at:Student a {};}번째 줄: 생성자를 직접 만들면 기본 생성자가 사라져요')),
+    dict(p='void Student()=default;', err=dict(raw='error: return type specification for constructor invalid', ko='{line}번째 줄: 생성자엔 반환형이 없어요')),
+    dict(p='Student(){}', soft=True, note='맞게 동작해요! `= default;` 가 “컴파일러 기본 그대로”라는 의도를 더 잘 보여 줘요.')])],
+ tests=[dict(name='출력이 0 90', out='0 90'), dict(name='조건: = default 사용', cond=[0])],
+ hints=['생성자를 하나라도 만들면 컴파일러가 공짜 기본 생성자를 거둬 가요.', '인자 없는 생성자를 “기본 그대로” 달라고 하는 문법이 있어요.', '`Student() = default;`']))
+
+M.append(dict(id='m4-3', part='p4-7', title='setter 에서 0~100 검사',
+ goal='0~100 밖의 값이면 무시하도록 조건을 쓰세요. (경계값 0, 100 은 허용)',
+ code='''#include <iostream>
+
+class Student {
+    int m_score {};
+public:
+    void setScore(int v)
+    {
+        if (⟦1⟧) return;     // 0~100 밖이면 무시
+        m_score = v;
+    }
+    int getScore() const { return m_score; }
+};
+
+int main()
+{
+    Student a {};
+    a.setScore(50);
+    int v {};
+    std::cin >> v;
+    a.setScore(v);
+    std::cout << a.getScore() << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='v < 0 || v > 100', accept=['v<0||v>100', 'v>100||v<0', 'v<0||100<v', '100<v||v<0', '!(v>=0&&v<=100)', '0>v||v>100'], wrong=[
+    dict(p='v<0&&v>100', outs=[None, '-5', '150', None, None], note='&& 면 “0보다 작고 동시에 100보다 큰” 수 — 그런 수는 없어요. 그래서 하나도 안 막아요.'),
+    dict(p='v<=0||v>=100', outs=[None, None, None, '50', '50'], note='경계값 0 과 100 까지 막아 버려요. <, > 로.'),
+    dict(p='v<0', outs=[None, None, '150', None, None], note='100 보다 큰 쪽도 막아야 해요.'),
+    dict(p='v>100', outs=[None, '-5', None, None, None], note='0 보다 작은 쪽도 막아야 해요.'),
+    dict(p='v>=0&&v<=100', outs=['50', '-5', '150', '50', '50'], note='거꾸로예요 — 정상 값을 막고 이상한 값을 통과시켜요.')])],
+ tests=[dict(name='90 → 90', inp='90', out='90'), dict(name='-5 → 무시 (50 유지)', inp='-5', out='50'), dict(name='150 → 무시 (50 유지)', inp='150', out='50'), dict(name='경계 100 → 100', inp='100', out='100'), dict(name='경계 0 → 0', inp='0', out='0')],
+ hints=['“밖이면” = 0 보다 작거나, 100 보다 크거나.', '“또는” 은 `||`. 0 과 100 은 허용이니 `<`, `>` 로.', '`v < 0 || v > 100`']))
+
+M.append(dict(id='m4-4', part='p4-9', title='const 멤버 함수',
+ goal='const& 로 받은 객체에서도 getScore 를 부를 수 있게 하세요.',
+ code='''#include <iostream>
+
+class Student {
+    int m_score { 90 };
+public:
+    int getScore() ⟦1⟧ { return m_score; }
+};
+
+void report(const Student& s)
+{
+    std::cout << s.getScore() << '\\n';
+}
+
+int main()
+{
+    Student a {};
+    report(a);
+    return 0;
+}''',
+ blanks=[dict(ans='const', accept=['const'], wrong=[
+    dict(p='', err=dict(raw="error: passing 'const Student' as 'this' argument discards qualifiers [-fpermissive]", ko='{at:s.getScore()}번째 줄: const& 로 받은 객체에선 const 멤버 함수만 부를 수 있어요')),
+    dict(p='static', err=dict(raw="error: expected ';' at end of member declaration", ko='{line}번째 줄: 괄호 뒤엔 const 가 와요'))])],
+ tests=[dict(name='출력이 90', out='90')],
+ hints=['report 는 s 를 const& 로 받아요. 그 안에선 “안 바꾸겠다”고 약속한 함수만 불러요.', '약속 표시는 괄호 닫고 바로 뒤에 한 단어.', '`const`']))
+
+M.append(dict(id='m5-1', part='p5-2', title='this 로 멤버 구분하기',
+ goal='매개변수와 이름이 같은 멤버에 값이 들어가도록 고치세요.',
+ code='''#include <iostream>
+#include <string>
+#include <string_view>
+
+class Student {
+    std::string name {};
+    int score {};
+public:
+    void setAll(std::string_view name, int score)
+    {
+        ⟦1⟧ = name;
+        ⟦2⟧ = score;
+    }
+    void print() const { std::cout << name << " (" << score << "점)\\n"; }
+};
+
+int main()
+{
+    Student a {};
+    a.setAll("홍길동", 90);
+    a.print();
+    return 0;
+}''',
+ blanks=[
+  dict(ans='this->name', accept=['this->name'], wrong=[
+    dict(p='name', tag='n', note='`name = name;` 은 매개변수가 자기 자신에게 대입될 뿐이에요. 오류도 안 나요.'),
+    dict(p='this.name', err=dict(raw="error: request for member 'name' in '(Student*)this', which is of pointer type 'Student*' (maybe you meant to use '->' ?)", ko='{line}번째 줄: this 는 포인터라서 . 대신 ->')),
+    dict(p='(*this).name', soft=True, note='맞는 코드예요! 같은 뜻인 `this->name` 이 더 흔해요.')]),
+  dict(ans='this->score', accept=['this->score'], wrong=[
+    dict(p='score', tag='s', note='`score = score;` 도 자기 자신에게 대입이라 멤버는 그대로예요.'),
+    dict(p='this.score', err=dict(raw="error: request for member 'score' in '(Student*)this', which is of pointer type 'Student*' (maybe you meant to use '->' ?)", ko='{line}번째 줄: this 는 포인터라서 . 대신 ->')),
+    dict(p='(*this).score', soft=True, note='맞는 코드예요! 같은 뜻인 `this->score` 가 더 흔해요.')])],
+ combos={'n': [' (90점)'], 's': ['홍길동 (0점)'], 'n+s': [' (0점)']},
+ tests=[dict(name='출력이 홍길동 (90점)', out='홍길동 (90점)')],
+ hints=['안에서 그냥 `name` 이라고 쓰면 매개변수 name 이 먼저 잡혀요.', '“이 객체의” name = 부른 객체를 가리키는 포인터 + `->`.', '① `this->name`  ② `this->score`']))
+
+M.append(dict(id='m5-2', part='p5-3', title='소멸자 만들기',
+ goal='객체가 사라질 때 “○○ 소멸” 이 찍히도록 소멸자를 선언하세요.',
+ code='''#include <iostream>
+#include <string>
+#include <string_view>
+
+class Guard {
+    std::string m_name {};
+public:
+    Guard(std::string_view n) : m_name { n } { std::cout << m_name << " 생성\\n"; }
+    ⟦1⟧ { std::cout << m_name << " 소멸\\n"; }     // 소멸자
+};
+
+int main()
+{
+    Guard a { "첫째" };
+    { Guard b { "둘째" }; }
+    std::cout << "끝\\n";
+    return 0;
+}''',
+ blanks=[dict(ans='~Guard()', accept=['~Guard()'], wrong=[
+    dict(p='Guard()', out='첫째 생성\n둘째 생성\n끝', note='`Guard()` 는 또 하나의 (기본) 생성자예요. 소멸자는 앞에 `~`.'),
+    dict(p='re:^~Guard\\(.+\\)$', err=dict(raw='error: destructors may not have parameters', ko='{line}번째 줄: 소멸자는 인자를 못 받아요')),
+    dict(p='void ~Guard()', err=dict(raw='error: return type specification for destructor invalid', ko='{line}번째 줄: 소멸자엔 반환형이 없어요')),
+    dict(p='~Guard', err=dict(raw="error: expected '(' before '{' token", ko='{line}번째 줄: 이름 뒤에 빈 괄호 () 가 필요해요'))])],
+ tests=[dict(name='생성·소멸 순서', out='첫째 생성\n둘째 생성\n둘째 소멸\n끝\n첫째 소멸')],
+ hints=['생성자의 짝이에요. 이름은 클래스 이름과 거의 같아요.', '이름 앞에 물결표 `~`, 인자·반환형 없음.', '`~Guard()`']))
+
+M.append(dict(id='m5-3', part='p5-6', title='학번 자동 부여',
+ goal='첫 학생은 20250001, 그다음부터 1씩 늘어나게 빈칸을 채우세요.',
+ code='''#include <iostream>
+
+class Student {
+    inline static int s_nextId { 20250001 };
+    int m_id {};
+public:
+    Student() : m_id { ⟦1⟧ } { }
+    int id() const { return m_id; }
+};
+
+int main()
+{
+    Student a {}, b {}, c {};
+    std::cout << a.id() << ' ' << c.id() << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='s_nextId++', accept=['s_nextId++'], wrong=[
+    dict(p='++s_nextId', out='20250002 20250004', note='전위 ++ 는 먼저 올리고 줘서 첫 학번이 20250002 가 돼요.'),
+    dict(p='s_nextId', out='20250001 20250001', note='값을 올리지 않아서 모두 같은 학번이에요.'),
+    dict(p='s_nextId+1', out='20250002 20250002', note='+1 은 s_nextId 자체를 바꾸지 않아요.'),
+    dict(p='s_nextId--', out='20250001 20249999')])],
+ tests=[dict(name='a = 20250001, c = 20250003', out='20250001 20250003')],
+ hints=['현재 번호를 주고, 다음 사람을 위해 번호를 하나 올려야 해요.', '“주고 나서 올리기” 는 후위 증가.', '`s_nextId++`']))
+
+M.append(dict(id='m5-4', part='p5-7', title='함수 템플릿 선언',
+ goal='larger 가 int·double·string 모두에서 동작하도록 템플릿 선언을 쓰세요.',
+ code='''#include <iostream>
+#include <string>
+
+⟦1⟧
+T larger(T a, T b)
+{
+    return a > b ? a : b;
+}
+
+int main()
+{
+    std::cout << larger(3, 7) << ' ' << larger(2.5, 1.5) << '\\n';
+    std::cout << larger(std::string { "홍길동" }, std::string { "김철수" }) << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='template <typename T>', accept=['template<typename T>', 'template<class T>'], wrong=[
+    dict(p='', err=dict(raw="error: 'T' does not name a type", ko='{at:T larger}번째 줄: T 가 뭔지 몰라요 — 바로 위에 템플릿 선언이 필요해요')),
+    dict(p='template<T>', err=dict(raw="error: 'T' has not been declared", ko='{line}번째 줄: < > 안에 `typename T` 처럼 써야 해요')),
+    dict(p='re:^template<(typename|class) T>;$', err=dict(raw="error: expected unqualified-id before ';' token", ko='{line}번째 줄: 템플릿 선언 뒤엔 ; 를 붙이지 않아요')),
+    dict(p='typename T;', err=dict(raw="error: expected nested-name-specifier before 'T'", ko='{line}번째 줄: 앞에 `template < >` 가 필요해요'))])],
+ tests=[dict(name='출력이 7 2.5 / 홍길동', out='7 2.5\n홍길동')],
+ hints=['T 는 “아직 정하지 않은 타입” 이에요. 컴파일러에게 그렇다고 알려 줘야 해요.', '`template < … >` 안에 “T 는 타입 이름” 이라고 쓰기.', '`template <typename T>`']))
+
+M.append(dict(id='m6-1', part='p6-2', title='{ } 와 ( ) 구분하기',
+ goal='a 는 0 이 세 칸, b 는 원소 3 하나짜리 vector 로 만드세요.',
+ code='''#include <iostream>
+#include <vector>
+
+int main()
+{
+    std::vector<int> a ⟦1⟧;    // 0 이 3칸
+    std::vector<int> b ⟦2⟧;    // 원소 3 하나
+    std::cout << a.size() << ' ' << b.size() << '\\n';
+    return 0;
+}''',
+ blanks=[
+  dict(ans='( 3 )', accept=['(3)', '(3,0)'], wrong=[
+    dict(p='{3}', tag='A', note='`{3}` 은 “3 이라는 원소 하나” 예요. 칸 수는 `( )`.'),
+    dict(p='[3]', err=dict(raw="error: request for member 'size' in 'a', which is of non-class type 'std::vector<int> [3]'", ko='{at:a.size()}번째 줄: `[3]` 은 vector 3개짜리 배열이 돼요 — 칸 수는 ( )'))]),
+  dict(ans='{ 3 }', accept=['{3}'], wrong=[
+    dict(p='(3)', tag='B', note='`(3)` 은 0 이 세 칸이에요. 값 나열은 `{ }`.')])],
+ combos={'A': ['1 1'], 'B': ['3 3'], 'A+B': ['1 3']},
+ tests=[dict(name='출력이 3 1', out='3 1')],
+ hints=['vector 는 괄호 모양에 따라 뜻이 완전히 달라요.', '“몇 칸짜리” 는 소괄호, “값 나열” 은 중괄호.', '① `( 3 )`  ② `{ 3 }`']))
+
+M.append(dict(id='m6-2', part='p6-3', title='range-for 로 원소 고치기',
+ goal='모든 이름 뒤에 “님” 이 붙도록 반복 변수의 타입을 정하세요.',
+ code='''#include <iostream>
+#include <string>
+#include <vector>
+
+int main()
+{
+    std::vector<std::string> names { "홍길동", "김철수" };
+    for (⟦1⟧ s : names)
+        s += "님";
+    std::cout << names[0] << ' ' << names[1] << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='std::string&', accept=['std::string&', 'auto&'], wrong=[
+    dict(p='std::string', out='홍길동 김철수', note='값으로 받으면 복사본에만 “님” 이 붙고 원본은 그대로예요.'),
+    dict(p='auto', out='홍길동 김철수', note='`auto` 만 쓰면 복사본이에요. 고치려면 `auto&`.'),
+    dict(p='re:^const (std::string|auto)&$', err=dict(raw="error: no match for 'operator+=' (operand types are 'const std::string' and 'const char [4]')", ko='{at:s += }번째 줄: const 로 받으면 고칠 수 없어요'))])],
+ tests=[dict(name='출력이 홍길동님 김철수님', out='홍길동님 김철수님')],
+ hints=['반복 변수가 원소의 복사본이면 원본은 안 바뀌어요.', '원본의 별명으로 받으려면 타입 뒤에 `&`.', '`std::string&` (또는 `auto&`)']))
+
+M.append(dict(id='m6-3', part='p6-9', title='빈 vector 먼저 확인하기',
+ goal='빈 vector 가 들어오면 0 을 돌려주도록 조건을 쓰세요.',
+ code='''#include <iostream>
+#include <vector>
+
+double average(const std::vector<int>& v)
+{
+    if (⟦1⟧) return 0.0;
+    int sum { 0 };
+    for (int x : v) sum += x;
+    return static_cast<double>(sum) / v.size();
+}
+
+int main()
+{
+    std::cout << average({ 90, 75, 84 }) << ' ' << average({}) << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='v.empty()', accept=['v.empty()', 'v.size()==0', '0==v.size()'], wrong=[
+    dict(p='v.size()', out='0 -nan', note='`v.size()` 는 원소가 있으면 참이라 거꾸로예요. 그리고 빈 vector 에서 0/0 이 돼요.'),
+    dict(p='!v.empty()', out='0 -nan', note='거꾸로예요. 비어 있을 때 돌아가야 해요.'),
+    dict(p='v.size()-1==0', out='83 -nan', note='빈 vector 의 `size() - 1` 은 −1 이 아니라 거대한 수예요.')])],
+ tests=[dict(name='출력이 83 0', out='83 0')],
+ hints=['비어 있으면 0 으로 나누게 돼요. 그 전에 돌아가야 해요.', '“비었나?” 를 묻는 멤버 함수가 있어요.', '`v.empty()`']))
+
+M.append(dict(id='m7-1', part='p7-4', title='find 결과 확인하기',
+ goal='못 찾았을 때 end() 를 읽지 않도록 조건을 쓰세요.',
+ code='''#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main()
+{
+    std::vector<int> v { 90, 75, 84 };
+    int target {};
+    std::cin >> target;
+    auto it = std::find(v.begin(), v.end(), target);
+    if (⟦1⟧)
+        std::cout << "찾음: " << *it << '\\n';
+    else
+        std::cout << "없음\\n";
+    return 0;
+}''',
+ blanks=[dict(ans='it != v.end()', accept=['it!=v.end()', 'v.end()!=it'], wrong=[
+    dict(p='it', err=dict(raw="error: could not convert 'it' from '__gnu_cxx::__normal_iterator<int*, std::vector<int> >' to 'bool'", ko='{line}번째 줄: 반복자는 조건으로 바로 못 써요 — v.end() 와 비교')),
+    dict(p='it==v.end()', outs=['없음', UB_END, '없음'], note='거꾸로예요. 못 찾았을 때 *it 를 읽게 돼요.'),
+    dict(p='*it', outs=[None, UB_END, None], note='못 찾으면 it 은 end() 라서 *it 자체가 UB 예요.'),
+    dict(p='it!=v.begin()', outs=[None, UB_END, '없음'], note='begin() 이 아니라 end() 와 비교해야 해요.')])],
+ tests=[dict(name='84 → 찾음: 84', inp='84', out='찾음: 84'), dict(name='50 → 없음', inp='50', out='없음'), dict(name='90 (맨 앞) → 찾음: 90', inp='90', out='찾음: 90')],
+ hints=['find 는 못 찾으면 “마지막 다음 자리” 를 돌려줘요.', '그 자리는 `v.end()`. 그것과 다른지 비교.', '`it != v.end()`']))
+
+M.append(dict(id='m7-2', part='p7-6', title='람다로 조건 넘기기',
+ goal='80점 이상인 점수의 개수를 세는 람다를 쓰세요.',
+ code='''#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main()
+{
+    std::vector<int> v { 90, 75, 80, 68, 92 };
+    auto n = std::count_if(v.begin(), v.end(), ⟦1⟧);   // 80점 이상
+    std::cout << n << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='[](int x) { return x >= 80; }', accept=['re:^\\[\\]\\((int|auto|const int&|const auto&) ?(\\w+)\\)\\{return \\2>=80;\\}$', 're:^\\[\\]\\((int|auto|const int&|const auto&) ?(\\w+)\\)\\{return 80<=\\2;\\}$'], wrong=[
+    dict(p='re:^\\[\\]\\((int|auto|const int&|const auto&) ?(\\w+)\\)\\{return \\2>80;\\}$', out='2', note='> 는 80 을 빼요. “이상” 은 >=.'),
+    dict(p='re:^\\[\\]\\((int|auto|const int&|const auto&) ?(\\w+)\\)\\{return \\2<80;\\}$', out='2', note='거꾸로 — 80 미만을 셌어요.'),
+    dict(p='re:^\\[\\]\\(.*\\)\\{\\w+>=80;\\}$', err=dict(raw='error: void value not ignored as it ought to be', ko='{line}번째 줄: 람다에 return 이 빠졌어요')),
+    dict(p='isBig', err=dict(raw="error: 'isBig' was not declared in this scope", ko='{line}번째 줄: isBig 함수가 없어요 — 그 자리에 람다를 써 보세요')),
+    dict(p='re:^\\(\\w+ \\w+\\)\\{.*\\}$', err=dict(raw="error: expected primary-expression before 'int'", ko='{line}번째 줄: 람다는 [ ] 로 시작해요'))])],
+ tests=[dict(name='출력이 3', out='3')],
+ hints=['“이 점수가 80 이상인가?” 를 답하는 작은 함수를 그 자리에서 만들어요.', '모양: `[](매개변수) { return 조건; }`', '`[](int x) { return x >= 80; }`']))
+
+M.append(dict(id='m7-3', part='p7-7', title='람다 캡처',
+ goal='입력받은 cut 이상인 점수를 세도록 람다가 cut 을 쓸 수 있게 하세요.',
+ code='''#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main()
+{
+    std::vector<int> v { 90, 75, 80, 68, 92 };
+    int cut {};
+    std::cin >> cut;
+    auto n = std::count_if(v.begin(), v.end(), [⟦1⟧](int x) { return x >= cut; });
+    std::cout << n << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='cut', accept=['cut', '&cut'], wrong=[
+    dict(p='', err=dict(raw="error: 'cut' is not captured", ko='{line}번째 줄: 바깥 변수 cut 을 쓰려면 [cut] 처럼 캡처해야 해요')),
+    dict(p='x', err=dict(raw="error: 'x' was not declared in this scope", ko='{line}번째 줄: 캡처 자리엔 바깥 변수(cut)를 적어요')),
+    dict(p='=', soft=True, note='동작은 맞아요! 다만 무엇을 가져오는지 보이게 `[cut]` 처럼 하나씩 적는 게 권장이에요.'),
+    dict(p='&', soft=True, note='동작은 맞아요! 다만 무엇을 가져오는지 보이게 `[cut]` 처럼 하나씩 적는 게 권장이에요.')])],
+ tests=[dict(name='cut 80 → 3', inp='80', out='3'), dict(name='cut 90 → 2', inp='90', out='2'), dict(name='cut 60 → 5', inp='60', out='5'), dict(name='조건: 필요한 것만 캡처', cond=[0])],
+ hints=['람다는 기본으로 바깥 지역 변수를 못 봐요.', '대괄호 [ ] 안에 가져올 변수 이름을 적어요.', '`cut`']))
+
+M.append(dict(id='m7-4', part='p7-8', title='내림차순 정렬',
+ goal='점수를 큰 것부터 정렬하도록 비교 조건을 쓰세요.',
+ code='''#include <algorithm>
+#include <iostream>
+#include <vector>
+
+int main()
+{
+    std::vector<int> v { 90, 75, 84, 68, 92 };
+    std::sort(v.begin(), v.end(), [](int a, int b) { return ⟦1⟧; });
+    for (int x : v) std::cout << x << ' ';
+    std::cout << '\\n';
+    return 0;
+}''',
+ blanks=[dict(ans='a > b', accept=['a>b', 'b<a'], wrong=[
+    dict(p='a<b', out='68 75 84 90 92', note='a < b 는 작은 게 앞 — 오름차순이에요.'),
+    dict(p='b>a', out='68 75 84 90 92', note='b > a 는 a < b 와 같아요 — 오름차순.'),
+    dict(p='a>=b', soft=True, note='지금은 같은 값이 없어서 맞게 나와요. 하지만 >= 는 같은 값이 있으면 정렬이 깨질 수 있어요 (엄격한 비교 필요).')])],
+ tests=[dict(name='출력이 92 90 84 75 68', out='92 90 84 75 68'), dict(name='조건: 엄격한 비교 (>)', cond=[0])],
+ hints=['비교 함수는 “a 가 b 보다 앞에 와야 하나?” 를 답해요.', '큰 게 앞이어야 하니까 “a 가 b 보다 크면 앞”.', '`a > b`']))

@@ -1,0 +1,54 @@
+@ p6-1
+mc ‖ 몇 개가 올지 모를 때 가장 알맞은 것은? ‖ `int arr[100]` ;; `std::vector<int>` ;; `std::array<int, 100>` ;; 변수 100개 ‖ 2 ‖ 필요한 만큼 늘어나고 크기를 스스로 앎.
+out ‖ 출력은? ‖ std::vector<int> v { 90, 75, 84 };⏎v.push_back(68);⏎std::cout << v.size() << ' ' << v.back(); ‖ 3 84 ;; 4 68 ;; 4 90 ;; 3 68 ‖ 2 ‖ 하나 붙여 4개, 마지막은 68.
+mc ‖ `v[0]` 은 몇 번째 원소? ‖ 첫 번째 ;; 두 번째 ;; 마지막 ;; 없음 ‖ 1 ‖ 인덱스는 0부터.
+ox ‖ `std::vector<Student>` 처럼 내가 만든 클래스도 담을 수 있다. ‖ O ‖ vector 는 클래스 템플릿.
+mc ‖ vector 를 쓰려면 include 할 헤더는? ‖ `<array>` ;; `<vector>` ;; `<list>` ;; `<string>` ‖ 2 ‖ `#include <vector>`
+@ p6-2
+out ‖ 출력은? ‖ std::vector<int> a { 3 };⏎std::vector<int> b ( 3 );⏎std::cout << a.size() << ' ' << b.size(); ‖ 3 3 ;; 1 3 ;; 3 1 ;; 1 1 ‖ 2 ‖ `{3}` 은 원소 3 하나, `(3)` 은 0 이 세 칸.
+mc ‖ `std::vector<int> d ( 3, 5 );` 의 내용은? ‖ 3 5 ;; 5 5 5 ;; 3 3 3 3 3 ;; 0 0 0 ‖ 2 ‖ 5 가 세 개.
+mc ‖ 범위 밖 인덱스에서 예외를 던지고 멈추는 것은? ‖ `v[10]` ;; `v.at(10)` ;; 둘 다 ;; 둘 다 아님 ‖ 2 ‖ `[]` 는 검사 없이 UB.
+out ‖ 출력은? (64비트) ‖ std::vector<int> v {};⏎std::cout << v.size() - 1; ‖ -1 ;; 0 ;; 18446744073709551615 ;; 컴파일 오류 ‖ 3 ‖ size() 는 부호 없는 수라 0 - 1 이 한 바퀴 돎.
+mc ‖ 부호 함정 없이 vector 를 훑는 가장 좋은 방법은? ‖ `for (int i = 0; i < v.size(); ++i)` ;; range-based for `for (int x : v)` ;; `while (true)` ;; `v.size() - 1` 부터 거꾸로 ‖ 2 ‖ 인덱스가 없어서 부호·범위 함정이 없음.
+@ p6-3
+out ‖ 출력은? ‖ std::vector<std::string> names { "홍길동" };⏎for (std::string s : names) s += "님";⏎std::cout << names[0]; ‖ 홍길동님 ;; 홍길동 ;; 님 ;; 컴파일 오류 ‖ 2 ‖ 값으로 받으면 사본만 바뀜.
+fill ‖ 원소를 직접 고치려면 빈칸은? ‖ for (______ s : names) s += "님"; ‖ `std::string` ;; `std::string&` ;; `const std::string&` ;; `std::string*` ‖ 2 ‖ 참조로 받아야 원본이 바뀜. const& 는 수정 불가.
+mc ‖ 큰 타입을 읽기만 할 때 기본 range-for 는? ‖ `for (T x : v)` ;; `for (const T& x : v)` ;; `for (T* x : v)` ;; `for (T&& x : v)` ‖ 2 ‖ 복사 없음.
+mc ‖ `v.resize(10)` 으로 늘어난 칸에는? ‖ 쓰레기 값 ;; 0 ;; 마지막 원소 복사 ;; 컴파일 오류 ‖ 2 ‖ 값 초기화 → int 는 0.
+mc ‖ 비었는지 확인하는 읽기 쉬운 방법은? ‖ `v.size() == 0` 만 가능 ;; `v.empty()` ;; `v == 0` ;; `!v` ‖ 2 ‖ empty() 가 의도를 바로 보여 줌.
+@ p6-4
+mc ‖ 원소 100만 개짜리 `std::vector<int>` 의 sizeof 는? (64비트, 일반 구현) ‖ 4,000,000 ;; 24 ;; 8 ;; 원소 수에 따라 다름 ‖ 2 ‖ 원소는 힙에, 객체 안엔 포인터 3개쯤만.
+mc ‖ 원소 10만 개 vector 를 읽기만 하는 함수의 매개변수는? ‖ `std::vector<int> v` ;; `const std::vector<int>& v` ;; `std::vector<int>* v` ;; `int v[]` ‖ 2 ‖ 값으로 받으면 약 400KB 통째로 복사.
+ox ‖ 함수 안에서 만든 vector 를 값으로 반환하면 반드시 통째로 복사돼 느리다. ‖ X ‖ C++17 부터 반환 복사는 생략됨.
+mc ‖ `roster.emplace_back("이영희", 84);` 의 특징은? ‖ 만든 객체를 복사해 넣음 ;; 생성자 인자로 vector 안에서 바로 만듦 ;; 맨 앞에 넣음 ;; 이름만 저장 ‖ 2 ‖ 복사 한 번 덜 함.
+ox ‖ vector 가 사라질 때 담긴 원소들의 소멸자도 자동으로 불린다. ‖ O ‖ RAII — vector 의 소멸자가 원소를 정리.
+@ p6-5
+mc ‖ size 와 capacity 의 차이는? ‖ 같은 말 ;; size = 지금 원소 수, capacity = 이사 없이 담을 수 있는 수 ;; size 가 항상 더 큼 ;; capacity 는 바이트 수 ‖ 2 ‖ 앉은 사람 vs 의자 수.
+out ‖ 이 코드의 문제는? ‖ std::vector<int> v { 1, 2, 3 };⏎int* p = &v[0];⏎v.push_back(4);⏎std::cout << *p; ‖ 문제없음, 1 출력 ;; 재할당으로 p 가 무효 → UB ;; 컴파일 오류 ;; 항상 4 출력 ‖ 2 ‖ 용량이 모자라면 통째로 이사해 옛 주소가 무효.
+mc ‖ 대략 20개가 올 걸 알 때 이사를 줄이는 방법은? ‖ `v.resize(20)` ;; `v.reserve(20)` ;; `v.clear()` ;; `v.at(20)` ‖ 2 ‖ 길이 0, 용량 20 으로 미리 확보.
+mc ‖ 원소가 많을 때 더 비싼 삭제는? ‖ `pop_back()` ;; `erase(v.begin())` (맨 앞) ;; 둘 다 같음 ;; `clear()` ‖ 2 ‖ 맨 앞을 지우면 뒤 원소를 전부 당겨야 함.
+out ‖ 출력은? ‖ std::vector<int> a { 1, 2, 3 };⏎std::vector<int> b { a };⏎b[0] = 99;⏎std::cout << a[0]; ‖ 99 ;; 1 ;; 0 ;; 컴파일 오류 ‖ 2 ‖ 통째로 복사돼 서로 남남.
+@ p6-6
+mc ‖ 요일 이름 7개처럼 개수가 고정일 때 알맞은 것은? ‖ `std::array<std::string, 7>` ;; `std::vector` 만 가능 ;; 변수 7개 ;; `std::string[]` 만 가능 ‖ 1 ‖ 고정이면 array (고민되면 vector).
+ox ‖ `std::array<int, 3>` 과 `std::array<int, 4>` 는 같은 타입이다. ‖ X ‖ 크기가 타입의 일부.
+ox ‖ std::array 에도 push_back 이 있다. ‖ X ‖ 크기가 고정이라 없음.
+mc ‖ std::array 가 vector 와 같은 점은? ‖ 크기를 바꿀 수 있음 ;; size(), at(), [], range-for 사용법 ;; 원소가 힙에 있음 ;; push_back ‖ 2 ‖ 다른 점은 크기 고정뿐.
+mc ‖ 고민될 때 기본 선택은? ‖ std::array ;; std::vector ;; C 배열 ;; 포인터 ‖ 2 ‖ 나중에 크기가 바뀌어도 안전.
+@ p6-7
+out ‖ 함수 안에서 출력되는 값은? (64비트) ‖ void f(int arr[]) { std::cout << sizeof(arr); }⏎int a[5] {};⏎f(a); ‖ 20 ;; 5 ;; 8 ;; 4 ‖ 3 ‖ 배열 감쇠 — 함수로 넘어가면 포인터(8바이트)가 됨.
+mc ‖ C 배열 `int arr[5]` 의 원소 개수를 구하는 식은? ‖ `arr.size()` ;; `sizeof(arr) / sizeof(arr[0])` ;; `sizeof(arr)` ;; `length(arr)` ‖ 2 ‖ C 배열엔 멤버 함수가 없음.
+mc ‖ C 스타일 문자열의 끝을 표시하는 것은? ‖ 공백 ;; `\0` (널 문자) ;; `\n` ;; 길이 정보 ‖ 2 ‖ 빠뜨리면 끝을 몰라 계속 읽음 (버퍼 오버런).
+out ‖ 출력은? ‖ char buf[10] { "hello" };⏎std::cout << std::strlen(buf); ‖ 10 ;; 5 ;; 6 ;; 0 ‖ 2 ‖ strlen 은 `\0` 전까지 센 글자 수.
+ox ‖ `"안녕"` 같은 문자열 리터럴의 정체는 const char 배열이다. ‖ O ‖ 그래서 C 배열을 읽을 줄 알아야 함.
+@ p6-8
+mc ‖ 3행 4열 2차원 vector 를 0 으로 만드는 코드는? ‖ `std::vector<int> g(3, 4);` ;; `std::vector<std::vector<int>> g(3, std::vector<int>(4, 0));` ;; `std::vector<int> g[3][4];` ;; `std::vector<std::vector<int>> g { 3, 4 };` ‖ 2 ‖ 바깥 3개(행), 각 행은 0 이 4칸.
+mc ‖ `grid[1][2]` 는 몇 행 몇 열? (사람 기준 1부터) ‖ 1행 2열 ;; 2행 3열 ;; 3행 2열 ;; 2행 2열 ‖ 2 ‖ 인덱스는 0부터.
+mc ‖ 열의 개수를 구하는 식은? ‖ `grid.size()` ;; `grid[0].size()` ;; `grid.cols()` ;; `sizeof(grid)` ‖ 2 ‖ `grid.size()` 는 행 수.
+mc ‖ 문자열에 가장 알맞은 것은? ‖ `char[]` ;; `std::string` ;; `std::vector<char>` ;; `const char*` ‖ 2 ‖ 길이를 알고 있고 안전.
+ox ‖ C 배열은 옛 코드나 C 라이브러리와 맞물릴 때처럼 어쩔 수 없을 때만 쓴다. ‖ O ‖ 결론표의 기준.
+@ p6-9
+mc ‖ vector 로 Roster 를 만들면 4회차 49.8 버그가 사라지는 이유는? ‖ 더 빨라서 ;; vector 가 자기 크기를 알아 개수를 따로 넘길 일이 없어서 ;; 컴파일러가 검사해서 ;; 점수가 자동 정렬돼서 ‖ 2 ‖ 개수 실수가 구조적으로 불가능.
+mc ‖ 학번으로 학생을 찾는 데 알맞은 컨테이너는? (이름만 배운 것) ‖ std::vector ;; std::array ;; std::map ;; std::set ‖ 3 ‖ 키 → 값.
+mc ‖ 중복 없이 모으는 컨테이너는? ‖ std::vector ;; std::map ;; std::set ;; std::array ‖ 3 ‖ set.
+mc ‖ 6회차 함정의 짝이 틀린 것은? ‖ `v[10]` → `at()` ;; 값으로 받아 수정 → `T&` ;; C 배열 sizeof → 개수 따로 넘기기 ;; `( 3 )` → `{ 3 }` 로 3칸 ‖ 4 ‖ 3칸은 `( 3 )`. `{ 3 }` 은 원소 하나.
+ox ‖ average 에서 빈 vector 를 먼저 확인하지 않으면 0 으로 나누게 된다. ‖ O ‖ `if (m_list.empty()) return 0.0;`

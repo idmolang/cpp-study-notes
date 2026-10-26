@@ -5,6 +5,8 @@ learncpp.com Ch 0~20 기반 강의 PPT(245장)를 77개 파트로 다시 정리�
 - 사이트 열기: `index.html` (GitHub Pages 를 켜면 링크로 접속 가능)
 - 파트 구성: 🎯 한 문장 → 🧩 비유 → 개념 카드 → ⚠️ 함정 → ⭐ 시험 → 🧠 외우기
 - 노트 원본: `notes-src/s1.txt ~ s7.txt`, 데이터: `notes.json`
+- 퀴즈 원본: `quiz-src/q1.txt ~ q7.txt` (385문제), 데이터: `quiz.json`
+- 실습 원본: `prac-src/missions.py` (27개 미션), 데이터: `missions.json`
 - 공부 계획: `공부계획.md`
 
 | 회차 | 주제 | 파트 |
