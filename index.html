@@ -1920,12 +1920,12 @@ const b64dec = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/
 const bar = document.createElement('div');
 bar.className = 'editbar'; bar.hidden = true;
 bar.innerHTML = `<div class="eb-st" id="ebSt" role="status" aria-live="polite"></div>
-  <div class="eb-btns"><button class="eb-save" id="ebSave">💾 저장</button><button id="ebDl">📁 파일로 받기</button><button id="ebTok">🔑 토큰</button><button id="ebOff">✕ 편집 끝내기</button></div>`;
+  <div class="eb-btns"><button class="eb-save" id="ebSave">💾 저장</button><button id="ebDl">📁 파일로 받기</button><button id="ebOff">✕ 편집 끝내기</button></div>`;
 document.body.append(bar);
 const ebSt = $('#ebSt');
 function setStatus(msg, cls = '') { ebSt.textContent = msg; ebSt.className = 'eb-st ' + cls; }
 function refreshBar() {
-  setStatus((isDirty() ? '✏️ 저장 안 한 변경이 있어요' : '✏️ 편집 중 · 변경 없음') + (token ? ' · 🔑 토큰 있음' : ' · 토큰 없음(저장하려면 🔑)'));
+  setStatus((isDirty() ? '✏️ 저장 안 한 변경이 있어요' : '✏️ 편집 중 · 변경 없음') + (token ? ' · 🔑 토큰 있음' : ' · 토큰 없음'));
 }
 
 /* ── token dialog: Promise<string | '' | null>  ('' = 토큰 없이 편집만, null = 취소) ── */
@@ -1941,7 +1941,7 @@ function askToken(forEdit) {
       <input type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="깃허브 토큰">
       <div class="merr" role="alert"></div>
       <div class="mact"><button type="submit" class="primary">${forEdit ? '편집 시작' : '확인'}</button>
-        ${forEdit ? '<button type="button" data-k="none">토큰 없이 편집만</button>' : ''}${store.get('tok', '') ? '<button type="button" data-k="forget">저장된 토큰 지우기</button>' : ''}<button type="button" data-k="cancel">취소</button></div>
+        ${forEdit ? '<button type="button" data-k="none">토큰 없이 편집만</button>' : ''}<button type="button" data-k="cancel">취소</button></div>
     </form>`;
     document.body.append(ov);
     const inp = ov.querySelector('input'), err = ov.querySelector('.merr');
@@ -1956,8 +1956,7 @@ function askToken(forEdit) {
     };
     ov.addEventListener('click', e => {
       const k = e.target.closest('[data-k]');
-      if (k && k.dataset.k === 'forget') { store.set('tok', ''); token = ''; done(null); toast('저장된 토큰을 지웠어요'); }
-      else if (k) done(k.dataset.k === 'none' ? '' : null);
+      if (k) done(k.dataset.k === 'none' ? '' : null);
       else if (e.target === ov) done(null);
     });
     inp.focus();
@@ -2043,7 +2042,7 @@ const gh = (url, opts = {}) => fetch('https://api.github.com' + url, {
 });
 const stamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
 const CONFLICT = '⚠️ 다른 곳에서 먼저 저장됐어요(충돌). 📁 파일로 받기로 내 편집을 백업한 뒤 새로고침하세요.';
-function badToken() { token = ''; store.set('tok', ''); return '🔒 토큰이 틀렸거나 만료됐어요. 🔑 토큰 버튼으로 다시 입력하세요.'; }
+function badToken() { token = ''; store.set('tok', ''); return '🔒 토큰이 틀렸거나 만료됐어요. 편집을 끄고 , 3번으로 다시 켜서 새 토큰을 입력하세요.'; }
 const NOPERM = '🔒 토큰 권한이 없어요. 이 저장소 · Contents: Read and write 로 만들었는지 확인하세요.';
 
 async function save() {
@@ -2087,7 +2086,6 @@ async function save() {
 $('#ebSave').onclick = save;
 $('#ebDl').onclick = download;
 $('#ebOff').onclick = exitEdit;
-$('#ebTok').onclick = async () => { if (askOpen) return; const t = await askToken(false); if (t) { token = t; store.set('tok', t); refreshBar(); } };
 
 /* ── boot: 열 때마다 notes.json 을 새로 읽음 ── */
 function boot(d) {
