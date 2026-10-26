@@ -1889,7 +1889,7 @@ let tt;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800); }
 
 /* ── edit mode (노트 글만 · 저장소 notes.json 에 바로 커밋) ──
-   토큰은 변수에만 보관 — 저장소·주소·콘솔·스토리지 어디에도 남기지 않음 */
+   토큰은 이 브라우저 localStorage(cppnote:tok)에만 기억 — 코드·주소·콘솔·저장소에는 남기지 않음 */
 let editing = false, token = '', saving = false, askOpen = false;
 
 function E(path, val, fmt = inl) {
@@ -1925,7 +1925,7 @@ document.body.append(bar);
 const ebSt = $('#ebSt');
 function setStatus(msg, cls = '') { ebSt.textContent = msg; ebSt.className = 'eb-st ' + cls; }
 function refreshBar() {
-  setStatus((isDirty() ? '✏️ 저장 안 한 변경이 있어요' : '✏️ 편집 중 · 변경 없음') + (token ? ' · 🔑 토큰 입력됨' : ' · 토큰 없음(저장하려면 🔑)'));
+  setStatus((isDirty() ? '✏️ 저장 안 한 변경이 있어요' : '✏️ 편집 중 · 변경 없음') + (token ? ' · 🔑 토큰 있음' : ' · 토큰 없음(저장하려면 🔑)'));
 }
 
 /* ── token dialog: Promise<string | '' | null>  ('' = 토큰 없이 편집만, null = 취소) ── */
@@ -1936,12 +1936,12 @@ function askToken(forEdit) {
     const ov = document.createElement('div'); ov.className = 'modal';
     ov.innerHTML = `<form class="mbox" role="dialog" aria-modal="true" aria-labelledby="tkT">
       <h2 id="tkT">🔑 깃허브 토큰</h2>
-      <p>저장하려면 토큰을 붙여넣으세요. 이 화면 메모리에만 있고 어디에도 저장되지 않아요(새로고침·편집 종료 시 사라짐).</p>
+      <p>저장하려면 토큰을 붙여넣으세요. 이 브라우저에만 기억돼서 다음부터는 다시 묻지 않아요(다른 사람·다른 브라우저에는 영향 없음).</p>
       <ol><li>깃허브 → Settings → Developer settings → Fine-grained tokens</li><li>이 저장소만 선택</li><li>Contents: <b>Read and write</b></li></ol>
       <input type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="깃허브 토큰">
       <div class="merr" role="alert"></div>
       <div class="mact"><button type="submit" class="primary">${forEdit ? '편집 시작' : '확인'}</button>
-        ${forEdit ? '<button type="button" data-k="none">토큰 없이 편집만</button>' : ''}<button type="button" data-k="cancel">취소</button></div>
+        ${forEdit ? '<button type="button" data-k="none">토큰 없이 편집만</button>' : ''}${store.get('tok', '') ? '<button type="button" data-k="forget">저장된 토큰 지우기</button>' : ''}<button type="button" data-k="cancel">취소</button></div>
     </form>`;
     document.body.append(ov);
     const inp = ov.querySelector('input'), err = ov.querySelector('.merr');
@@ -1956,7 +1956,8 @@ function askToken(forEdit) {
     };
     ov.addEventListener('click', e => {
       const k = e.target.closest('[data-k]');
-      if (k) done(k.dataset.k === 'none' ? '' : null);
+      if (k && k.dataset.k === 'forget') { store.set('tok', ''); token = ''; done(null); toast('저장된 토큰을 지웠어요'); }
+      else if (k) done(k.dataset.k === 'none' ? '' : null);
       else if (e.target === ov) done(null);
     });
     inp.focus();
@@ -1966,9 +1967,13 @@ function askToken(forEdit) {
 /* ── enter / leave ── */
 async function enterEdit() {
   if (editing || askOpen || !DATA) return;
-  const t = await askToken(true);
-  if (t === null) return;
-  token = t; editing = true;
+  token = store.get('tok', '');
+  if (!token) {
+    const t = await askToken(true);
+    if (t === null) return;
+    token = t; if (t) store.set('tok', t);
+  }
+  editing = true;
   document.body.classList.add('editing'); bar.hidden = false;
   refreshBar(); render({ keepScroll: true });
   toast('✏️ 편집 모드');
@@ -2038,7 +2043,7 @@ const gh = (url, opts = {}) => fetch('https://api.github.com' + url, {
 });
 const stamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; };
 const CONFLICT = '⚠️ 다른 곳에서 먼저 저장됐어요(충돌). 📁 파일로 받기로 내 편집을 백업한 뒤 새로고침하세요.';
-function badToken() { token = ''; return '🔒 토큰이 틀렸거나 만료됐어요. 🔑 토큰 버튼으로 다시 입력하세요.'; }
+function badToken() { token = ''; store.set('tok', ''); return '🔒 토큰이 틀렸거나 만료됐어요. 🔑 토큰 버튼으로 다시 입력하세요.'; }
 const NOPERM = '🔒 토큰 권한이 없어요. 이 저장소 · Contents: Read and write 로 만들었는지 확인하세요.';
 
 async function save() {
@@ -2049,7 +2054,7 @@ async function save() {
   if (!token) {
     const t = await askToken(false);
     if (!t) { refreshBar(); return; }
-    token = t;
+    token = t; store.set('tok', t);
   }
   saving = true; $('#ebSave').disabled = true;
   setStatus('저장 중…');
@@ -2082,7 +2087,7 @@ async function save() {
 $('#ebSave').onclick = save;
 $('#ebDl').onclick = download;
 $('#ebOff').onclick = exitEdit;
-$('#ebTok').onclick = async () => { if (askOpen) return; const t = await askToken(false); if (t) { token = t; refreshBar(); } };
+$('#ebTok').onclick = async () => { if (askOpen) return; const t = await askToken(false); if (t) { token = t; store.set('tok', t); refreshBar(); } };
 
 /* ── boot: 열 때마다 notes.json 을 새로 읽음 ── */
 function boot(d) {
