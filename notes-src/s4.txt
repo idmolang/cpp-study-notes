@@ -1,456 +1,743 @@
 @ c4 | 4회차 · 클래스 입문 | Ch 14
 
-# p4-1 | 왜 클래스가 필요할까 | Ch 14.1~14.2
-sum: 따로 노는 변수들을 **데이터 + 동작이 한 덩어리**인 클래스로 묶는다. 클래스는 **설계도**, 객체는 **찍어낸 물건**.
-ana: 🐟 클래스 = 붕어빵 틀, 객체 = 붕어빵. 틀은 하나, 붕어빵은 몇 개든.
+# p4-1 | 왜 클래스가 필요할까요 | Ch 14.1~14.2
+sum: 따로 노는 변수들을 **데이터와 동작이 한 덩어리**인 클래스로 묶으면, “이 값들은 한 사람의 것”이라는 사실을 코드가 기억해 줘요. **클래스는 설계도**, **객체는 그 설계도로 만든 물건**이에요.
+ana: 🐟 클래스는 붕어빵 틀, 객체는 붕어빵이에요. 틀은 하나지만 붕어빵은 몇 개든 찍어낼 수 있고, 붕어빵마다 속(값)이 달라요.
 h: 변수를 따로 두면 생기는 문제
 code:
 std::string name1 { "홍길동" };  int score1 { 90 };
 std::string name2 { "김철수" };  int score2 { 75 };
-// 10명이면 변수 20개, 이름·점수를 엇갈려 써도 컴파일러는 모름
+// 학생이 10명이면 변수가 20개
+// name1 과 score2 를 짝지어 써도 컴파일러는 모름
 :end
-li: “이 이름과 이 점수가 한 사람 것”이라는 정보가 코드에 **없음**
-li: 함수에 넘기려면 인자가 계속 늘어남
-li: “학년”을 추가하면 관련 코드를 전부 찾아 고쳐야 함
-h: struct 는 반쪽짜리
+li: “name1과 score1이 한 사람 것”이라는 정보가 코드 어디에도 없어요
+li: 함수에 넘길 때마다 인자가 늘어나요
+li: “학년”을 추가하려면 관련 코드를 전부 찾아서 고쳐야 해요
+h: struct로 묶으면 반은 해결
+p: 3회차의 struct로 이름과 점수를 묶을 수 있었어요. 하지만 “출력하기”, “합격인지 판단하기” 같은 **동작**은 여전히 struct 바깥 함수로 흩어져 있고, 누구나 점수를 −50으로 바꿀 수 있어요. 클래스는 동작까지 안으로 넣고, 아무나 못 건드리게 막아 줘요.
 tbl:  | struct (3회차) | class (오늘)
 r: 데이터 묶기 | ✅ | ✅
-r: 동작(출력·판정) 넣기 | 밖에 흩어짐 | ✅ 안으로
-r: 아무나 못 건드리게 | ❌ | ✅
-h: 클래스 vs 객체
+r: 동작(함수)을 안에 넣기 | 보통 밖에 둠 | ✅
+r: 바깥에서 함부로 못 바꾸게 막기 | 기본은 안 막음 | ✅
+h: 클래스와 객체
 tbl:  | 클래스 | 객체
-r: 정체 | 설계도 | 설계도로 만든 실물
-r: 개수 | 한 번 정의 | 몇 개든
-r: 메모리 | 차지 안 함 | 차지함, 각자 값
-flow: 설계도 정의 > `class Student { … };` || 객체 생성 > `Student a; Student b;` || 사용 > `a.print();`
-tip: 이미 써 봤음 — `std::string` 이 클래스, `std::string s;` 의 s 가 객체.
-trap: 이름·점수를 변수 따로따로 관리 > 클래스로 묶기 > 짝이 맞는지 컴파일러가 확인 못 함
-trap: “클래스를 만들면 메모리를 차지한다” > 객체를 만들 때 차지 > 클래스는 설계도일 뿐
-star: 클래스 = 설계도(메모리 X), 객체 = 실물(메모리 O).
+r: 정체 | 설계도 (“학생은 이름과 점수가 있고 출력할 수 있다”) | 설계도로 만든 실물 (홍길동, 김철수)
+r: 몇 개 | 한 번 정의 | 몇 개든 만들 수 있어요
+r: 메모리 | 차지하지 않아요 | 차지하고, 각자 자기 값을 가져요
+tip: 사실 이미 써 봤어요. `std::string` 이 클래스이고, `std::string s;` 의 s가 객체예요.
+star: 클래스는 **설계도**(메모리 차지 X), 객체는 **실물**(메모리 차지 O).
+trap: 이름과 점수를 변수 두 개로 따로 관리 > 클래스로 묶기 > 짝이 맞는지 컴파일러가 확인할 수 없어요
+trap: 클래스를 정의하면 메모리를 차지한다고 생각 > 객체를 만들 때 차지 > 클래스는 설계도일 뿐이에요
 mem: 클래스 = **붕어빵 틀**, 객체 = **붕어빵**
-key: 따로 둔 변수엔 “한 덩어리” 정보가 없음
-key: 클래스 = 설계도, 객체 = 실물
-key: std::string 도 클래스
+key: 따로 둔 변수는 “한 덩어리”라는 정보가 없어요
+key: 클래스 = 설계도, 객체 = 설계도로 만든 실물
+key: std::string도 클래스예요
 
 # p4-2 | 첫 클래스 만들기 | Ch 14.2
-sum: `class 이름 { public: ... };` — **public:** 과 끝의 **`;`** 를 잊지 말 것. 멤버 값은 **객체마다 따로**.
-ana: 🏠 같은 설계도로 지은 집 두 채. 한 집 벽지를 바꿔도 옆집은 그대로.
+sum: `class 이름 { public: 멤버들 };` 으로 만들어요. **`public:`** 과 끝의 **`};`** 를 잊지 마세요. 멤버 값은 **객체마다 따로** 있어요.
+ana: 🏠 같은 설계도로 지은 집 두 채예요. 한 집 벽지를 바꿔도 옆집 벽지는 그대로예요.
 h: 기본 모양
 code:
+#include <iostream>
+#include <string>
+
 class Student {
-public:                     // ← 없으면 밖에서 못 씀
+public:                         // ← 이게 없으면 바깥(main)에서 멤버를 못 써요
     std::string name {};
     int score {};
-};                          // ← ; 잊지 말기
+};                              // ← 세미콜론!
 
-Student a {};
-a.name = "홍길동";
-a.score = 90;
+int main()
+{
+    Student a {};               // Student 설계도로 객체 a 를 만들어요
+    a.name = "홍길동";           // a 의 name
+    a.score = 90;               // a 의 score
+    std::cout << a.name << " (" << a.score << "점)\n";
+    return 0;
+}
 :end
-h: 객체마다 따로
+out: 실행 결과
+홍길동 (90점)
+:end
+tbl: 줄 | 뜻
+r: `class Student { ... };` | Student라는 설계도를 만들어요
+r: `public:` | 아래 멤버들은 바깥에서도 쓸 수 있다는 표시 (없으면 class는 전부 숨겨져요)
+r: `Student a {};` | 설계도로 실제 객체 a를 하나 만들어요
+r: `a.name` | “a의 name” — 점(.)은 “~의”라는 뜻
+h: 객체마다 값이 따로 있어요
 code:
-Student a {}, b {};
-a.score = 90;  b.score = 75;
-a.score = 95;              // a 만 바뀜
-// a.score = 95, b.score = 75
-:end
-h: 점(.) 읽는 법
-tbl: 코드 | 맞나 | 이유
-r: `a.score = 90;` | ✅ | a 라는 물건의 점수
-r: `b.print();` | ✅ | b 에게 시킴
-r: `Student.score = 90;` | ❌ | 설계도엔 값이 없음
-r: `score = 90;` | ❌ | 누구 것인지 모름
-trap: 클래스 끝 `;` 누락 > `};` > 엉뚱한 줄에서 오류
-trap: `public:` 을 안 씀 > `public:` 추가 > class 는 기본 private → `a.name` 오류
-star: 입문 오류 TOP 2 — **`};` 누락**, **`public:` 누락**.
-mem: 점(.) = “**누구의 무엇**” (`a.score` = a 의 점수)
-key: 클래스 끝 `};` + `public:`
-key: 멤버는 객체마다 따로
-key: `객체.멤버` (클래스.멤버 X)
+#include <iostream>
+#include <string>
 
-# p4-3 | 멤버 함수 | Ch 14.3
-sum: 동작도 클래스 안에 넣는다. 멤버 함수 안의 `name` 은 “**이 함수를 부른 객체의** name”.
-ana: 📢 `a.print()` = a 에게 “자기소개 해 봐”. 같은 대사(함수)라도 말하는 사람이 다르면 내용이 다름.
-h: 밖 vs 안
-vs: 함수를 밖에 | 함수를 안에
+class Student {
+public:
+    std::string name {};
+    int score {};
+};
+
+int main()
+{
+    Student a {}, b {};
+    a.score = 90;
+    b.score = 75;
+    a.score = 95;                              // a 만 바꿈
+    std::cout << a.score << ' ' << b.score << '\n';
+    return 0;
+}
+:end
+out: 실행 결과
+95 75
+:end
+p: a를 바꿔도 b는 그대로예요. Student 객체를 10개 만들면 name과 score도 10쌍이 따로따로 생겨요.
+h: 점(.) 앞에는 객체가 와요
+tbl: 코드 | 될까요 | 이유
+r: `a.score = 90;` | ✅ | a라는 객체의 점수
+r: `Student.score = 90;` | ❌ | 설계도에는 값이 없어요
+r: main에서 그냥 `score = 90;` | ❌ | 누구의 점수인지 몰라요
+star: 입문자가 가장 많이 하는 실수 두 가지 — **`};` 누락**, **`public:` 누락**.
+trap: 클래스 끝에 `}` 만 씀 > `};` > 다음 줄에서 엉뚱한 오류가 나요
+trap: `public:` 없이 멤버를 씀 > 멤버 위에 `public:` > class는 기본이 private이라 `a.name` 이 오류예요
+trap: `Student.score = 90;` > `a.score = 90;` > 점 앞에는 설계도가 아니라 객체가 와야 해요
+mem: 점(.) = “**~의**” (`a.score` = a의 점수)
+key: `class 이름 { public: ... };`
+key: 멤버 값은 객체마다 따로
+key: `객체.멤버` 로 접근
+
+# p4-3 | 멤버 함수: 동작도 클래스 안으로 | Ch 14.3
+sum: 클래스 안에 함수를 넣으면 **멤버 함수**가 돼요. 멤버 함수 안에서 `name` 이라고만 쓰면 “**이 함수를 부른 객체의** name”이라는 뜻이에요.
+ana: 📢 `a.print()` 는 a에게 “자기소개 해 봐”라고 시키는 거예요. 같은 대사(함수)라도 말하는 사람이 다르면 내용이 달라요.
+h: 함수를 밖에 둘 때와 안에 둘 때
+vs: 밖에 둔 함수 | 안에 넣은 멤버 함수
 void print(const Student& s)
 {
     std::cout << s.name;
 }
-print(a);
+
+print(a);   // a 를 넘겨줘야 해요
 --
 class Student {
 public:
     std::string name {};
     void print() { std::cout << name; }
 };
-a.print();
+
+a.print();  // a 에게 시켜요
 :end
-li: 안에 넣으면 `s.` 가 사라짐 — 누구인지는 `a.print()` 의 **a** 가 정함
+p: 멤버 함수 안에서는 `s.` 같은 앞부분이 필요 없어요. 누구의 name인지는 `a.print()` 의 **a** 가 정해 줘요.
+h: 같은 함수, 다른 결과
 code:
-a.print();   // 홍길동 (90점)
-b.print();   // 김철수 (75점)  ← 같은 함수, 다른 결과
+#include <iostream>
+#include <string>
+
+class Student {
+public:
+    std::string name {};
+    int score {};
+    void print() { std::cout << name << " (" << score << "점)\n"; }
+};
+
+int main()
+{
+    Student a {}; a.name = "홍길동"; a.score = 90;
+    Student b {}; b.name = "김철수"; b.score = 75;
+    a.print();     // a 의 name, score 를 출력
+    b.print();     // b 의 name, score 를 출력
+    return 0;
+}
 :end
-h: 멤버 함수의 장점
-tbl: 장점 | 내용
-r: 이름 겹쳐도 OK | `Student::print`, `Course::print` 는 남남
-r: 순서 상관없음 | 클래스 안에선 **아래 함수를 위에서 그냥 부름** (전방 선언 불필요)
+out: 실행 결과
+홍길동 (90점)
+김철수 (75점)
+:end
+h: 멤버 함수의 편한 점
+tbl: 장점 | 설명
+r: 이름이 겹쳐도 괜찮아요 | `Student::print` 와 `Course::print` 는 다른 함수예요. `printStudent` 처럼 이름을 길게 지을 필요가 없어요
+r: 순서를 신경 안 써도 돼요 | 클래스 안에서는 아래에 있는 멤버 함수를 위에서 바로 부를 수 있어요 (전방 선언 불필요)
 code:
 class Student {
 public:
     int score {};
-    void report() { std::cout << gradeOf(); }   // 아래에 있어도 OK
-    char gradeOf() { return score >= 90 ? 'A' : 'B'; }
+    void report() { std::cout << grade() << '\n'; }   // grade 가 아래에 있어도 OK
+    char grade() { return score >= 90 ? 'A' : 'B'; }
 };
 :end
-trap: 멤버 함수 안에서 `s.name` 처럼 객체를 또 적음 > 그냥 `name` > 부른 객체의 멤버가 자동으로 쓰임
-trap: `Student.print();` (클래스 이름으로 호출) > `a.print();` > 누구에게 시킬지 객체가 필요
-star: 멤버 함수 안의 멤버 이름 = **부른 객체의 것**.
-mem: `a.print()` = **a 에게 시키기**
-key: 멤버 함수 = 클래스 안의 동작
-key: 같은 함수, 부른 객체에 따라 결과 다름
-key: 클래스 안에선 전방 선언 불필요
+star: 멤버 함수 안의 멤버 이름은 **그 함수를 부른 객체의 것**이에요.
+trap: 멤버 함수 안에서 `s.name` 처럼 객체를 또 씀 > 그냥 `name` > 멤버 함수 안에서는 부른 객체의 멤버가 자동으로 쓰여요
+trap: `Student.print();` > `a.print();` > 누구에게 시킬지 객체가 필요해요
+mem: `a.print()` = **a에게 시키기**
+key: 멤버 함수 = 클래스 안의 함수
+key: 같은 함수라도 부른 객체에 따라 결과가 달라요
+key: 클래스 안에서는 전방 선언 없이 서로 부를 수 있어요
 
-# p4-4 | class vs struct, Roster 비교 | Ch 14.5
-sum: 둘의 **문법 차이는 하나** — struct 는 기본 public, class 는 기본 private. 지킬 규칙이 있으면 class.
-ana: 🏪 struct = 진열대(누구나 집음), class = 카운터 뒤 진열장(점원을 통해서만).
-h: 유일한 차이
+# p4-4 | class 와 struct, 그리고 명단 관리 비교 | Ch 14.5
+sum: class와 struct의 **문법상 차이는 하나**예요. struct는 기본이 public, class는 기본이 private. 지켜야 할 규칙(점수 0~100 등)이 있으면 class를 써요.
+ana: 🏪 struct는 손님이 직접 집어 가는 진열대, class는 점원을 통해서만 꺼낼 수 있는 진열장이에요.
+h: 유일한 문법 차이
+code:
+struct Point  { int x {}; };    // 기본이 public
+class  Point2 { int x {}; };    // 기본이 private
+
+int main()
+{
+    Point p {};   p.x = 3;      // ✅
+    Point2 q {};  // q.x = 3;   // ❌ private 이라 바깥에서 못 써요
+    return 0;
+}
+:end
 tbl:  | struct | class
-r: 기본 접근 | **public** | **private**
-r: 언제 | 아무 값이나 OK (좌표, 색) | 규칙이 있음 (점수 0~100)
+r: 아무것도 안 적었을 때 | public | private
+r: 관습적으로 쓰는 곳 | 아무 값이나 괜찮은 단순한 묶음 (좌표, 색) | 지켜야 할 규칙이 있는 것 (점수 0~100, 월 1~12)
+h: 큰 예: 배열과 함수만으로 명단 관리
+p: 학생 명단을 배열 두 개(이름, 점수)와 개수 변수로 관리하면, 함수를 부를 때마다 셋을 같이 넘겨야 해요. 그리고 개수를 잘못 넘겨도 아무도 모르게 틀린 답이 나와요.
 code:
-struct Point  { int x {}; };   Point p {};  p.x = 3;   // ✅
-class  Point2 { int x {}; };   Point2 q {}; q.x = 3;   // ❌ private
+#include <iostream>
+
+double average(const int scores[], int count)
+{
+    int sum { 0 };
+    for (int i { 0 }; i < count; ++i) sum += scores[i];
+    return static_cast<double>(sum) / count;
+}
+
+int main()
+{
+    int scores[100] { 90, 75, 84 };   // 3명만 넣고 나머지는 0
+    int count { 3 };
+    std::cout << average(scores, count) << '\n';   // 맞게 넘김
+    std::cout << average(scores, 5) << '\n';       // 개수를 잘못 넘김
+    return 0;
+}
 :end
-h: 함수만으로 명단을 관리하면
-code:
-std::string names[100] {};
-int scores[100] {};
-int count { 0 };
-addStudent(names, scores, count, "홍길동", 90);   // 매번 셋을 같이 넘김
-average(scores, count);   // 83   ✅
-average(scores, 5);       // 49.8 ❌ 개수를 잘못 넘김 — 경고도 없음
+out: 실행 결과
+83
+49.8
 :end
-fix: PPT 에 실행 결과가 빠져 있음. 잘못 넘기면 (90+75+84+0+0) / 5 = **49.8**.
-li: names·scores·count 가 짝이라는 건 **사람 머릿속에만** 있음
-li: count 올리기를 깜빡해도 조용히 틀림
+p: 두 번째 줄은 (90 + 75 + 84 + 0 + 0) ÷ 5 = 49.8이에요. 경고도 오류도 없이 틀린 답이 나왔어요. “scores와 count가 짝”이라는 사실은 사람 머릿속에만 있어서 컴파일러가 확인해 줄 수 없거든요.
+fix: PPT에는 이 실행 결과가 빠져 있어서 보충했어요. 잘못 넘긴 평균은 **49.8**이에요.
 h: 클래스로 묶으면
+p: 명단과 개수를 클래스 안에 넣고, 바깥에는 “추가하기”, “평균 구하기” 같은 동작만 열어 두면 개수를 잘못 넘길 일 자체가 사라져요. 개수는 6회차에서 배우는 `std::vector` 가 스스로 기억해요.
 code:
 class Roster {
-    std::vector<Student> m_list {};   // 개수는 vector 가 앎
+    std::vector<Student> m_list {};       // 학생 목록 — 개수는 vector 가 알아요
 public:
-    void add(std::string_view n, int s);
-    double average();
+    void add(const Student& s) { m_list.push_back(s); }
+    double average();                      // 개수를 넘길 필요가 없어요
 };
+
 Roster r;
-r.add("홍길동", 90);
-r.average();                          // 개수를 넘길 일이 없음
+r.add(a);
+r.add(b);
+std::cout << r.average();
 :end
-trap: `average(scores, 5);` 처럼 개수를 따로 넘김 > 데이터와 개수를 클래스로 묶기 > 잘못 넘겨도 컴파일러가 모름 → 49.8
-star: struct 기본 **public**, class 기본 **private** — 문법 차이는 이것뿐.
+star: class와 struct의 문법 차이는 **기본 접근 지정자 하나**(struct=public, class=private)예요.
+trap: `average(scores, 5);` 처럼 개수를 따로 넘김 > 데이터와 개수를 클래스로 묶기 > 잘못 넘겨도 아무도 몰라서 49.8 같은 틀린 답이 나와요
 mem: **S**truct = **S**hare(공개), **C**lass = **C**losed(잠김)
 key: 차이는 기본 접근 지정자 하나
 key: 규칙이 있으면 class
-key: 따로 노는 데이터는 실수를 못 막음
+key: 따로 노는 데이터는 실수를 막지 못해요
 
-# p4-5 | 생성자 | Ch 14.9, 14.11
-sum: 생성자 = 객체가 만들어질 때 **자동으로 불리는 함수**. 이름 = 클래스 이름, **반환형 없음**.
-ana: 🎁 생성자 = 택배 상자에 물건을 **넣어서** 보내는 것. 빈 상자 받고 나중에 채우지 않아도 됨.
-h: 생성자 없으면
+# p4-5 | 생성자: 만들자마자 값 채우기 | Ch 14.9, 14.11
+sum: **생성자**는 객체가 만들어지는 순간 **자동으로 불리는 함수**예요. 이름은 클래스 이름과 같고, **반환형이 없어요**(void도 아님).
+ana: 🎁 생성자는 택배 상자에 물건을 넣어서 보내는 거예요. 빈 상자를 받고 나중에 채우는 대신, 받는 순간부터 내용이 들어 있어요.
+h: 생성자가 없으면
 code:
 Student a {};
-a.name = "홍길동";   // 만든 뒤 한 줄씩 채움
-a.score = 90;        // 깜빡하면 빈 값 — 컴파일러가 안 막음
+a.name = "홍길동";   // 만든 다음에 한 줄씩 채워야 해요
+a.score = 90;        // 깜빡하면 빈 값으로 쓰이고, 컴파일러는 안 막아요
 :end
-h: 생성자 3규칙
-tbl: 규칙 | 내용
-r: ① 이름 | 클래스 이름과 같음
-r: ② 반환형 | **없음** (void 도 아님)
-r: ③ 호출 | 직접 안 부름 — 만들면 **자동**
+h: 생성자 만들기
 code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
 class Student {
 public:
     std::string name {};
     int score {};
-    Student()                            // 기본 생성자 (인자 없음)
-    { name = "이름없음"; score = 0; }
-    Student(std::string_view n, int s)   // 인자 받는 생성자
-    { name = n; score = s; }
+
+    Student(std::string_view n, int s)   // 생성자: 이름은 클래스와 같고, 반환형이 없어요
+    {
+        name = n;
+        score = s;
+    }
 };
 
-Student a {};                // → 이름없음 (0점)
-Student b { "홍길동", 90 };  // → 홍길동 (90점)
+int main()
+{
+    Student a { "홍길동", 90 };   // 중괄호 안의 값이 생성자의 n, s 로 들어가요
+    Student b { "김철수", 75 };
+    std::cout << a.name << ' ' << b.score << '\n';
+    return 0;
+}
 :end
-out: 기본 생성자에 출력을 넣었을 때
-a 를 만들기 직전
-  Student 하나가 만들어짐    ← 부른 적 없는데 불림
-b 를 만들기 직전
-  Student 하나가 만들어짐
+out: 실행 결과
+홍길동 75
 :end
-li: 생성자도 **여러 개** 가능 — 인자 개수·타입으로 컴파일러가 고름 (함수 오버로딩과 같음)
-fix: PPT 에 “**2회차**의 함수 오버로딩”이라고 되어 있지만 오버로딩은 **3회차**에서 배움.
-trap: 생성자에 `void` 를 붙임 > 반환형 없이 `Student()` > 생성자는 반환형이 아예 없음
-star: 생성자 = **이름 같음 · 반환형 없음 · 자동 호출**.
-mem: 생성자 = 객체의 **출생 신고** (태어날 때 딱 한 번 자동)
+tbl: 생성자 규칙 | 내용
+r: ① 이름 | 클래스 이름과 똑같아요 (`Student`)
+r: ② 반환형 | **없어요**. `void` 도 쓰지 않아요
+r: ③ 호출 | 내가 직접 부르지 않아요. 객체를 만들면 **자동으로** 불려요
+tip: 이제 값을 빠뜨리는 게 불가능해요. 인자 없이 `Student c {};` 라고 쓰면, 인자를 받는 생성자만 있으니 컴파일 오류가 나요.
+h: 생성자를 여러 개 두기
+p: 생성자도 함수처럼 오버로딩(3회차)할 수 있어요. 객체를 만들 때 넣은 값의 개수와 타입을 보고 컴파일러가 맞는 생성자를 골라요.
+code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
+class Student {
+public:
+    std::string name {};
+    int score {};
+    Student()                            // ① 인자 없는 생성자 = 기본 생성자
+    {
+        name = "이름없음";
+        score = 0;
+    }
+    Student(std::string_view n, int s)   // ② 인자 두 개
+    {
+        name = n;
+        score = s;
+    }
+};
+
+int main()
+{
+    Student a {};                  // ① 이 불려요
+    Student b { "홍길동", 90 };     // ② 가 불려요
+    std::cout << a.name << ' ' << b.name << '\n';
+    return 0;
+}
+:end
+out: 실행 결과
+이름없음 홍길동
+:end
+term: 기본 생성자 | default constructor | 인자 없이 불리는 생성자
+fix: PPT에 “**2회차**의 함수 오버로딩과 같은 원리”라고 되어 있지만, 함수 오버로딩은 **3회차**에서 배웠어요.
+star: 생성자는 **이름 = 클래스 이름**, **반환형 없음**, **자동 호출**.
+trap: `void Student(...)` 처럼 반환형을 붙임 > `Student(...)` > 생성자는 반환형이 아예 없어요
+trap: 객체를 만든 뒤 멤버를 하나씩 채움 > 생성자로 만들 때 바로 채우기 > 깜빡하면 빈 값으로 쓰여요
+mem: 생성자 = 객체의 **출생 신고** (태어날 때 딱 한 번, 자동으로)
 key: 생성자: 클래스 이름, 반환형 없음, 자동 호출
 key: 기본 생성자 = 인자 없는 생성자
-key: 생성자도 오버로딩 가능
+key: 생성자도 여러 개 만들 수 있어요
 
-# p4-6 | 초기화 리스트와 사라지는 기본 생성자 | Ch 14.10~14.11
-sum: 생성자는 **`: 멤버 { 값 }`** 으로 초기화한다. 생성자를 하나라도 만들면 **기본 생성자가 사라짐** → `= default`.
-ana: 🍳 본문 대입 = 빈 그릇을 꺼냈다가 다시 담기. 초기화 리스트 = 처음부터 음식을 담아서 꺼내기.
-h: 본문 대입 vs 초기화 리스트
+# p4-6 | 멤버 초기화 리스트와 사라지는 기본 생성자 | Ch 14.10~14.11
+sum: 생성자에서 멤버에 값을 넣을 때는 **`: 멤버 { 값 }`** (멤버 초기화 리스트)를 써요. 그리고 생성자를 하나라도 직접 만들면 **기본 생성자가 사라지니** `Student() = default;` 로 되살려요.
+ana: 🍳 본문에서 대입하는 건 빈 그릇을 먼저 꺼냈다가 음식을 다시 담는 거예요. 초기화 리스트는 처음부터 음식을 담아서 꺼내는 거예요.
+h: 본문 대입과 초기화 리스트
 vs: 본문에서 대입 | ✅ 초기화 리스트
 Student(std::string_view n, int s)
 {
-    name = n;    // 빈 문자열로 만든 뒤
-    score = s;   // 다시 대입
+    name = n;    // name 을 빈 값으로 먼저 만들고
+    score = s;   // 그다음 다시 값을 넣어요
 }
 --
 Student(std::string_view n, int s)
-    : name { n }    // 처음부터 n
+    : name { n }     // 처음부터 n 으로 만들어요
     , score { s }
-{ }
+{
+}
 :end
 tbl: 알아 둘 것 | 내용
-r: 위치 | `:` 뒤, 본문 `{ }` 앞, 쉼표로 나열
-r: 장점 | 한 단계 덜 해서 빠름
-r: 필수인 경우 | **const 멤버** 처럼 대입이 안 되는 멤버
-h: 함정: 기본 생성자가 사라짐
+r: 위치 | 생성자 괄호 `)` 뒤, 본문 `{ }` 앞. 콜론 `:` 으로 시작해서 쉼표로 이어요
+r: 장점 | 한 단계를 건너뛰어서 빨라요
+r: 꼭 필요한 경우 | **const 멤버**처럼 만든 뒤에는 대입할 수 없는 멤버
+h: 함정: 생성자를 만들면 기본 생성자가 사라져요
+p: 생성자를 하나도 안 만들면 컴파일러가 인자 없는 생성자를 공짜로 만들어 줘요. 그런데 생성자를 **하나라도** 직접 만들면, 컴파일러는 “알아서 하겠지” 하고 공짜 생성자를 만들지 않아요.
 code:
+#include <string>
+#include <string_view>
+
 class Student {
 public:
+    std::string name {};
+    int score {};
     Student(std::string_view n, int s) : name { n }, score { s } {}
 };
-Student a {};    // ❌ 컴파일 오류 — 인자 없는 생성자가 없음
+
+int main()
+{
+    Student a {};   // ❌ 인자 없는 생성자가 없어요
+    return 0;
+}
 :end
-out: GCC 13 실제 출력
+out: GCC 실제 출력
 error: no matching function for call to 'Student::Student(<brace-enclosed initializer list>)'
 :end
+h: 해결: = default 로 되살리기
 code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
 class Student {
 public:
-    Student() = default;                                       // ✅ 되살리기
+    std::string name {};
+    int score {};
+    Student() = default;                                         // 인자 없는 생성자를 기본 그대로 만들어 줘
     Student(std::string_view n, int s) : name { n }, score { s } {}
 };
-:end
-li: `std::vector<Student> v(10);`, `Student arr[5];` 처럼 인자 없이 만드는 곳이 있으면 꼭 필요
-warn: 남은 문제 — 전부 public 이라 `a.score = -50;` 을 아무도 안 막음 → 다음 파트.
-trap: 생성자 만든 뒤 `Student a {};` > `Student() = default;` 추가 > 기본 생성자가 사라져 컴파일 오류
-star: 생성자를 직접 만들면 **기본 생성자는 사라진다** → `T() = default;`
-mem: 생성자를 직접 만들면 컴파일러가 **공짜 기본 생성자를 회수**함
-key: 초기화 리스트 `: m { v }` (const 멤버는 필수)
-key: 생성자를 만들면 기본 생성자 사라짐
-key: `T() = default;` 로 되살리기
 
-# p4-7 | private 과 getter/setter | Ch 14.5~14.6
-sum: 멤버는 **private** 으로 숨기고, 값을 바꾸는 **문(setter)을 하나만** 열어 거기서 검사한다.
-ana: 🏦 은행 금고. 아무나 손 못 대고(private), 창구(setter) 하나에서만 확인 후 넣고 뺌.
-h: public 이면 생기는 일
-code:
-a.score = -50;     // 컴파일 OK
-a.score = 1000;    // 이것도 OK — 어디서 깨졌는지 찾기 어려움
+int main()
+{
+    Student a {};                  // ✅ 이제 돼요 (name 은 빈 문자열, score 는 0)
+    Student b { "홍길동", 90 };
+    std::cout << a.score << ' ' << b.score << '\n';
+    return 0;
+}
 :end
-flow: ① 막기 > 바깥에서 못 건드리게 private || ② 문 하나 > 값을 바꾸는 setter 하나만 || ③ 검사 > 그 문에서 규칙 확인
-h: private 과 접근 함수
+out: 실행 결과
+0 90
+:end
+p: 인자 없이 객체를 만드는 곳(`Student a {};`, `std::vector<Student> v(10);` 등)이 있다면 반드시 필요해요.
+warn: 아직 남은 문제가 있어요. 멤버가 전부 public이라 `a.score = -50;` 같은 코드를 아무도 막지 못해요. 다음 파트에서 해결해요.
+star: 생성자를 직접 만들면 **기본 생성자가 사라져요** → `Student() = default;`
+trap: 생성자를 만든 뒤 `Student a {};` > `Student() = default;` 추가 > 기본 생성자가 없어서 컴파일 오류
+trap: 초기화 리스트를 콜론 없이 씀 `Student(...) name { n }` > `Student(...) : name { n }` > 초기화 리스트는 `:` 로 시작해요
+mem: 생성자를 직접 만들면 컴파일러가 **공짜 기본 생성자를 회수**해요
+key: 초기화 리스트 `: 멤버 { 값 }` — const 멤버엔 필수
+key: 생성자를 만들면 기본 생성자가 사라져요
+key: `클래스이름() = default;` 로 되살리기
+
+# p4-7 | private 과 getter·setter | Ch 14.5~14.6
+sum: 멤버 변수는 **private** 으로 숨기고, 값을 바꾸는 통로(**setter**)를 하나만 열어서 그 안에서 규칙을 검사해요.
+ana: 🏦 은행 금고와 같아요. 아무나 금고(private)에 손댈 수 없고, 창구(setter) 하나에서만 확인을 거쳐 돈을 넣고 빼요.
+h: 다 열어 두면 생기는 문제
 code:
+Student a { "홍길동", 90 };
+a.score = -50;     // 컴파일도 되고 실행도 돼요
+a.score = 1000;    // 이것도 돼요
+:end
+p: 진짜 문제는 “어디서 잘못된 값이 들어왔는지 모른다”는 거예요. 점수를 바꾸는 코드가 프로그램 곳곳에 흩어져 있으면 잘못된 한 줄을 찾는 데 시간이 다 가요.
+h: private 으로 막고 setter로 열기
+code:
+#include <iostream>
+
 class Student {
-private:
-    std::string m_name {};
+private:                                // 여기부터는 바깥에서 못 써요
     int m_score {};
-public:
-    int getScore() { return m_score; }     // getter: 읽기
-    void setScore(int v)                   // setter: 쓰기
+public:                                 // 여기부터는 바깥에서 써도 돼요
+    int getScore() { return m_score; }  // getter: 값을 읽는 통로
+    void setScore(int v)                // setter: 값을 바꾸는 통로
     {
-        if (v < 0 || v > 100) return;      // 검사 통과해야만
+        if (v < 0 || v > 100) return;   // 규칙(0~100)을 어기면 무시
         m_score = v;
     }
 };
-// a.m_score = -50;   // ❌ 'm_score' is private
-:end
-tbl: 말 | 뜻
-r: 접근 지정자 | public / private
-r: getter | 값을 **읽는** 함수
-r: setter | 값을 **쓰는** 함수 (검사 포함)
-r: `m_` | 멤버 변수 표시 관습
-li: private 이어도 **같은 클래스의 멤버 함수**는 자유롭게 씀
-trap: 멤버를 public 으로 둬 아무 데서나 대입 > private + setter > 잘못된 값이 어디서 들어왔는지 추적 불가
-star: m_score 에 대입하는 곳은 프로그램 전체에서 **setScore 안 한 줄**. 규칙이 바뀌어도 고칠 곳이 하나.
-mem: private = **금고**, setter = **창구**
-key: private = 바깥 접근 불가
-key: setter 에서 검사 → 문은 하나
-key: `m_` = 멤버 변수
 
-# p4-8 | 생성자 검사와 캡슐화 | Ch 14.6~14.9
-sum: 생성자도 setter 를 거치게 하면 **잘못된 객체가 아예 안 생긴다**. getter/setter 를 기계적으로 다 만들지 말 것.
-ana: 🚪 공항 보안검색대. 입국(생성)할 때도, 나중에 짐을 넣을 때(setter)도 같은 검색대를 지나감.
-h: 생성자도 같은 문으로
-code:
-Student(std::string_view n, int s) : m_name { n }, m_score { 0 }
+int main()
 {
-    setScore(s);   // 생성자도 setter 를 거침
+    Student a {};
+    a.setScore(90);
+    a.setScore(-50);                    // 무시돼요
+    // a.m_score = -50;                 // ❌ 컴파일 오류: private 이에요
+    std::cout << a.getScore() << '\n';
+    return 0;
 }
 :end
-tbl: 해 본 것 | 결과
-r: `Student a { "홍길동", 90 };` | 90
-r: `Student b { "김철수", -50 };` | **0** (거부됨)
-r: `a.setScore(1000);` | 90 **그대로**
-h: 접근 함수 만드는 기준
-tbl: 하지 말 것 | 이렇게
-r: 멤버마다 get/set 기계적으로 | 바깥이 **정말 필요한 것만**
-r: 학번에도 setter | 안 바뀌는 값은 getter 만
-r: `setScore(getScore() + 5)` | `addBonus(5)` — 의도가 이름에
-r: getScore / score / Score 섞기 | 프로젝트 안에서 하나로 통일
-h: 캡슐화의 진짜 이유
-vs: public 이었다면 | private 이었다면
+out: 실행 결과
+90
+:end
+tbl: 이름 | 뜻
+r: `private:` | 바깥(main 등)에서 쓸 수 없어요. 같은 클래스의 멤버 함수는 자유롭게 써요
+r: `public:` | 바깥에서도 쓸 수 있어요
+r: getter | 값을 **읽는** 멤버 함수 (`getScore`)
+r: setter | 값을 **바꾸는** 멤버 함수, 안에서 규칙 검사 (`setScore`)
+r: `m_` | “멤버 변수”라는 표시로 붙이는 관습. 지역 변수와 눈으로 구분돼요
+star: 이제 m_score를 바꾸는 곳은 프로그램 전체에서 **setScore 안의 한 줄뿐**이에요. 규칙이 0~150으로 바뀌어도 고칠 곳이 한 군데예요.
+trap: 멤버를 public으로 두고 여기저기서 직접 대입 > private으로 막고 setter로만 바꾸기 > 잘못된 값이 어디서 들어왔는지 찾을 수 없어요
+trap: setter 조건을 `v < 0 && v > 100` 으로 씀 > `v < 0 \|\| v > 100` > 0보다 작으면서 100보다 큰 수는 없어서 아무것도 안 막아요
+mem: private = **금고**, setter = **창구**
+key: private = 바깥에서 못 씀 (멤버 함수는 OK)
+key: 값을 바꾸는 통로(setter)는 하나, 그 안에서 검사
+key: `m_` = 멤버 변수 표시
+
+# p4-8 | 생성자에서도 검사하기, 그리고 캡슐화 | Ch 14.6~14.9
+sum: 생성자도 setter를 거치게 하면 **규칙을 어긴 객체가 아예 만들어지지 않아요**. getter/setter를 멤버마다 기계적으로 만들지 말고, “바깥이 무엇을 하고 싶은가”에서 출발해요.
+ana: 🚪 공항 보안 검색대예요. 입국할 때(생성자)도, 나중에 짐을 부칠 때(setter)도 같은 검색대를 지나가요.
+h: 생성자도 같은 통로로
+code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
+class Student {
+    std::string m_name {};
+    int m_score {};
+public:
+    Student(std::string_view n, int s) : m_name { n }
+    {
+        setScore(s);                     // 생성자도 setter 를 거쳐요
+    }
+    void setScore(int v) { if (v >= 0 && v <= 100) m_score = v; }
+    int getScore() const { return m_score; }
+};
+
+int main()
+{
+    Student a { "홍길동", 90 };
+    Student b { "김철수", -50 };          // -50 은 거부돼서 기본값 0 그대로
+    a.setScore(1000);                    // 거부돼서 90 그대로
+    std::cout << a.getScore() << ' ' << b.getScore() << '\n';
+    return 0;
+}
+:end
+out: 실행 결과
+90 0
+:end
+p: `getScore() const` 의 `const` 는 다음 파트(4-9)에서 설명해요. 지금은 “이 함수는 값을 바꾸지 않는다”는 표시라고만 알면 돼요.
+h: getter·setter를 만드는 기준
+tbl: 이렇게 하지 말고 | 이렇게 해요
+r: 멤버마다 get/set을 기계적으로 다 만들기 | 바깥이 **정말 필요한 것만** 열어요. 다 열면 public과 다를 게 없어요
+r: 학번처럼 안 바뀌는 값에도 setter | getter만 두고, 값은 생성자에서만 정해요
+r: `setScore(getScore() + 5)` | `addBonus(5)` 처럼 **동작**을 열어요. 의도가 이름에 드러나요
+h: 감춰 두면 나중에 내부를 바꿀 수 있어요
+p: 이름을 하나의 문자열로 저장하다가 “성”과 “이름”으로 나눠 저장하기로 바꿨다고 해 볼게요.
+vs: public이었다면 | private이었다면
 struct Student {
     std::string name {};
 };
-// 성/이름으로 쪼개면
-// s.name 쓰는 코드 전부 깨짐
+// 바깥 곳곳의 s.name 이
+// 전부 깨져요
 --
 class Student {
-    std::string m_first {}, m_last {};
+    std::string m_first {};
+    std::string m_last {};
 public:
     std::string getName()
     { return m_last + m_first; }
 };
-// 바깥 코드 수정: 0줄
+// 바깥은 getName() 만 쓰니까
+// 고칠 코드 0줄
 :end
-tbl: 말 | 뜻
-r: 캡슐화 (encapsulation) | 내부는 숨기고 문만 열어 둠
-r: 불변식 (invariant) | 객체가 항상 지켜야 할 조건 (점수 0~100)
-trap: 모든 멤버에 getter/setter 를 다 만듦 > 필요한 동작만 공개 > 사실상 전부 public 과 같아짐
-star: 기준은 “멤버를 알아야 하나?”가 아니라 **“바깥이 이 객체로 뭘 하고 싶나?”**. 캡슐화의 가치 = **내부를 바꿔도 밖이 안 깨짐**.
-mem: 캡슐화 = **알약 캡슐** — 안의 성분이 바뀌어도 먹는 법은 같음
-key: 생성자도 setter 를 거치게
-key: getter/setter 는 필요한 것만, 동작(addBonus)으로
-key: 캡슐화 = 내부 변경에도 밖이 안전
+term: 캡슐화 | encapsulation | 내부는 숨기고 필요한 통로만 열어 두는 것
+term: 불변식 | invariant | 객체가 언제나 지켜야 하는 조건 (점수는 항상 0~100)
+star: 캡슐화의 진짜 가치는 **내부를 바꿔도 바깥 코드가 안 깨진다**는 거예요.
+trap: 생성자에서 `m_score { s }` 로 검사 없이 바로 넣음 > 생성자 본문에서 `setScore(s);` > 처음부터 −50점짜리 객체가 만들어져요
+trap: 모든 멤버에 getter·setter를 다 만듦 > 바깥에 필요한 동작만 공개 > 사실상 전부 public과 같아져요
+mem: 캡슐화 = **알약 캡슐**. 안의 성분이 바뀌어도 먹는 법은 같아요
+key: 생성자도 setter를 거치게 해서 처음부터 규칙 지키기
+key: getter·setter는 필요한 것만, 가능하면 동작(addBonus)으로
+key: 캡슐화 = 내부를 바꿔도 바깥이 안전
 
 # p4-9 | const 멤버 함수 | Ch 14.4
-sum: 멤버를 **안 바꾸는** 멤버 함수엔 예외 없이 **`const`**. 안 붙이면 const 객체·const& 로 받은 객체에서 못 부른다.
-ana: 👀 const 멤버 함수 = “**보기만 할게요**” 서약서. 서약서 없는 사람은 유리 진열장(const 객체)에 접근 금지.
+sum: 멤버를 **바꾸지 않는** 멤버 함수에는 괄호 뒤에 **`const`** 를 붙여요. 안 붙이면 const 객체나 `const&` 로 받은 객체에서 그 함수를 부를 수 없어요.
+ana: 👀 const 멤버 함수는 “보기만 할게요”라는 서약서예요. 서약서 없는 사람은 유리 진열장(const 객체) 안의 물건에 접근할 수 없어요.
 h: 문제 상황
+p: 3회차에서 큰 객체는 `const&` 로 받으라고 배웠어요. 그런데 그렇게 받은 객체에서 getter를 부르면 오류가 나요.
 code:
-void report(const Student& s)   // 복사 피하려고 const& 로 받음
+#include <iostream>
+
+class Student {
+    int m_score { 90 };
+public:
+    int getScore() { return m_score; }      // const 가 없어요
+};
+
+void report(const Student& s)               // const 참조로 받음
 {
-    std::cout << s.getScore();  // ❌ 컴파일 오류
+    std::cout << s.getScore() << '\n';      // ❌ 컴파일 오류
+}
+
+int main()
+{
+    Student a {};
+    report(a);
+    return 0;
 }
 :end
-out: GCC 13 실제 출력
+out: GCC 실제 출력
 error: passing 'const Student' as 'this' argument discards qualifiers
 :end
-li: 컴파일러는 getScore 안을 **들여다보지 않음** — const 표시가 없으면 “바꿀 수도 있다”고 봄
+p: 컴파일러는 getScore 안을 들여다보지 않아요. const 표시가 없으면 “이 함수는 값을 바꿀 수도 있다”고 보고, const 객체에서는 못 부르게 막아요.
 h: 해결: 괄호 뒤에 const
 code:
+#include <iostream>
+
 class Student {
-    int m_score {};
+    int m_score { 90 };
 public:
-    int getScore() const { return m_score; }   // ✅ 읽기만
-    void setScore(int v) { m_score = v; }      // 바꾸니까 const X
+    int getScore() const { return m_score; }   // "값을 안 바꿔요" 표시
+    void setScore(int v) { m_score = v; }      // 값을 바꾸니까 const 안 붙임
 };
-const Student a { "홍길동", 90 };
-a.getScore();     // ✅
-a.setScore(80);   // ❌ const 객체는 못 바꿈
-:end
-tbl: 붙인다 | 안 붙인다
-r: getScore, getName, print | setScore
-r: 멤버를 안 바꾸는 모든 함수 | **생성자** (채우는 게 일)
-li: const 를 붙이면 함수 안에서 실수로 멤버를 바꿀 때 **컴파일 오류** — 이게 더 큰 장점
-trap: 읽기 함수에 const 를 안 붙임 > `int get() const` > const& 로 받은 곳에서 호출 불가 → 수정이 줄줄이 번짐
-star: 안 바꾸는 멤버 함수엔 **무조건 const** (나중에 붙이면 수정이 줄줄이 번짐).
-mem: const 자리 = **괄호 닫고 바로 뒤** `int get() const`
-key: 읽기 전용 멤버 함수 → `() const`
-key: const 없으면 const 객체에서 호출 불가
-key: 생성자·setter 엔 안 붙임
 
-# p4-10 | 복사는 언제 일어날까 | Ch 14.7, 14.13~14.15
-sum: 같은 타입 객체로 새 객체를 만들면 **복사 생성자**가 불린다. 읽기만 하면 **const&**, 새로 만든 건 **값으로 반환**.
-ana: 📠 복사 생성자 = 복사기. 원본을 넣으면 똑같은 새 문서가 나옴.
-h: 언제 복사되나
-tbl: 코드 | 불리는 것
-r: `Student a { "홍길동" };` | 일반 생성자
-r: `Student b { a };` | **복사 생성자**
-r: `Student c = a;` | **복사 생성자** (대입 아님!)
+void report(const Student& s)
+{
+    std::cout << s.getScore() << '\n';         // ✅ 이제 돼요
+}
+
+int main()
+{
+    Student a {};
+    report(a);
+    return 0;
+}
+:end
+out: 실행 결과
+90
+:end
+p: const를 붙이면 또 하나 좋은 점이 있어요. 함수 안에서 실수로 `m_score = 0;` 같은 코드를 쓰면 **컴파일러가 오류로 잡아 줘요**.
+tbl: const를 붙여요 | 안 붙여요
+r: getScore, getName, print 같은 읽기 함수 | setScore, addBonus 같은 바꾸는 함수
+r: 멤버를 안 바꾸는 모든 멤버 함수 | **생성자** (멤버를 채우는 게 일이라서)
+tip: “나중에 필요하면 붙이지”는 안 통해요. const 객체 쪽에서 오류가 나면 그 함수를 고치고, 그 함수가 부르는 함수를 또 고치고… 수정이 줄줄이 번져요. 처음부터 붙이세요.
+star: 멤버를 안 바꾸는 멤버 함수엔 **무조건 const**. 없으면 `const&` 로 받은 객체에서 호출할 수 없어요.
+trap: getter에 const를 안 붙임 > `int getScore() const` > const 객체나 `const&` 로 받은 곳에서 못 불러요
+trap: setter에 const를 붙임 > setter는 const 없이 > const 함수 안에서는 멤버를 바꿀 수 없어서 오류예요
+mem: const 자리 = **괄호 닫고 바로 뒤** `int getScore() const`
+key: 읽기만 하는 멤버 함수 → `() const`
+key: const가 없으면 const 객체에서 못 불러요
+key: 생성자·setter에는 안 붙여요
+
+# p4-10 | 객체는 언제 복사될까요 | Ch 14.7, 14.13~14.15
+sum: 같은 타입의 객체로 새 객체를 만들면 **복사 생성자**가 불려요. 그래서 객체를 읽기만 하는 함수는 **const 참조**로 받고, 새로 만든 객체는 **값으로** 돌려줘요.
+ana: 📠 복사 생성자는 복사기예요. 원본을 넣으면 똑같은 새 문서가 나와요. 문서가 두꺼울수록 복사 시간이 오래 걸려요.
+h: 복사가 언제 일어나는지 눈으로 보기
+p: 복사 생성자를 직접 만들어서 불릴 때마다 출력해 보면 언제 복사되는지 보여요. (평소에는 안 만들어도 컴파일러가 알아서 만들어 줘요.)
 code:
-Student(const Student& other) : m_name { other.m_name }   // 복사 생성자
-{ std::cout << "복사!"; }
-:end
-li: 안 만들어도 컴파일러가 **알아서** 만들어 줌 (위 코드는 출력 보려고 직접 쓴 것)
-h: 넘기고 돌려주기
-tbl: 상황 | 이렇게 | 이유
-r: 객체를 읽기만 | `const Student&` | 복사 0회
-r: 객체를 고침 | `Student&` | 원본 수정
-r: int·double 등 작은 값 | 값 | 참조가 더 느릴 수도
-r: 새 객체를 반환 | 값 | C++17 부터 복사 생략
-r: 문자열 멤버 getter | `const std::string&` | 값이면 매번 복사
-trap: `Student c = a;` 를 대입이라 생각 > 새 객체가 태어나니 복사 생성 > c 는 이 줄에서 처음 생김
-star: `Student c = a;` 는 **대입이 아니라 복사 생성**.
-mem: **새로 태어나면 생성자**, 이미 있는 것에 넣으면 대입
-key: `b{a}`, `c = a` → 복사 생성자
-key: 읽기 인자 const&, 작은 값은 값
-key: 새 객체 반환은 값으로
+#include <iostream>
+#include <string>
+#include <string_view>
 
-# p4-11 | 파일 나누기 · 설계 순서 · explicit | Ch 14.16
-sum: **.h 에 클래스 선언, .cpp 에 `Student::` 붙여 정의.** 설계는 규칙 → 동작 → 데이터 순서. 인자 하나짜리 생성자엔 **explicit**.
-ana: 📐 집 짓기: 규칙(건축법) 확인 → 방 용도(동작) 정하기 → 자재(데이터) 고르기. 자재부터 사면 쓸데없는 걸 삼.
+class Student {
+    std::string m_name {};
+public:
+    Student(std::string_view n) : m_name { n }
+    { std::cout << "생성: " << m_name << '\n'; }
+
+    Student(const Student& other) : m_name { other.m_name }   // 복사 생성자
+    { std::cout << "복사: " << m_name << '\n'; }
+};
+
+void byValue(Student s) { }               // 값으로 받으면 복사돼요
+void byRef(const Student& s) { }          // const 참조로 받으면 복사 안 돼요
+
+int main()
+{
+    Student a { "홍길동" };   // 생성
+    Student b { a };          // 복사
+    Student c = a;            // 복사 (대입처럼 보이지만 새로 만드는 것)
+    byValue(a);               // 복사
+    byRef(a);                 // (출력 없음)
+    return 0;
+}
+:end
+out: 실행 결과
+생성: 홍길동
+복사: 홍길동
+복사: 홍길동
+복사: 홍길동
+:end
+p: `Student c = a;` 를 보세요. `=` 가 있어서 대입처럼 보이지만, c가 **이 줄에서 처음 태어나는** 거라서 복사 생성자가 불려요.
+term: 복사 생성자 | copy constructor | 같은 타입 객체를 받아서 똑같은 새 객체를 만드는 생성자
+h: 그래서 어떻게 넘기고 돌려줄까요
+tbl: 상황 | 이렇게 | 이유
+r: 객체를 읽기만 하는 매개변수 | `const Student&` | 복사가 없어요
+r: 객체를 고쳐야 하는 매개변수 | `Student&` | 원본을 바꿔요
+r: int, double 같은 작은 값 | 값으로 | 참조가 오히려 느릴 수 있어요
+r: 함수 안에서 새로 만든 객체를 돌려줄 때 | 값으로 (`Student`) | C++17부터 이 경우 복사를 생략해요
+r: 문자열 멤버를 읽게만 하는 getter | `const std::string&` | 값으로 돌려주면 부를 때마다 복사돼요
+star: `Student c = a;` 는 대입이 아니라 **복사 생성**이에요.
+trap: 큰 객체를 읽기만 하는데 값으로 받음 `void f(Student s)` > `void f(const Student& s)` > 부를 때마다 복사돼요
+trap: 함수 안에서 만든 객체를 참조로 돌려줌 > 값으로 돌려주기 > 지역 객체가 사라져 댕글링이에요
+mem: **새로 태어나면 생성자**, 이미 있는 것에 넣으면 대입
+key: `Student b { a };`, `Student c = a;` → 복사 생성자
+key: 읽기만 하면 const 참조로 받기
+key: 새로 만든 객체는 값으로 돌려주기
+
+# p4-11 | 파일 나누기, 클래스 설계 순서, explicit | Ch 14.16
+sum: 클래스 선언은 **.h**, 멤버 함수의 몸통은 **.cpp** 에 `Student::` 를 붙여서 둬요. 클래스는 **규칙 → 동작 → 데이터** 순서로 설계하고, 인자 하나짜리 생성자에는 **explicit** 을 붙여요.
+ana: 📐 집 짓기와 같아요. 건축 규칙을 먼저 확인하고, 방을 어디에 쓸지(동작) 정한 다음, 자재(데이터)를 골라요. 자재부터 사면 쓸데없는 걸 사게 돼요.
 h: 파일 나누기
-vs: Student.h — 선언 | Student.cpp — 정의
+code:
+// ── Student.h ── (클래스 선언)
 #pragma once
+#include <string>
+#include <string_view>
+
 class Student {
     std::string m_name {};
     int m_score {};
 public:
-    Student(std::string_view, int);
+    Student(std::string_view n, int s);
     int getScore() const;
     void setScore(int v);
 };
---
+
+// ── Student.cpp ── (멤버 함수 몸통)
 #include "Student.h"
-Student::Student(std::string_view n, int s)
-    : m_name { n }, m_score { s } {}
-int Student::getScore() const
-{ return m_score; }
+
+Student::Student(std::string_view n, int s) : m_name { n }
+{
+    setScore(s);
+}
+
+int Student::getScore() const        // const 는 여기에도 다시 써요
+{
+    return m_score;
+}
+
 void Student::setScore(int v)
-{ if (v >= 0 && v <= 100) m_score = v; }
+{
+    if (v >= 0 && v <= 100) m_score = v;
+}
 :end
-tbl: 규칙 | 내용
-r: `Student::` | 클래스 **밖**에서 정의할 때 “Student 의 멤버”라는 표시
-r: `const` | .cpp 정의에도 **다시** 적어야 함
-r: 클래스 정의 | 헤더에 있어도 됨 (ODR 예외)
-fix: 이 PPT 코드의 생성자는 점수 검사를 안 함. 4-8 처럼 본문에서 `setScore(s);` 를 부르는 게 일관됨.
-h: 클래스 만드는 6단계
-flow: 1 규칙 > 무엇을 막을지 (점수 0~100) || 2 동작 public > print, getScore, addBonus || 3 데이터 private > 1·2에 필요한 것만 || 4 생성자 > 규칙 어긴 객체 금지, 인자 하나면 explicit || 5 const > 안 바꾸는 함수 전부 || 6 반환형 > string 은 const&, int 는 값
-h: explicit (보충)
-fix: 함정 표에 explicit 이 나오지만 설명 슬라이드가 없어 보충함.
+tbl: 규칙 | 뜻
+r: `Student::getScore` | “Student 클래스의 getScore”라는 뜻. 클래스 **밖**에서 몸통을 쓸 때 붙여요
+r: `const` | 선언(.h)과 몸통(.cpp) **양쪽에** 써야 해요
+r: 클래스 정의를 헤더에 | 여러 파일에 들어가도 괜찮아요 (클래스 정의는 ODR 예외)
+fix: PPT의 Student.cpp 생성자는 `m_score { s }` 로 검사 없이 넣고 있었어요. 4-8처럼 `setScore(s);` 를 거치게 고쳐 썼어요.
+h: 클래스를 만드는 순서
+flow: 1 규칙 > 무엇을 막아야 하나요? (점수 0~100, 이름은 비면 안 됨) || 2 동작 > 바깥이 할 일을 public 함수로 (print, getScore, addBonus) || 3 데이터 > 1·2를 하는 데 필요한 멤버만 private으로 || 4 생성자 > 규칙을 어긴 객체가 못 만들어지게. 인자 하나면 explicit || 5 const > 안 바꾸는 멤버 함수에 빠짐없이 || 6 반환형 > 큰 건 const 참조, 작은 건 값
+tip: 멤버 변수부터 정하면 “getter·setter 다 만들어야지”로 흘러서 결국 전부 public과 같아져요. 동작부터 정하면 필요한 데이터만 남아요.
+h: explicit: 몰래 일어나는 변환 막기
+p: 인자 하나짜리 생성자가 있으면, C++는 그 타입의 값을 **몰래** 객체로 바꿔 줄 수 있어요. 의도하지 않은 변환이라 조용히 틀린 결과가 나와요.
 code:
-class Student {
+#include <iostream>
+
+class Score {
+    int m_value {};
 public:
-    explicit Student(int s) : m_score { s } {}   // ✅ explicit
+    Score(int v) : m_value { v } {}          // 인자 하나짜리 생성자 (explicit 없음)
+    int get() const { return m_value; }
 };
-void printScore(const Student& s);
-printScore('A');            // explicit 없으면: 'A' → 65 → Student{65} 로 몰래 변환!
-printScore(Student { 90 }); // ✅ 명시적으로
+
+void printScore(const Score& s) { std::cout << s.get() << "점\n"; }
+
+int main()
+{
+    printScore('A');    // 'A'(65) 가 몰래 Score{65} 로 바뀌어요 → "65점"
+    return 0;
+}
 :end
-h: 용어
-tbl: 한국어 | 영어 | 한 줄
-r: 클래스 / 객체 | class / object | 설계도 / 실물
-r: 멤버 변수·함수 | member | 클래스 안의 변수·함수
-r: 접근 지정자 | access specifier | public / private
-r: 접근 함수 | access function | getter / setter
-r: 생성자 | constructor | 만들 때 자동 호출
+out: 실행 결과
+65점
+:end
+p: `'A'` 를 넘겼는데 오류 없이 65점이 나왔어요. 생성자 앞에 `explicit` 을 붙이면 이런 몰래 변환이 **컴파일 오류**가 돼서, `printScore(Score { 90 })` 처럼 분명히 써야만 해요.
+code:
+explicit Score(int v) : m_value { v } {}   // 이제 printScore('A') 는 컴파일 오류
+:end
+fix: 함정 표와 설계 순서에 explicit이 나오지만 PPT에 설명 슬라이드가 없어서 보충했어요.
+h: 4회차 용어 정리
+tbl: 한국어 | 영어 | 한 줄 뜻
+r: 클래스 / 객체 | class / object | 설계도 / 설계도로 만든 실물
+r: 멤버 변수 / 멤버 함수 | member | 클래스 안의 변수 / 함수
+r: 접근 지정자 | access specifier | public, private
+r: 접근 함수 | access function | getter(읽기), setter(쓰기)
+r: 생성자 | constructor | 객체를 만들 때 자동으로 불리는 함수
 r: 기본 생성자 | default constructor | 인자 없는 생성자
-r: 멤버 초기화 리스트 | member initializer list | 생성자 `:` 뒤 목록
-r: 불변식 | invariant | 항상 지킬 조건
-r: 캡슐화 | encapsulation | 숨기고 문만 열기
-trap: 클래스 끝 `;` 누락 > `};` > 엉뚱한 줄에서 오류
-trap: `public:` 안 씀 > `public:` 추가 > 전부 private
-trap: 생성자 만든 뒤 인자 없이 생성 > `T() = default;` > 기본 생성자 사라짐
-trap: 읽기 함수에 const 누락 > `() const` > const 객체에서 호출 불가
-trap: 인자 하나 생성자에 explicit 누락 > `explicit` > `printScore('A')` 가 65점 — **조용히 틀림**
-trap: 사라진 객체의 멤버 참조 사용 > 객체가 살아 있을 때만 > 댕글링 UB
-star: 함정 6개 중 **explicit 누락만 조용히 틀린다** (나머지는 컴파일러가 잡음).
-mem: 설계 순서 **규·동·데·생·콘·반**
-key: .h 선언, .cpp 에 `Student::` 정의
+r: 멤버 초기화 리스트 | member initializer list | 생성자의 `: 멤버 { 값 }` 부분
+r: 캡슐화 | encapsulation | 내부를 숨기고 통로만 여는 것
+trap: 클래스 끝 `;` 누락 > `};` > 엉뚱한 줄에서 오류가 나요
+trap: `public:` 을 안 씀 > `public:` 추가 > class는 기본이 private이에요
+trap: 생성자를 만든 뒤 인자 없이 객체 생성 > `Student() = default;` > 기본 생성자가 사라졌어요
+trap: 읽기 함수에 const 누락 > `int getScore() const` > const 객체에서 못 불러요
+trap: 인자 하나짜리 생성자에 explicit 누락 > `explicit Score(int v)` > `printScore('A')` 가 65점이 돼요 — **오류 없이 조용히 틀려요**
+trap: .cpp 몸통에서 `const` 를 빠뜨림 > 선언과 몸통 양쪽에 const > 서로 다른 함수로 보여 오류가 나요
+star: 4회차 함정 중 **explicit 누락만 오류 없이 조용히 틀려요**. 나머지는 컴파일러가 잡아 줘요.
+mem: 설계 순서 **규·동·데·생·콘·반** (규칙 → 동작 → 데이터 → 생성자 → const → 반환형)
+key: .h엔 선언, .cpp엔 `Student::함수` 몸통
 key: 규칙 → 동작 → 데이터 → 생성자 → const → 반환형
-key: 인자 하나 생성자엔 explicit
+key: 인자 하나짜리 생성자엔 explicit

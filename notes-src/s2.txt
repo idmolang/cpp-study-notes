@@ -1,521 +1,809 @@
 @ c2 | 2회차 · 상수·문자열부터 오류 처리까지 | Ch 5~9
 
-# p2-1 | const 와 숫자 표기법 | Ch 5.1~5.3
-sum: **const** = “한 번 정하면 못 바꿈”. 숫자 앞에 0 을 붙이면 **8진수**가 되니 조심.
-ana: 🔒 const = 값에 자물쇠. 처음 넣을 때만 열려 있고, 그 뒤론 잠김.
-h: const 기본
+# p2-1 | const 와 숫자 쓰는 법 | Ch 5.1~5.3
+sum: **const** 를 붙이면 “처음 넣은 값을 다시는 못 바꾸는” 변수가 돼요. 숫자 앞에 0을 붙이면 **8진수**로 읽히니 조심해요.
+ana: 🔒 const는 값에 거는 자물쇠예요. 처음 값을 넣을 때만 열려 있고, 그다음부터는 잠겨요.
+h: const 쓰는 법
+p: 프로그램 안에서 절대 바뀌면 안 되는 값(중력 가속도, 최대 인원 등)에 const를 붙여 두면, 실수로 바꾸는 코드를 컴파일러가 막아 줘요.
 code:
-const double gravity { 9.8 };          // 만들 때 반드시 값 넣기
-// gravity = 9.9;                      // ❌ 오류: 못 바꿈
-const int rows { getRowsFromUser() };  // ✅ 실행 중에 정해진 값도 OK
+#include <iostream>
+
+int main()
+{
+    const double gravity { 9.8 };   // const 변수는 만들 때 반드시 값을 넣어야 해요
+    // gravity = 10.0;              // ❌ 컴파일 오류: const 는 바꿀 수 없어요
+
+    int input {};
+    std::cin >> input;
+    const int rows { input };       // ✅ 실행 중에 정해진 값도 const 로 묶을 수 있어요
+    std::cout << gravity * rows << '\n';
+    return 0;
+}
 :end
-li: const 의 약속은 “**초기화 후 안 바뀐다**”뿐
-li: 값이 **실행 중에** 정해져도 상관없음
-li: 컴파일할 때 이미 정해져야 하면 → **constexpr** (다음 파트)
-h: 숫자 표기법
-tbl: 쓴 것 | 뜻
-r: `3.14` / `3.14f` | double(기본) / float
-r: `5u` `5L` | unsigned / long
+out: 입력 2
+19.6
+:end
+p: 두 번째 const를 보세요. const의 약속은 “**한 번 넣으면 안 바뀐다**”뿐이라서, 넣는 값이 실행 중에 정해져도 괜찮아요. 컴파일할 때 이미 값이 정해져야 한다면 다음 파트의 **constexpr** 을 써요.
+h: 숫자를 쓰는 여러 방법
+tbl: 이렇게 쓰면 | 이런 뜻이에요
+r: `3.14` | double (실수의 기본)
+r: `3.14f` | float (끝에 f)
+r: `5u` | unsigned int
 r: `0b1010` | 2진수 → 10
-r: `012` | ⚠️ **8진수 → 10** (12 아님!)
+r: `012` | ⚠️ **8진수** → 10 (12가 아니에요!)
 r: `0xFF` | 16진수 → 255
-r: `1'000'000` | 그냥 1000000 (읽기 편하라고 ' 넣음)
-r: `"abc"s` / `"abc"sv` | std::string / std::string_view
-trap: `int month { 08 };` (자릿수 맞추려 0 붙임) > `int month { 8 };` > 0 으로 시작하면 8진수. 8진수엔 8 이 없어 오류
-star: `012` 는 **10**, `0xFF` 는 **255**.
-mem: 0**b** = **b**inary, 0**x** = he**x**, 그냥 **0** = 8진수 (O ctal 의 O 모양)
-key: const = 초기화 후 변경 불가 (실행 중 값도 OK)
-key: `012` = 10, `0xFF` = 255
+r: `1'000'000` | 그냥 1000000. `'` 는 읽기 편하라고 넣는 구분자
+warn: 날짜처럼 자릿수를 맞추려고 `int month { 08 };` 이라고 쓰면 컴파일 오류가 나요. 0으로 시작해서 8진수가 됐는데, 8진수에는 8이라는 숫자가 없거든요. `07` 은 오류 없이 7이 되지만, `010` 은 조용히 8이 돼요.
+star: `012` 는 **10**, `0xFF` 는 **255** 예요.
+trap: 자릿수를 맞추려고 `int day { 09 };` > `int day { 9 };` > 0으로 시작하면 8진수라서 9는 오류예요
+trap: const 변수를 만들고 나중에 값을 넣으려 함 `const int x; x = 5;` > `const int x { 5 };` > const는 만들 때 값을 넣어야 해요
+mem: 0**b** = **b**inary(2진), 0**x** = he**x**(16진), 그냥 **0** = 8진수 (O ctal의 O 모양)
+key: const = 처음 넣은 값을 못 바꿔요 (실행 중 값도 OK)
+key: `012` 는 8진수 10, `0xFF` 는 255
 key: `3.14` 는 double, `3.14f` 는 float
 
 # p2-2 | constexpr: 컴파일할 때 정해지는 상수 | Ch 5.4~5.6
-sum: **constexpr** = 값이 **컴파일할 때 이미** 정해진 상수. 미리 아는 값이면 const 대신 constexpr 이 기본.
-ana: 📅 const = “오늘 정할게, 그다음엔 안 바꿔”. constexpr = “**달력에 이미 인쇄**돼 있어”.
-h: const vs constexpr
-tbl:  | const | constexpr
-r: 값이 정해지는 때 | 실행 중이어도 OK | **반드시 컴파일할 때**
-r: 바꿀 수 있나 | ❌ | ❌ (constexpr 은 자동으로 const)
-r: 배열 크기로 | 실행 중 값이면 ❌ | ✅
-r: 헤더에서 공유 | 파일마다 사본 | `inline constexpr` 로 하나만
-r: 언제 | 값이 실행 중에 정해질 때 | **미리 아는 값 — 기본**
+sum: **constexpr** 은 값이 **컴파일할 때 이미 정해지는** 상수예요. 미리 아는 값(9.8, 100 같은)에는 const보다 constexpr을 기본으로 써요.
+ana: 📅 const는 “오늘 정하면 그다음엔 안 바꿀게”예요. constexpr은 “달력에 이미 **인쇄돼 있어**”예요.
+h: const와 무엇이 다를까요?
+p: const는 값이 실행 중에 정해져도 되지만, constexpr은 컴파일러가 컴파일하는 동안 값을 계산할 수 있어야 해요. 그래서 키보드로 입력받은 값으로는 constexpr을 만들 수 없어요.
 code:
-constexpr int side { 4 };
-constexpr int area { side * side };   // 컴파일할 때 16 으로 계산됨
-int arr[area];                        // ✅ 배열 크기로 사용 가능
+#include <iostream>
 
-int rows { getRowsFromUser() };
-// constexpr int r { rows };          // ❌ 실행 중 값은 안 됨
-const int r { rows };                 // ✅ const 는 됨
-:end
-fix: 엄밀히는 `const int n { 5 };` 처럼 **숫자로 바로 초기화한 const** 는 배열 크기에 쓸 수 있음. 헷갈리면 “컴파일 타임 상수 = constexpr”로 기억.
-ref: as-if 규칙 — 결과만 같으면 컴파일러는 코드를 마음대로 최적화해도 됨. const 도 최적화될 수 있지만 보장은 없음.
-trap: `constexpr int r { rows };` (rows 는 입력값) > `const int r { rows };` > 실행 중에 정해진 값은 constexpr 불가
-star: constexpr = **컴파일 타임 상수**. 실행 중 값으로 초기화하면 **컴파일 오류**.
-mem: const = “안 바꿀게”, constexpr = “**이미 알아**”
-key: constexpr 은 컴파일할 때 정해져야 함
-key: constexpr 은 자동으로 const
-key: 미리 아는 값은 constexpr 이 기본
-
-# p2-3 | std::string 과 한 줄 입력 | Ch 5.7
-sum: 문자열은 **std::string**. `cin >>` 은 **공백에서 끊기니**, 한 줄 전체는 `getline(cin >> ws, s)`.
-ana: ✂️ `cin >>` = 띄어쓰기마다 가위질. “홍 길동”을 넣으면 “홍”만 가져가고 “길동”은 남겨 둠.
-h: std::string 기본
-code:
-#include <string>
-
-std::string name { "홍길동" };
-name += " 님";               // 길이가 알아서 늘어남
-name.length();               // 바이트 수 (한글은 1글자 = 3바이트)
-std::string empty {};        // 빈 문자열
-:end
-tbl: 알아 둘 것 | 내용
-r: 왜 string? | 길이·메모리를 알아서 관리
-r: `length()` | **바이트** 수 → `"한글".length()` 는 **6**
-r: include | `<string>` 꼭 직접 쓰기
-h: 공백 있는 입력 받기
-vs: ❌ cin >> | ✅ getline + ws
-std::cin >> name;
-// "홍 길동" 입력
-// name = "홍"
-// "길동"은 남아서
-// 다음 입력에 딸려 감
---
-std::getline(std::cin >> std::ws, name);
-// "홍 길동" 전체가 들어감
-:end
-h: 왜 std::ws 를 붙여?
-flow: ① `cin >> age;` > 숫자는 읽고 Enter(개행)는 남김 || ② `getline(cin, s);` > 남은 개행을 바로 만나 **빈 문자열**로 끝 || ③ `getline(cin >> ws, s);` > ws 가 남은 공백·개행을 먼저 치움 ✅
-trap: `std::cin >> name;` 으로 이름 받기 > `std::getline(std::cin >> std::ws, name);` > 공백에서 끊겨 입력이 하나씩 밀림
-trap: `cin >> age;` 다음 바로 `getline(cin, s)` > `getline(cin >> ws, s)` > 남은 개행 때문에 빈 문자열이 읽힘
-star: 한 줄 입력 = `std::getline(std::cin >> std::ws, s)` — **ws 까지 세트로 외우기**.
-mem: **ws** = **w**hite **s**pace 청소기
-key: 문자열은 std::string, `<string>` include
-key: `length()` 는 바이트 수 (한글 3바이트)
-key: 한 줄 읽기 = `getline(cin >> ws, s)`
-
-# p2-4 | std::string_view: 복사 없이 보기만 | Ch 5.8~5.9
-sum: **string_view** = 문자열을 **복사 없이 들여다보는 창문**. 내 것이 아니라서 원본이 사라지면 같이 망가진다.
-ana: 🪟 string_view = 창문. 집(원본 문자열)이 철거되면 창문으로 보이는 건 허공.
-h: string vs string_view
-tbl:  | std::string | std::string_view
-r: 정체 | 문자열을 **소유** | 주소 + 길이만 (빌려 봄)
-r: 복사 비용 | 있음 | 거의 0
-r: 수정 | 가능 | ❌ 읽기 전용
-r: 원본이 사라지면 | 상관없음 | ❌ **댕글링 (UB)**
-code:
-void printA(std::string s)      { std::cout << s; }  // 부를 때마다 복사
-void printB(std::string_view s) { std::cout << s; }  // 복사 없음 ✅
-
-printB("리터럴도 OK");
-std::string name { "홍길동" };
-printB(name);                   // string 도 그대로 넘어감
-:end
-h: 언제 뭘 쓸까
-tbl: 상황 | 쓸 것
-r: 읽기만 하는 **매개변수** | ✅ string_view
-r: 클래스 **멤버 변수** | std::string
-r: 함수에서 **반환** | std::string
-r: 수정·저장해야 함 | std::string
-r: 컴파일 타임 상수 문자열 | `constexpr std::string_view`
-h: 함정: 댕글링
-code:
-std::string_view getName()
-{
-    std::string name { "홍길동" };
-    return name;          // ❌ name 은 함수 끝나면 사라짐
-}
-
-std::string s { "안녕" };
-std::string_view sv { s };
-s = "훨씬 더 긴 문자열";   // s 가 메모리를 새로 잡으면
-std::cout << sv;          // ❌ sv 가 가리키던 곳은 이미 없음
-:end
-trap: 함수에서 string_view 반환 > std::string 반환 > 지역 string 이 사라져 댕글링
-trap: view 를 만든 뒤 원본 string 을 크게 바꿈 > view 는 원본을 안 건드릴 때만 > 원본이 재할당되면 view 무효
-star: **소유하면 string, 잠깐 보기만 하면 string_view.** 애매하면 string (느릴 뿐 틀리진 않음).
-mem: view = **창문** — 집이 없으면 아무것도 안 보임
-key: string_view = 주소+길이, 복사 공짜, 읽기 전용
-key: 매개변수는 view, 멤버·반환은 string
-key: view 반환·원본 재할당 = 댕글링
-
-# p2-5 | 우선순위와 계산 순서 | Ch 6.1, 6.4
-sum: 우선순위는 “**무엇끼리 묶이나**”만 정한다. “**무엇부터 계산하나**”는 대부분 안 정해져 있다.
-ana: 🧮 우선순위 = 괄호를 어디에 칠지. 계산 순서 = 누가 먼저 계산기를 두드릴지 — 이건 컴파일러 마음.
-h: 우선순위 (위가 먼저 묶임)
-tbl: 순위 | 연산자
-r: 1 | `::`
-r: 2 | `++x` `--x` `!` `-x` `sizeof`
-r: 3 | `*` `/` `%`
-r: 4 | `+` `-`
-r: 5 | `<<` `>>`
-r: 6 | `<` `<=` `>` `>=`
-r: 7 | `==` `!=`
-r: 8 | `&&`
-r: 9 | `\|\|`
-r: 10 | `?:` `=` `+=` (오른쪽부터)
-tip: 다 외우지 말고 **괄호**. `* / %` 가 `+ -` 보다 먼저라는 것만 기억.
-h: 우선순위 ≠ 계산 순서
-tbl: 우선순위 | 계산 순서
-r: `a + b * c` → b*c 가 묶임 | a 와 b*c 중 무엇을 먼저 계산? → **미정**
-r: 표준이 정함 | 대부분 표준이 **안 정함**
-code:
-int i { 1 };
-std::cout << i++ + ++i;   // ❌ UB — 컴파일러마다 다름
-
-int x { 1 };
-add(x, ++x);              // ❌ 인자 계산 순서 미정 → 결과 불확정
-:end
-trap: `i++ + ++i` > 문장을 나눠서 따로 계산 > 한 식에서 같은 변수를 두 번 바꾸면 UB
-star: 한 식 안에서 **같은 변수를 두 번 바꾸지 않는다**.
-mem: 우선순위 = **어디에 괄호**, 계산 순서 = **누가 먼저** (몰라도 되게 짜기)
-key: 헷갈리면 괄호
-key: 우선순위 ≠ 계산 순서
-key: `i++ + ++i` = UB
-
-# p2-6 | 나눗셈 · 나머지 · ++ | Ch 6.2~6.5
-sum: 정수끼리 나누면 소수점을 **버린다**. 나머지 부호는 **앞 숫자**를 따른다. `++x` 는 올리고 주고, `x++` 는 주고 올린다.
-ana: 🍕 피자 7조각을 2명이 정수로 나누면 3조각씩, 1조각은 버려짐(7/2 = 3).
-h: 나눗셈과 나머지
-tbl: 식 | 결과 | 왜
-r: `7 / 2` | **3** | 정수끼리라 소수점 버림
-r: `7.0 / 2` | 3.5 | 한쪽이 실수
-r: `-5 % 3` | **-2** | 부호는 앞 숫자(-5)를 따름
-r: `5 % -3` | 2 | 앞 숫자가 양수
-r: `-3 % 2` | **-1** | 그래서 홀수 판정에 주의
-r: `std::pow(3, 2)` | 9 (double) | 8.999… 일 수 있음
-h: 홀수 판정
-vs: ❌ == 1 | ✅ != 0
-x % 2 == 1
-// -3 이면 -1 이라 실패
---
-x % 2 != 0
-// 음수도 OK
-:end
-h: ++ 앞뒤 차이
-tbl: 코드 | 결과 | 순서
-r: `int y { ++x };` (x=5) | x=6, **y=6** | 올리고 → 줌
-r: `int b { a++ };` (a=5) | a=6, **b=5** | 주고 → 올림
-term: 부작용 | side effect | 값을 돌려주는 것 말고 **상태를 바꾸는** 일 (대입, ++, 출력)
-trap: `sum / count` 로 평균 (둘 다 int) > `static_cast<double>(sum) / count` > 소수점이 사라짐
-trap: `if (x % 2 == 1)` > `if (x % 2 != 0)` > 음수 홀수는 나머지가 -1
-star: `7 / 2 == 3`, `-3 % 2 == -1`, `a++` 는 **옛 값**을 준다.
-mem: ++ 가 **앞**이면 **먼저** 올림, **뒤**면 **나중에** 올림
-key: 정수 나눗셈은 버림, `7/2 == 3`
-key: 홀수는 `x % 2 != 0`
-key: `++x` 새 값, `x++` 옛 값
-
-# p2-7 | 비교 · 논리 연산자 | Ch 6.6~6.8
-sum: 실수는 `==` 대신 **오차 범위**로 비교. `&&` `||` 는 답이 정해지면 **나머지를 아예 계산 안 한다**.
-ana: 🚪 `&&` = 문 두 개를 다 통과해야 함. 첫 문이 잠겨 있으면 두 번째 문은 쳐다보지도 않음.
-h: 실수 비교
-code:
-// 절대 오차: 큰 수에서는 실패
-bool almostEqualAbs(double a, double b, double eps = 1e-9)
-{ return std::abs(a - b) <= eps; }
-
-// 상대 오차 (learncpp 6.7절 방식)
-bool almostEqualRel(double a, double b, double relEps = 1e-8)
-{ return std::abs(a - b) <= std::max(std::abs(a), std::abs(b)) * relEps; }
-:end
-fix: PPT 에 “learncpp **5.7**절 방식”이라고 되어 있지만 실수 비교는 **6.7**절.
-h: 단축 평가 (short-circuit)
-tbl: 연산자 | 오른쪽을 건너뛰는 때
-r: `a && b` | a 가 **false** 면 → b 계산 안 함
-r: `a \|\| b` | a 가 **true** 면 → b 계산 안 함
-code:
-if (ptr != nullptr && ptr->value > 0)   // ✅ 널이면 오른쪽 안 봄 → 안전
-if (ptr->value > 0 && ptr != nullptr)   // ❌ 순서 바꾸면 널 역참조
-:end
-h: 그 밖에
-tbl: 규칙 | 내용
-r: 드모르간 | `!(a && b)` = `!a \|\| !b`
-r: 섞어 쓸 때 | `&&` 가 `\|\|` 보다 먼저 → 괄호로
-r: `?:` | `x > y ? x : y` — 값을 돌려주는 식. 중첩하면 읽기 어려움
-trap: `0.1 + 0.2 == 0.3` > 오차 범위 함수로 비교 > 실수는 근삿값
-trap: `if (a() \|\| b())` 에서 b() 가 꼭 실행돼야 함 > 따로 호출해 두고 비교 > a() 가 true 면 b() 는 건너뜀
-star: 널 검사는 `&&` 의 **왼쪽**에 둔다.
-mem: 드모르간 = **!를 안으로 넣으면 && ↔ || 뒤집힘**
-key: 실수는 오차 범위로 비교 (6.7절)
-key: `&&` 왼쪽 false / `||` 왼쪽 true → 오른쪽 생략
-key: 널 검사는 `&&` 왼쪽
-
-# p2-8 | 스코프 · 수명 · 링키지 | Ch 7.1~7.8, 7.12
-sum: 세 가지 질문 — **어디서 보이나**(스코프) · **언제까지 사나**(수명) · **다른 파일과 같은 것인가**(링키지).
-ana: 🏢 스코프 = 출입증이 통하는 층, 수명 = 근무 기간, 링키지 = 다른 지점에서도 같은 사람으로 통하나.
-h: 세 개념 한눈에
-tbl: 개념 | 질문 | 종류
-r: 스코프 | 이 이름을 **어디서** 쓸 수 있나 | 블록 / 전역
-r: 수명 | 객체가 **언제** 생기고 사라지나 | 자동 / 정적 / 동적
-r: 링키지 | 다른 **파일**의 같은 이름이 같은 것인가 | 없음 / 내부 / 외부
-h: 이름 가리기 (섀도잉)
-code:
-int value { 10 };            // 전역
 int main()
 {
-    int value { 20 };        // 전역을 가림
-    {
-        int value { 30 };    // 또 가림
-        std::cout << value;  // 30
-    }
-    std::cout << value;      // 20
-    std::cout << ::value;    // 10  ← :: 는 전역
+    constexpr int side { 4 };
+    constexpr int area { side * side };   // 컴파일할 때 16으로 계산돼요
+    int arr[area] {};                     // 배열 크기처럼 "컴파일할 때 알아야 하는 자리"에 쓸 수 있어요
+
+    int input {};
+    std::cin >> input;
+    // constexpr int r { input };         // ❌ 오류: 입력값은 실행해야 알 수 있어요
+    const int r { input };                // ✅ const는 OK
+    std::cout << area + r << '\n';
+    return 0;
 }
 :end
-li: 블록 `{ }` 안에서 만든 변수는 블록이 끝나면 **사라짐**
-li: 변수 범위는 **최대한 좁게**
-h: 전역 변수와 링키지
-tbl: 선언 | 링키지 | 다른 파일에서
-r: `int g_count { 0 };` | 외부 | `extern int g_count;` 로 사용 ✅
-r: `static int s_helper { 0 };` | 내부 | ❌ 안 보임
-r: `const int g_max { 100 };` | 내부 (const 전역 기본값) | ❌ 안 보임
-r: `extern int g_count;` | (선언만) | 정의는 다른 파일에
-warn: 바꿀 수 있는 전역 변수는 피하기 — 누가 언제 바꿨는지 추적 불가, 테스트 어려움.
-trap: 다른 파일에서 `static` 전역을 `extern` 으로 씀 > 외부 링키지 변수만 공유 > 내부 링키지라 링크 오류
-star: 출력 순서 **30 → 20 → 10**. `::value` 는 전역.
-mem: **스**코프 = **시**야, **수**명 = **살**아 있는 기간, **링**키지 = 파일끼리 **연결**
-key: 스코프(어디서) · 수명(언제까지) · 링키지(파일 간)
-key: 안쪽 이름이 바깥을 가림, `::x` 는 전역
-key: static·const 전역 = 내부, extern = 선언
+out: 입력 4
+20
+:end
+tbl:  | const | constexpr
+r: 값이 정해지는 때 | 실행 중이어도 OK | **반드시 컴파일할 때**
+r: 값을 바꿀 수 있나요 | ❌ | ❌ (constexpr은 자동으로 const)
+r: 배열 크기로 쓰기 | 실행 중에 정해진 값이면 ❌ | ✅
+r: 언제 쓰나요 | 값이 실행 중에 정해질 때 | 미리 아는 값 — **기본으로 이쪽**
+fix: 엄밀하게는 `const int n { 5 };` 처럼 **숫자로 바로 초기화한 const 정수**는 배열 크기에도 쓸 수 있어요. 헷갈리면 “컴파일할 때 필요한 상수 = constexpr”로 기억하면 돼요.
+ref: 컴파일러는 결과만 같다면 코드를 자유롭게 최적화할 수 있어요(as-if 규칙). 그래서 const도 컴파일할 때 계산될 수 있지만, 그게 **보장**되는 건 constexpr뿐이에요.
+star: constexpr은 **컴파일할 때 값이 정해져야** 해요. 실행 중 값(입력 등)으로 만들면 컴파일 오류예요.
+trap: `constexpr int r { input };` (input은 입력받은 값) > `const int r { input };` > 입력값은 실행해야 알 수 있어서 constexpr이 될 수 없어요
+mem: const = “안 바꿀게”, constexpr = “**이미 알아**”
+key: constexpr = 컴파일할 때 정해지는 상수
+key: constexpr은 자동으로 const이기도 해요
+key: 미리 아는 값은 constexpr이 기본
 
-# p2-9 | 헤더 상수 · static 지역 변수 · using | Ch 7.9~7.14
-sum: 헤더 상수는 **`inline constexpr`**. 함수 안 static 은 **수명만** 늘린다. using 은 필요한 이름만.
-ana: 📌 static 지역 변수 = 회의실 화이트보드. 회의(함수)가 끝나도 지워지지 않고 다음 회의 때 그대로 있음.
-h: 헤더에서 상수 공유
+# p2-3 | std::string 과 한 줄 입력 | Ch 5.7
+sum: 글자를 여러 개 담을 때는 **std::string** 을 써요. `std::cin >>` 은 **띄어쓰기에서 끊기기** 때문에, 공백이 들어간 한 줄은 `std::getline(std::cin >> std::ws, 변수)` 로 받아요.
+ana: ✂️ `cin >>` 은 띄어쓰기마다 가위로 잘라요. “홍 길동”을 넣으면 “홍”만 가져가고 “길동”은 바닥에 남겨 둬요.
+h: std::string 기본
 code:
-// constants.h
+#include <iostream>
+#include <string>    // std::string 을 쓰려면 꼭 include
+
+int main()
+{
+    std::string name { "홍길동" };
+    name += "님";                         // 뒤에 글자를 붙이면 길이가 알아서 늘어나요
+    std::cout << name << '\n';
+    std::cout << name.length() << '\n';   // 길이 — 글자 수가 아니라 "바이트" 수예요
+    return 0;
+}
+:end
+out: 실행 결과 (UTF-8 환경)
+홍길동님
+12
+:end
+p: 마지막 줄을 보세요. 글자는 4개인데 12가 나왔어요. `length()` 는 바이트 수를 세는데, 한글 한 글자는 3바이트라서 4 × 3 = 12가 돼요.
+h: 공백이 있는 이름 받기
+p: `std::cin >> name` 은 공백을 만나면 거기서 멈춰요. 공백까지 포함해 한 줄 전체를 받으려면 `std::getline` 을 써요.
+code:
+#include <iostream>
+#include <string>
+
+int main()
+{
+    std::string name {};
+    std::cout << "이름: ";
+    std::getline(std::cin >> std::ws, name);   // 한 줄 전체를 name에
+    std::cout << name << "님 안녕하세요\n";
+    return 0;
+}
+:end
+out: 입력: 홍 길동
+이름: 홍 길동님 안녕하세요
+:end
+tbl: 코드 조각 | 뜻
+r: `std::getline(입력, 변수)` | 줄바꿈(Enter) 전까지 한 줄 전체를 변수에 넣어요
+r: `std::cin >> std::ws` | 입력 앞쪽에 남아 있는 공백·줄바꿈을 먼저 버려요
+h: std::ws 는 왜 붙여야 할까요?
+p: 앞에서 `std::cin >> age;` 로 숫자를 읽었다면, 사용자가 누른 Enter(줄바꿈)는 읽히지 않고 남아 있어요. 그 상태에서 `std::getline(std::cin, s)` 를 하면, 남아 있던 줄바꿈을 바로 만나서 **빈 문자열**을 읽고 끝나 버려요. `std::ws` 가 그 줄바꿈을 먼저 치워 줘요.
+code:
+int age {};
+std::string name {};
+std::cin >> age;                          // 20 입력 후 Enter → Enter가 남아 있어요
+std::getline(std::cin, name);             // ❌ 남은 Enter를 읽고 끝 → name은 빈 문자열
+std::getline(std::cin >> std::ws, name);  // ✅ 남은 Enter를 치우고 다음 줄을 읽어요
+:end
+star: 공백이 있는 한 줄 입력은 `std::getline(std::cin >> std::ws, s)` — **ws까지 세트로** 외워요.
+trap: `std::cin >> name;` 으로 “홍 길동” 받기 > `std::getline(std::cin >> std::ws, name);` > 공백에서 끊겨 “홍”만 들어가요
+trap: `cin >> age;` 바로 다음에 `getline(cin, s);` > `getline(cin >> ws, s);` > 남아 있던 Enter 때문에 빈 문자열이 읽혀요
+mem: **ws** = **w**hite **s**pace(공백) 청소기
+key: 글자 여러 개는 std::string, `<string>` include
+key: `length()` 는 바이트 수 (한글 1글자 = 3바이트)
+key: 한 줄 입력 = `std::getline(std::cin >> std::ws, s)`
+
+# p2-4 | std::string_view: 복사 없이 보기만 | Ch 5.8~5.9
+sum: **std::string_view** 는 문자열을 **복사하지 않고 들여다보는 창문**이에요. 빠르지만, 창문 너머의 원래 문자열이 사라지면 아무것도 안 보여요.
+ana: 🪟 string_view는 창문이에요. 집(원래 문자열)을 통째로 옮겨 오는 대신 창문으로 보기만 해요. 그런데 집이 철거되면 창문으로 보이는 건 허공이에요.
+h: 왜 필요할까요?
+p: 함수에 `std::string` 을 그냥 넘기면 매번 문자열 전체가 **복사**돼요. 읽기만 할 거라면 복사는 낭비예요. string_view는 “어디서부터 몇 글자”라는 정보만 가지고 원래 문자열을 그대로 들여다봐요.
+code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
+void greet(std::string_view name)   // 복사 없이 보기만 해요
+{
+    std::cout << name << "님 안녕하세요\n";
+}
+
+int main()
+{
+    std::string n { "홍길동" };
+    greet(n);          // std::string 을 넘겨도 되고
+    greet("김철수");    // 따옴표 글자를 바로 넘겨도 돼요
+    return 0;
+}
+:end
+out: 실행 결과
+홍길동님 안녕하세요
+김철수님 안녕하세요
+:end
+tbl:  | std::string | std::string_view
+r: 하는 일 | 문자열을 **가지고** 있어요 | 남의 문자열을 **보기만** 해요
+r: 넘길 때 복사 | 전체 복사 | 거의 없음 (위치와 길이만)
+r: 글자 수정 | 가능 | ❌ 읽기 전용
+r: 원래 문자열이 사라지면 | 상관없음 | ❌ 엉뚱한 값 (미정의 동작)
+h: 위험 1: 함수 안에서 만든 문자열을 창문으로 돌려주기
+code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
+std::string_view makeName()
+{
+    std::string name { "홍길동" };   // 함수 안에서 만든 문자열
+    return name;                     // 문자열이 아니라 "창문"만 돌려줘요
+}                                    // ← 여기서 name 이 사라져요
+
+int main()
+{
+    std::string_view sv { makeName() };   // 이미 사라진 문자열을 보는 창문
+    std::cout << sv << '\n';              // ❌ 무엇이 출력될지 몰라요
+    return 0;
+}
+:end
+p: `makeName()` 이 끝나는 순간 함수 안의 `name` 은 사라져요. 돌려받은 창문은 빈 자리를 보고 있어서 미정의 동작이에요. 반환형을 `std::string` 으로 바꾸면 문자열 자체가 복사돼 나오니까 안전해요.
+term: 댕글링 | dangling | 이미 사라진 대상을 가리키고 있는 상태
+h: 위험 2: 창문을 만든 뒤 원래 문자열을 크게 바꾸기
+code:
+#include <iostream>
+#include <string>
+#include <string_view>
+
+int main()
+{
+    std::string s { "안녕" };
+    std::string_view sv { s };          // s 를 보는 창문
+    s = "훨씬 더 긴 문자열로 바꿈";        // s 가 더 넓은 메모리로 이사할 수 있어요
+    std::cout << sv << '\n';            // ❌ 창문은 옛날 자리를 보고 있어요
+    return 0;
+}
+:end
+p: string은 내용이 길어지면 더 넓은 메모리로 옮겨 가요. 창문은 그 사실을 모르고 옛날 위치를 계속 보고 있어서 미정의 동작이 돼요.
+h: 언제 무엇을 쓸까요?
+tbl: 상황 | 쓸 것
+r: 함수가 문자열을 **읽기만** 할 때 (매개변수) | `std::string_view`
+r: 함수가 문자열을 **돌려줄** 때 | `std::string`
+r: 클래스 안에 문자열을 **저장**할 때 | `std::string`
+r: 문자열을 고쳐야 할 때 | `std::string`
+star: **잠깐 읽기만 하면 string_view, 가지고 있어야 하면 string.** 헷갈리면 string을 쓰세요(느릴 뿐 틀리지는 않아요).
+trap: 함수에서 `std::string_view` 를 반환 > `std::string` 을 반환 > 함수 안 문자열이 사라져서 창문이 빈 자리를 봐요
+trap: view를 만든 뒤 원래 string에 긴 문자열을 대입 > view를 다시 만들거나 string을 직접 사용 > 원래 문자열이 이사 가면 view는 옛 자리를 봐요
+mem: string_view = **창문**. 집(원본)이 없어지면 아무것도 안 보여요
+key: string_view = 복사 없이 보기만, 읽기 전용
+key: 매개변수는 string_view, 반환·저장은 string
+key: 원래 문자열이 사라지거나 이사 가면 view는 위험해요
+
+# p2-5 | 연산자 우선순위와 계산 순서 | Ch 6.1, 6.4
+sum: **우선순위**는 “어떤 것끼리 묶이는지”만 정해요. “어느 쪽을 먼저 계산하는지”는 대부분 정해져 있지 않아요. 그래서 한 식에서 같은 변수를 두 번 바꾸면 안 돼요.
+ana: 🧮 우선순위는 식에 괄호를 어디에 칠지 정하는 규칙이에요. 괄호 안의 두 덩어리 중 누가 먼저 계산기를 두드릴지는 컴파일러 마음이에요.
+h: 우선순위 — 위에 있을수록 먼저 묶여요
+tbl: 순위 | 연산자 | 예
+r: 높음 | `++x` `--x` `!` `-x` | `!a`
+r:  | `*` `/` `%` | `b * c`
+r:  | `+` `-` | `a + b`
+r:  | `<<` `>>` | `std::cout << x`
+r:  | `<` `<=` `>` `>=` | `x < 5`
+r:  | `==` `!=` | `x == 5`
+r:  | `&&` | `a && b`
+r:  | `\|\|` | `a \|\| b`
+r: 낮음 | `?:` `=` `+=` | `x = 5`
+p: 다 외울 필요는 없어요. `* / %` 가 `+ -` 보다 먼저라는 것만 알고, 헷갈리면 **괄호**를 치면 돼요.
+h: 우선순위와 계산 순서는 달라요
+p: `a + b * c` 에서 `b * c` 가 먼저 묶이는 건 우선순위가 정해 줘요. 하지만 `a` 와 `b * c` 중 **어느 쪽 값을 먼저 구할지**는 표준이 정하지 않았어요. 보통은 상관없지만, 계산하면서 변수를 바꾸는 식에서는 문제가 돼요.
+code:
+#include <iostream>
+
+int main()
+{
+    int i { 1 };
+    std::cout << i++ + ++i << '\n';   // ❌ i 를 두 번 바꿈 → 미정의 동작, 컴파일러마다 결과가 달라요
+    return 0;
+}
+:end
+p: `i++` 와 `++i` 중 무엇이 먼저 실행되느냐에 따라 결과가 달라지는데, 그 순서가 정해져 있지 않아서 미정의 동작이에요. 해결은 간단해요. 한 줄에서 한 번만 바꾸도록 **문장을 나누면** 돼요.
+star: 한 식 안에서 **같은 변수를 두 번 바꾸지 않아요**. (`i++ + ++i` 는 미정의 동작)
+trap: `i++ + ++i` > 문장을 나눠서 하나씩 계산 > 계산 순서가 정해지지 않아 미정의 동작이에요
+trap: 우선순위표를 외워서 괄호 없이 긴 식을 씀 > 헷갈리는 곳에 괄호 > 읽는 사람도, 쓰는 나도 실수해요
+mem: 우선순위 = **괄호 위치**, 계산 순서 = **누가 먼저** (몰라도 되게 짜기)
+key: 헷갈리면 괄호
+key: 우선순위와 계산 순서는 다른 문제
+key: 한 식에서 같은 변수를 두 번 바꾸지 않기
+
+# p2-6 | 나눗셈, 나머지, 증가 연산자 | Ch 6.2~6.5
+sum: 정수끼리 나누면 소수점은 **버려요**. 나머지(`%`)의 부호는 **앞 숫자**를 따라가요. `++x` 는 먼저 올리고, `x++` 는 나중에 올려요.
+ana: 🍕 피자 7조각을 2명이 똑같이 정수로 나누면 3조각씩이고, 1조각이 남아요. `7 / 2` 는 3, `7 % 2` 는 1이에요.
+h: 나눗셈과 나머지
+code:
+#include <iostream>
+
+int main()
+{
+    std::cout << 7 / 2 << '\n';     // 3   정수끼리 → 소수점 버림
+    std::cout << 7.0 / 2 << '\n';   // 3.5 한쪽이 실수 → 실수 나눗셈
+    std::cout << 7 % 2 << '\n';     // 1   나머지
+    std::cout << -7 % 2 << '\n';    // -1  부호는 앞 숫자(-7)를 따라가요
+    return 0;
+}
+:end
+out: 실행 결과
+3
+3.5
+1
+-1
+:end
+h: 홀수 판정에서 자주 하는 실수
+p: 마지막 줄을 보세요. 음수의 나머지는 음수예요. 그래서 “나머지가 1이면 홀수”라고 짜면 음수 홀수(-7)에서 틀려요. “나머지가 0이 아니면 홀수”라고 짜야 해요.
+vs: ❌ == 1 로 판정 | ✅ != 0 으로 판정
+bool isOdd(int x)
+{
+    return x % 2 == 1;
+}
+// isOdd(-7) → false (틀림)
+--
+bool isOdd(int x)
+{
+    return x % 2 != 0;
+}
+// isOdd(-7) → true
+:end
+warn: 거듭제곱 `std::pow(3, 2)` 는 결과를 double로 돌려줘서 8.9999…처럼 오차가 생길 수 있어요. 정수 거듭제곱이 필요하면 반복문으로 곱해요.
+h: ++x 와 x++ 의 차이
+p: 둘 다 x를 1 올리지만, **식에서 돌려주는 값**이 달라요. 따로 한 줄에 `++x;` 또는 `x++;` 만 쓰면 결과는 같아요. 차이는 다른 식 안에 넣었을 때 생겨요.
+code:
+#include <iostream>
+
+int main()
+{
+    int x { 5 };
+    int y { ++x };   // 전위: x 를 6 으로 올린 뒤, 6 을 줘요
+    std::cout << x << ' ' << y << '\n';
+
+    int a { 5 };
+    int b { a++ };   // 후위: 지금 값 5 를 먼저 주고, a 를 6 으로 올려요
+    std::cout << a << ' ' << b << '\n';
+    return 0;
+}
+:end
+out: 실행 결과
+6 6
+6 5
+:end
+term: 부작용 | side effect | 값을 계산하는 것 말고 상태를 바꾸는 일 (대입, ++, 출력 등)
+star: `7 / 2` 는 3, `-7 % 2` 는 **-1**, `b { a++ }` 에서 b는 **옛 값**이에요.
+trap: `sum / count` 로 평균 (둘 다 int) > `static_cast<double>(sum) / count` > 정수끼리 나눠서 소수점이 사라져요
+trap: `x % 2 == 1` 로 홀수 판정 > `x % 2 != 0` > 음수 홀수는 나머지가 -1이에요
+mem: `++` 가 **앞**에 있으면 **먼저** 올리고, **뒤**에 있으면 **나중에** 올려요
+key: 정수 나눗셈은 소수점 버림, `7 / 2 == 3`
+key: 홀수 판정은 `x % 2 != 0`
+key: `++x` 는 새 값, `x++` 는 옛 값을 줘요
+
+# p2-7 | 비교 연산자와 논리 연산자 | Ch 6.6~6.8
+sum: 실수는 `==` 대신 **차이가 아주 작은지**로 비교해요. `&&` 와 `||` 는 답이 이미 정해지면 **나머지 부분을 계산하지 않아요**(단축 평가).
+ana: 🚪 `&&` 는 문 두 개를 모두 통과해야 하는 규칙이에요. 첫 번째 문이 잠겨 있으면 두 번째 문은 열어 보지도 않아요.
+h: 실수 비교
+p: 1-11에서 봤듯이 `0.1 + 0.2 == 0.3` 은 false예요. 그래서 실수는 “두 값의 차이가 아주 작으면 같다고 보자”는 함수를 만들어 비교해요.
+code:
+#include <cmath>       // std::abs
+#include <iostream>
+
+bool almostEqual(double a, double b)
+{
+    return std::abs(a - b) < 1e-9;   // 차이가 0.000000001 보다 작으면 같다고 봐요
+}
+
+int main()
+{
+    std::cout << std::boolalpha << almostEqual(0.1 + 0.2, 0.3) << '\n';
+    return 0;
+}
+:end
+out: 실행 결과
+true
+:end
+p: `std::abs` 는 절댓값(부호를 뗀 값), `1e-9` 는 10의 −9제곱이에요. 아주 큰 수끼리 비교할 때는 이 고정된 오차가 너무 작을 수 있어서, learncpp 6.7절은 두 수의 크기에 비례하는 오차(상대 오차)를 함께 쓰는 방법을 소개해요.
+fix: PPT에 “learncpp **5.7**절 방식”이라고 되어 있지만 실수 비교는 **6.7**절이에요.
+h: 단축 평가
+p: `A && B` 에서 A가 거짓이면 전체가 거짓으로 정해지니까 B는 계산하지 않아요. `A || B` 에서 A가 참이면 B를 계산하지 않아요. 이 성질 덕분에 “안전 검사를 왼쪽에” 두는 코드가 가능해요.
+code:
+#include <iostream>
+
+int main()
+{
+    int* ptr { nullptr };                         // 아무것도 가리키지 않는 포인터 (3회차)
+    if (ptr != nullptr && *ptr > 0)               // 왼쪽이 거짓 → 오른쪽(*ptr)은 실행 안 함 ✅
+        std::cout << "양수\n";
+    else
+        std::cout << "검사 통과 못 함\n";
+    return 0;
+}
+:end
+out: 실행 결과
+검사 통과 못 함
+:end
+p: 순서를 바꿔 `*ptr > 0 && ptr != nullptr` 로 쓰면, 널 포인터를 먼저 따라가 버려서 프로그램이 멈춰요. **순서 자체가 안전장치**예요.
+h: 그 밖에 알아 둘 것
+tbl: 규칙 | 내용
+r: 드모르간 법칙 | `!(a && b)` 는 `!a \|\| !b` 와 같아요. `!` 를 안으로 넣으면 `&&` 와 `\|\|` 가 뒤바뀌어요
+r: 섞어 쓸 때 | `&&` 가 `\|\|` 보다 먼저 묶여요. 헷갈리지 않게 괄호를 쳐요
+r: 조건 연산자 `?:` | `x > y ? x : y` — 조건이 참이면 앞, 거짓이면 뒤 값을 줘요
+star: 널 검사는 `&&` 의 **왼쪽**에 둬요.
+trap: `if (0.1 + 0.2 == 0.3)` > 차이가 아주 작은지로 비교 > 실수는 근삿값이라 ==가 거의 항상 실패해요
+trap: `if (a() \|\| b())` 에서 b()가 꼭 실행돼야 함 > b()를 따로 먼저 호출 > a()가 참이면 b()는 건너뛰어요
+mem: 드모르간 = `!` 를 안으로 넣으면 `&&` ↔ `||` 가 뒤집혀요
+key: 실수는 차이가 아주 작은지로 비교 (6.7절)
+key: `&&` 는 왼쪽이 거짓, `||` 는 왼쪽이 참이면 오른쪽을 안 봐요
+key: 안전 검사는 왼쪽에
+
+# p2-8 | 스코프, 수명, 링키지 | Ch 7.1~7.8, 7.12
+sum: 변수에는 세 가지 성질이 있어요. **어디서 보이나**(스코프), **언제까지 살아 있나**(수명), **다른 파일에서도 같은 변수인가**(링키지).
+ana: 🏢 회사 출입증에 비유하면, 스코프는 출입증이 통하는 층, 수명은 근무 기간, 링키지는 다른 지점에서도 같은 사람으로 통하는지예요.
+h: 세 성질 한눈에
+tbl: 성질 | 묻는 것 | 종류
+r: 스코프 (scope) | 이 이름을 **어디서** 쓸 수 있나요 | 블록(중괄호 안) / 전역(파일 전체)
+r: 수명 (duration) | 이 변수가 **언제** 생기고 사라지나요 | 자동(블록 끝에서 사라짐) / 정적(프로그램 끝까지)
+r: 링키지 (linkage) | 다른 **파일**의 같은 이름이 같은 변수인가요 | 없음 / 내부(이 파일만) / 외부(다른 파일도)
+h: 스코프: 안쪽 이름이 바깥 이름을 가려요
+p: 중괄호 `{ }` 안에서 만든 변수는 그 중괄호가 끝나면 사라져요. 안쪽에서 바깥과 같은 이름을 쓰면 안쪽 것이 바깥 것을 **가려요**(섀도잉).
+code:
+#include <iostream>
+
+int value { 10 };                      // 전역 변수
+
+int main()
+{
+    int value { 20 };                  // 전역 value 를 가려요
+    {
+        int value { 30 };              // 또 가려요
+        std::cout << value << '\n';    // 30 — 가장 안쪽
+    }                                  // 여기서 30짜리 value 는 사라져요
+    std::cout << value << '\n';        // 20
+    std::cout << ::value << '\n';      // 10 — :: 를 붙이면 전역
+    return 0;
+}
+:end
+out: 실행 결과
+30
+20
+10
+:end
+tip: 변수는 필요한 곳에서 **최대한 좁은 범위**에 만들어요. 신경 쓸 변수가 줄고 이름 충돌도 줄어요.
+h: 링키지: 다른 파일에서 쓸 수 있나요?
+code:
+// ── a.cpp ──
+int g_count { 0 };            // 외부 링키지 — 다른 파일에서도 쓸 수 있어요
+static int s_helper { 0 };    // 내부 링키지 — 이 파일 안에서만
+const int g_max { 100 };      // const 전역은 기본이 내부 링키지
+
+// ── b.cpp ──
+extern int g_count;           // "a.cpp에 있는 그 g_count 를 쓸게요" (선언만, 값 없음)
+void increase() { ++g_count; }
+:end
+tbl: 선언 | 다른 파일에서 쓸 수 있나요
+r: `int g_count { 0 };` (함수 밖) | ✅ `extern int g_count;` 로 가져와서
+r: `static int s { 0 };` (함수 밖) | ❌ 이 파일만
+r: `const int g { 100 };` (함수 밖) | ❌ 기본이 이 파일만
+warn: 값을 바꿀 수 있는 전역 변수는 되도록 피해요. 어느 함수가 언제 바꿨는지 추적하기 어렵고, 테스트도 어려워져요.
+star: 위 코드의 출력 순서 **30 → 20 → 10**. `::value` 는 전역 변수예요.
+trap: 다른 파일에서 `static` 전역 변수를 `extern` 으로 가져옴 > static을 빼서 외부 링키지로 > static 전역은 그 파일 안에서만 보여서 링크 오류가 나요
+mem: **스**코프 = **시**야(보이는 곳), **수**명 = **살**아 있는 기간, **링**키지 = 파일끼리 **연결**
+key: 스코프(어디서) · 수명(언제까지) · 링키지(다른 파일)
+key: 안쪽 이름이 바깥을 가림, `::이름` 은 전역
+key: static·const 전역은 이 파일만, extern 은 “다른 파일 것을 쓸게”
+
+# p2-9 | 헤더 상수, static 지역 변수, using | Ch 7.9~7.14
+sum: 여러 파일이 같이 쓰는 상수는 헤더에 **`inline constexpr`** 로 둬요. 함수 안의 **static 변수**는 함수가 끝나도 값이 남아요. using은 필요한 이름만 좁게 써요.
+ana: 📌 함수 안 static 변수는 회의실 화이트보드예요. 회의(함수)가 끝나도 지워지지 않아서, 다음 회의 때 이어서 쓸 수 있어요.
+h: 헤더에 상수 두기
+p: 상수를 헤더에 `constexpr` 로만 두면, 그 헤더를 include하는 파일마다 상수 사본이 하나씩 생겨요. `inline` 을 붙이면 프로그램 전체에 **하나만** 생겨요.
+code:
+// ── constants.h ──
+#pragma once
 namespace constants
 {
-    inline constexpr double gravity { 9.8 };   // ✅ 전체에서 하나
-    inline constexpr int    maxUsers { 100 };
+    inline constexpr double gravity { 9.8 };   // 프로그램 전체에 하나
+    inline constexpr int maxUsers { 100 };
 }
+
+// ── main.cpp ──
+#include <iostream>
+#include "constants.h"
+int main() { std::cout << constants::gravity << '\n'; }
 :end
-tbl: 헤더에 이렇게 쓰면 | 결과
-r: `constexpr double g { 9.8 };` | 포함한 파일마다 **사본**
-r: `inline constexpr double g { 9.8 };` | ✅ 프로그램 전체에 **하나**
-li: 요즘 `inline` 의 뜻 = “같은 정의가 여러 파일에 있어도 ODR 위반 아님”
-li: C++17 이전이면 .cpp 에 정의, 헤더엔 extern 선언
-h: 함수 안 static
+term: inline (변수) | inline variable | “같은 정의가 여러 파일에 있어도 하나로 취급해 줘”라는 표시 (C++17)
+h: 함수 안의 static 변수
+p: 보통 함수 안의 변수는 함수가 끝나면 사라지고, 다음에 부르면 처음부터 다시 만들어져요. `static` 을 붙이면 **처음 한 번만** 만들어지고, 함수가 끝나도 값이 그대로 남아요.
 code:
+#include <iostream>
+
 void counter()
 {
-    static int calls { 0 };   // 처음 한 번만 초기화
+    static int calls { 0 };   // 처음 불릴 때 딱 한 번만 0 으로 만들어져요
     ++calls;
-    std::cout << calls;
+    std::cout << calls << '\n';
 }
-counter(); counter(); counter();   // 1 2 3
+
+int main()
+{
+    counter();
+    counter();
+    counter();
+    return 0;
+}
 :end
-tbl: static 의 위치 | 뜻
-r: **함수 안** | 수명을 프로그램 끝까지 (보이는 곳은 그대로)
-r: **함수 밖** | 링키지를 내부로 (이 파일에서만)
-h: 종합표
+out: 실행 결과
+1
+2
+3
+:end
+p: static을 빼면 매번 0에서 시작해서 1, 1, 1이 나와요. 이름은 여전히 함수 안에서만 보이고(스코프 그대로), **사는 기간만** 프로그램 끝까지로 늘어난 거예요.
+h: static은 위치에 따라 뜻이 달라요
+tbl: 어디에 쓰나요 | 뜻
+r: **함수 안** `static int x;` | 수명을 프로그램 끝까지로 (값이 유지돼요)
+r: **함수 밖** `static int x;` | 이 파일에서만 보이게 (내부 링키지)
+h: 스코프·수명·링키지 정리표
 tbl: 선언 | 스코프 | 수명 | 링키지
-r: `int x;` (함수 안) | 블록 | 자동 | 없음
-r: `static int x;` (함수 안) | 블록 | 정적 | 없음
-r: `int x;` (함수 밖) | 전역 | 정적 | 외부
-r: `static int x;` (함수 밖) | 전역 | 정적 | 내부
-r: `const int x {1};` (함수 밖) | 전역 | 정적 | 내부
-r: `inline constexpr int x {1};` | 전역 | 정적 | 외부 (하나만)
-r: `extern int x;` | 전역 | 정적 | 외부 (선언만)
-h: using
-tbl: 쓰는 법 | 괜찮나
-r: `using namespace std;` | ❌ 이름 충돌이 예고 없이
-r: 함수 안 `using std::cout;` | ✅ 필요한 것만, 좁게
-trap: 헤더에 `constexpr` 상수 > `inline constexpr` > 파일마다 사본이 생김
-star: `static` 은 **위치에 따라 뜻이 다르다** — 안: 수명, 밖: 링키지.
-mem: static — 안에선 **오래 살기**, 밖에선 **집 밖에 못 나가기**
-key: 헤더 상수 = `inline constexpr`
-key: 함수 안 static = 한 번만 초기화, 값 유지
-key: static 은 위치에 따라 뜻이 다름
+r: 함수 안 `int x;` | 블록 | 자동 | 없음
+r: 함수 안 `static int x;` | 블록 | 정적 | 없음
+r: 함수 밖 `int x;` | 전역 | 정적 | 외부
+r: 함수 밖 `static int x;` | 전역 | 정적 | 내부
+r: 함수 밖 `const int x { 1 };` | 전역 | 정적 | 내부
+r: `inline constexpr int x { 1 };` | 전역 | 정적 | 외부 (하나만)
+h: using 은 좁게
+tbl: 쓰는 법 | 괜찮을까요?
+r: `using namespace std;` | ❌ std의 모든 이름이 쏟아져 나와 충돌 위험
+r: 함수 안 `using std::cout;` | ✅ 필요한 이름 하나만, 그 함수 안에서만
+star: `static` 은 **함수 안에서는 수명**, **함수 밖에서는 링키지**를 바꿔요.
+trap: 헤더에 `constexpr double g { 9.8 };` > `inline constexpr double g { 9.8 };` > include하는 파일마다 사본이 생겨요
+trap: 호출 횟수를 세려고 함수 안에 그냥 `int calls { 0 };` > `static int calls { 0 };` > 매번 0부터 다시 시작해요
+mem: static — 함수 안에서는 **오래 살기**, 함수 밖에서는 **집 밖에 못 나가기**
+key: 헤더 상수는 `inline constexpr`
+key: 함수 안 static = 한 번만 만들어지고 값이 유지돼요
+key: static은 위치에 따라 뜻이 달라요
 
 # p2-10 | if 와 switch | Ch 8.2~8.6
-sum: if 는 한 줄이어도 **항상 중괄호**. switch 는 **break** 가 없으면 아래 case 로 흘러내린다.
-ana: 🌊 switch 의 case = 계단식 물웅덩이. break(둑)가 없으면 물이 아래 칸으로 쭉 흘러내림.
-h: if 실수 4가지
+sum: if는 한 줄짜리여도 **항상 중괄호**를 쳐요. switch는 case 끝에 **break** 가 없으면 아래 case까지 계속 실행돼요.
+ana: 🌊 switch의 case는 계단식 물웅덩이예요. break라는 둑이 없으면 물이 아래 칸으로 계속 흘러내려요.
+h: if에서 자주 하는 실수 4가지
 code:
-if (x > 5);              // ① ; 때문에 if 가 여기서 끝남
-    std::cout << "큼";   //    → 항상 실행
+if (x > 5);              // ① 괄호 뒤 ; — if 가 여기서 끝나요
+    std::cout << "큼";   //    그래서 이 줄은 x 와 상관없이 항상 실행돼요
 
-if (x = 5)               // ② 대입! 항상 참
+if (x = 5)               // ② = 는 대입이에요. x 가 5 가 되고, 조건은 항상 참
 
 if (a)
     if (b) f();
-    else   g();          // ③ else 는 가장 가까운 if(b) 짝
+    else   g();          // ③ 이 else 는 바깥 if(a)가 아니라 안쪽 if(b)의 짝이에요
 
 if (x > 5)
     std::cout << "큼";
-    std::cout << "확실";  // ④ if 밖. 항상 실행
+    std::cout << "확실";  // ④ 들여쓰기만 했을 뿐 if 밖이에요. 항상 실행돼요
 :end
-star: 4가지를 한 번에 막는 법 = **항상 중괄호** `{ }`.
-h: switch
+p: 네 가지 모두 **중괄호**를 습관으로 치면 생기지 않아요(②는 `-Wall` 경고가 잡아 줘요). 컴파일러는 들여쓰기를 전혀 보지 않는다는 것도 기억하세요.
+h: switch: 값에 따라 갈래 나누기
 code:
-switch (grade)              // 정수·열거형만 (문자열 ❌)
+#include <iostream>
+
+int main()
 {
-    case 'A':
-    case 'B':               // 비어 있는 case 는 그냥 흘러가도 OK
-        std::cout << "합격";
-        break;              // ← 빠뜨리면 아래로 흘러감
-    case 'C':
-        pass();
-        [[fallthrough]];    // "일부러 흘려보냄" 표시 (C++17)
-    case 'D':
-        record();
-        break;
-    default:                // 나머지 전부 — 안전망
-        break;
+    char grade { 'A' };
+    switch (grade)              // 정수나 열거형만 쓸 수 있어요 (문자열은 ❌)
+    {
+        case 'A':
+            std::cout << "우수\n";
+            break;              // 여기서 switch 를 빠져나가요
+        case 'B':
+            std::cout << "보통\n";
+            break;
+        default:                // 위 case 에 해당하지 않는 모든 값
+            std::cout << "기타\n";
+            break;
+    }
+    return 0;
 }
 :end
+out: 실행 결과
+우수
+:end
+h: break를 빠뜨리면
+p: 위 코드에서 `case 'A'` 의 break를 지우면 “우수” 다음에 “보통”까지 출력돼요. 이걸 **fallthrough(흘러내림)** 라고 해요. 오류가 아니라서 컴파일러가 막아 주지 않아요. 일부러 흘려보낼 때는 `[[fallthrough]];` 라고 적어서 의도를 표시해요.
 tbl: 규칙 | 내용
-r: 조건 타입 | **정수·열거형만**
-r: break 없음 | 다음 case 로 흘러내림 (오류 아님!)
-r: 의도한 흘러내림 | `[[fallthrough]];`
-r: case 안 변수 선언 | 그 case 를 `{ }` 로 감싸야 함
-trap: break 를 빠뜨림 > 모든 case 끝에 break > 다음 case 까지 실행됨 (컴파일러가 안 막음)
-trap: `if (x > 5);` > `if (x > 5) { ... }` > 세미콜론에서 if 가 끝남
-mem: else 는 **가장 가까운** if 와 짝 (들여쓰기는 컴파일러가 안 봄)
-key: if 는 항상 중괄호
-key: switch 는 break 없으면 흘러내림
-key: switch 는 정수·열거형만, default 는 안전망
+r: 조건 타입 | 정수, char, 열거형만 (std::string ❌)
+r: break 없음 | 다음 case 까지 실행돼요
+r: 일부러 흘려보내기 | `[[fallthrough]];` 로 표시 (C++17)
+r: case 안에서 변수 만들기 | 그 case 를 `{ }` 로 감싸야 해요
+star: switch는 break가 없으면 **아래 case로 흘러내려요**. 조건에는 **정수·열거형만** 쓸 수 있어요.
+trap: case 끝의 break를 빠뜨림 > 모든 case 끝에 break > 다음 case까지 실행돼요 (오류도 안 나요)
+trap: `if (x > 5);` > `if (x > 5) { ... }` > 세미콜론에서 if가 끝나 버려요
+mem: else는 **가장 가까운** if와 짝이에요. 들여쓰기는 컴파일러가 안 봐요
+key: if는 항상 중괄호
+key: switch는 break가 없으면 흘러내려요
+key: switch 조건은 정수·열거형만, 나머지는 default
 
-# p2-11 | 반복문 · 종료 · 난수 | Ch 8.7~8.15
-sum: 횟수 모르면 **while**, 최소 한 번이면 **do-while**, 횟수 정해지면 **for**. 난수는 `rand()` 말고 **`<random>`**.
-ana: 🏃 while = “지칠 때까지 뛰어”, do-while = “일단 한 바퀴는 뛰고 판단”, for = “운동장 5바퀴”.
-h: 반복문 3가지
-tbl: 형태 | 언제 | 주의
-r: `while (조건) {}` | 횟수 모름. 0번일 수도 | 조건을 바꾸는 코드 빠뜨리면 무한 루프
-r: `do {} while (조건);` | **최소 1번** (메뉴, 재입력) | 끝의 `;`
-r: `for (초기; 조건; 증가)` | 횟수가 정해짐 | `<=` 로 한 번 더 돎
+# p2-11 | 반복문, 프로그램 끝내기, 난수 | Ch 8.7~8.15
+sum: 몇 번 돌지 모르면 **while**, 최소 한 번은 돌아야 하면 **do-while**, 횟수가 정해져 있으면 **for**. 난수는 `rand()` 대신 **`<random>`** 의 엔진과 분포를 써요.
+ana: 🏃 while은 “지칠 때까지 뛰어”, do-while은 “일단 한 바퀴 뛰고 나서 판단해”, for는 “운동장 5바퀴”예요.
+h: 반복문 세 가지
+tbl: 형태 | 언제 쓰나요
+r: `while (조건) { }` | 몇 번 돌지 모를 때. 처음부터 조건이 거짓이면 한 번도 안 돌아요
+r: `do { } while (조건);` | 최소 한 번은 실행해야 할 때 (메뉴 보여 주기, 다시 입력받기)
+r: `for (시작; 조건; 증가) { }` | 횟수가 정해져 있을 때
 code:
-for (int i { 0 }; i < 5; ++i)    // 0~4 → 5번 ✅
-for (int i { 0 }; i <= 5; ++i)   // 0~5 → 6번 (off-by-one)
+#include <iostream>
 
-while (true) {
-    if (done) break;             // 반복 전체 탈출
-    if (skip) continue;          // 이번 회차만 건너뜀
+int main()
+{
+    for (int i { 0 }; i < 5; ++i)    // i 가 0,1,2,3,4 일 때 → 5번
+        std::cout << i << ' ';
+    std::cout << '\n';
+
+    int n { 0 };
+    while (true)                     // 무한 반복 + 안에서 빠져나가기
+    {
+        ++n;
+        if (n % 2 == 0) continue;    // 짝수면 이번 회차만 건너뛰기
+        if (n > 7) break;            // 7보다 커지면 반복 전체를 끝내기
+        std::cout << n << ' ';
+    }
+    return 0;
 }
 :end
-h: 프로그램 끝내기
-tbl: 방법 | 정리(뒷정리)
-r: main 에서 `return` | ✅ 전부 정리 — 가장 안전
-r: `std::exit(코드)` | 정적 객체만. **지금 함수의 지역 객체는 정리 안 됨**
-r: `std::abort()` | ❌ 아무것도 정리 안 함
-h: 난수
-vs: ❌ rand() | ✅ <random>
-std::srand(std::time(0));
-int r = std::rand() % 6 + 1;
-// 품질 나쁨, 분포 치우침
-// 1초 안에 여러 번 → 같은 수열
---
-std::mt19937 gen{ std::random_device{}() };
-std::uniform_int_distribution die{ 1, 6 };
-int r { die(gen) };
-// 분포 고름
+out: 실행 결과
+0 1 2 3 4
+1 3 5 7
 :end
-tip: 재현이 필요하면 고정 시드 `std::mt19937 gen{ 42 };` → 매번 같은 수열 (디버깅용).
-trap: 함수 안에서 엔진을 매번 새로 만듦 > 엔진은 한 번만 만들어 재사용 (static 등) > 같은 값이 반복될 수 있음
-trap: `for (int i { 0 }; i <= 5; ++i)` 로 5번 > `i < 5` > 6번 돎
-star: `i <= 5` 는 **6번**. 난수는 **mt19937 + 분포 객체**.
-mem: **break** = 루프를 부숨, **continue** = 이번 판만 넘김
-key: while(모름) · do-while(최소 1번) · for(정해짐)
-key: `<=` 는 한 번 더 — off-by-one
-key: 난수 엔진은 한 번만 만들기
+tbl: 키워드 | 하는 일
+r: `break` | 반복문을 **완전히** 빠져나가요
+r: `continue` | 이번 회차의 나머지를 건너뛰고 **다음 회차**로 가요
+warn: `for (int i { 0 }; i <= 5; ++i)` 는 0부터 5까지 **6번** 돌아요. 5번을 원했다면 `<` 를 써야 해요.
+h: 프로그램을 중간에 끝내는 방법
+tbl: 방법 | 뒷정리
+r: main에서 `return` | ✅ 모든 변수가 정상적으로 정리돼요 — 가장 안전
+r: `std::exit(코드)` | 지금 실행 중인 함수의 지역 변수는 정리되지 않아요
+r: `std::abort()` | 아무것도 정리하지 않고 즉시 멈춰요
+h: 난수: 1~6 주사위 만들기
+p: 난수는 **부품 두 개**로 만들어요. 숫자를 마구 쏟아내는 **엔진**과, 그 숫자를 원하는 범위(1~6)로 고르게 바꿔 주는 **분포**예요. 엔진은 처음 시작점(시드)이 필요한데, 그걸 정해 주는 장치가 `std::random_device` 예요.
+code:
+#include <iostream>
+#include <random>
+
+int main()
+{
+    std::random_device rd;                        // ① 시작점(시드)을 정해 주는 장치
+    std::mt19937 gen { rd() };                    // ② 엔진: rd에게서 시작점을 받아 숫자를 만들기 시작
+    std::uniform_int_distribution die { 1, 6 };   // ③ 분포: 숫자를 1~6 사이로 고르게 바꿔 줌
+
+    for (int i { 0 }; i < 5; ++i)
+        std::cout << die(gen) << ' ';             // ④ 엔진에서 숫자 하나를 뽑아 1~6으로 바꿔 출력
+    std::cout << '\n';
+    return 0;
+}
+:end
+out: 실행 결과 (매번 달라요)
+3 6 1 1 4
+:end
+tbl: 이름 | 뜻
+r: `std::random_device` | 엔진의 시작점을 정해 주는 장치. 실행할 때마다 다른 시작점을 줘요
+r: `std::mt19937` | 엔진 종류의 이름이에요. “표준 엔진”이라고만 알면 돼요
+r: `std::uniform_int_distribution` | uniform(고르게) + int(정수) + distribution(분포) → “정수를 고르게”
+r: `die(gen)` | 분포 die에게 엔진 gen을 넘겨서 “하나 뽑아 줘”
+p: PPT에 나온 `std::mt19937 gen{ std::random_device{}() };` 는 위의 ①②를 한 줄로 줄인 거예요. `std::random_device{}` 로 장치를 잠깐 만들고, 바로 `()` 로 숫자 하나를 뽑아 엔진에 넣어요.
+h: rand() 를 쓰지 않는 이유
+tbl: `std::rand() % 6 + 1` 의 문제 | `<random>` 은
+r: 만들어 내는 숫자의 품질이 낮아요 | 품질 좋은 엔진을 골라 써요
+r: `%` 로 자르면 특정 숫자가 조금 더 자주 나와요 | 분포가 고르게 맞춰 줘요
+warn: 엔진은 **한 번만** 만들어서 계속 써요. 함수를 부를 때마다 엔진을 새로 만들면 비슷한 시작점에서 다시 시작해서 같은 숫자가 반복될 수 있어요.
+tip: 디버깅할 때는 `std::mt19937 gen { 42 };` 처럼 시작점을 고정하면 매번 같은 숫자가 나와서 버그를 재현하기 좋아요.
+star: `i <= 5` 로 0부터 세면 **6번** 돌아요. 난수는 **엔진(mt19937) + 분포(uniform_int_distribution)**.
+trap: `for (int i { 0 }; i <= 5; ++i)` 로 5번 > `i < 5` > 0부터 5까지 6번 돌아요
+trap: 난수 함수 안에서 엔진을 매번 새로 만듦 > 엔진은 한 번만 만들어 재사용 > 같은 숫자가 반복될 수 있어요
+mem: **break** = 반복을 부수고 나가기, **continue** = 이번 판만 넘기고 계속
+key: while(몰라요) · do-while(최소 1번) · for(정해져 있어요)
+key: `<=` 는 한 번 더 돌아요 (off-by-one)
+key: 난수 = 엔진 + 분포, 엔진은 한 번만 만들기
 
 # p2-12 | 테스트와 오류 다루기 | Ch 9.1~9.4
-sum: **경계값**(0, 음수, 최댓값, 빈 입력)을 테스트하고, 오류는 **절대 조용히 넘기지 않는다**.
-ana: 🧱 버그는 대부분 담장 끝(경계)에 숨어 있다. 마당 한가운데보다 모서리를 먼저 살펴라.
-h: 테스트가 얼마나 덮었나
-tbl: 커버리지 | 확인할 것
-r: 문장 | 모든 줄이 한 번은 실행됐나
-r: 분기 | if 의 참·거짓 둘 다 실행됐나
-r: 반복 | 0번 · 1번 · 여러 번 다 돌려 봤나
+sum: 테스트할 때는 **경계값**(0, 음수, 최댓값, 빈 입력)을 꼭 넣어 봐요. 오류가 생기면 **절대 조용히 넘기지 않아요**.
+ana: 🧱 버그는 대부분 마당 한가운데가 아니라 담장 끝(경계)에 숨어 있어요.
+h: 테스트를 짜는 법
+p: 함수 하나를 만들면 “이 입력에는 이 결과가 나와야 한다”를 코드로 적어 두고 확인해요. `assert(조건)` 은 조건이 거짓이면 프로그램을 즉시 멈추고 어디서 틀렸는지 알려 줘요.
 code:
-#include <cassert>
+#include <cassert>    // assert
+#include <iostream>
+
+int add(int a, int b) { return a + b; }
+
 void testAdd()
 {
-    assert(add(2, 3) == 5);
-    assert(add(-1, 1) == 0);   // 음수 경계
-    assert(add(0, 0) == 0);    // 0 경계
+    assert(add(2, 3) == 5);     // 평범한 값
+    assert(add(-1, 1) == 0);    // 음수 경계
+    assert(add(0, 0) == 0);     // 0 경계
+    std::cout << "add 테스트 통과\n";
+}
+
+int main()
+{
+    testAdd();
+    return 0;
 }
 :end
-tip: 테스트의 진짜 쓸모 = **고친 버그가 다시 살아나지 않게** 막기. 버그 하나 고치면 테스트 하나 추가.
-li: 흔한 의미 오류: off-by-one · 우선순위 착각 · 정수 나눗셈 · 실수 `==` · 부호 섞기
-h: 오류 다루는 4가지 방법
+out: 실행 결과
+add 테스트 통과
+:end
+h: 얼마나 꼼꼼히 확인했나요
+tbl: 확인 방법 | 묻는 것
+r: 문장 커버리지 | 모든 줄이 한 번은 실행됐나요
+r: 분기 커버리지 | if의 참인 경우와 거짓인 경우가 둘 다 실행됐나요
+r: 반복 커버리지 | 반복문이 0번, 1번, 여러 번 도는 경우를 다 해 봤나요
+tip: 테스트의 진짜 쓸모는 “**한 번 고친 버그가 다시 살아나지 않게**” 막는 거예요. 버그를 하나 고칠 때마다 그 버그를 재현하는 테스트를 하나 남겨 두세요.
+h: 오류가 생겼을 때 할 수 있는 일
 tbl: 방법 | 예
-r: ① 함수 안에서 해결 | 기본값으로 대체, 재시도
-r: ② 부른 쪽에 알림 | bool 반환, 실패 값, std::optional
-r: ③ 프로그램 종료 | assert, std::exit
-r: ④ 예외 던지기 | 📎 이 과정 범위 밖
-trap: 오류를 무시하고 계속 진행 > 4가지 중 하나로 처리 > 엉뚱한 곳에서 터져 원인 찾기가 몇 배 어려움
-star: 테스트는 **경계값**부터. 오류 처리 최악은 **조용히 무시**.
-mem: 버그는 **모서리**에 산다 (0, -1, 최대, 빈 것)
-key: 경계값 테스트
-key: 테스트 = 회귀 방지
+r: ① 함수 안에서 해결 | 잘못된 값이면 기본값으로 바꾸거나 다시 입력받기
+r: ② 부른 쪽에 알리기 | 성공 여부를 bool로 돌려주기
+r: ③ 프로그램 끝내기 | 계속하면 더 나빠질 때 (assert, std::exit)
+r: ④ 예외 던지기 | 📎 이 과정의 범위 밖
+warn: 가장 나쁜 선택은 **아무것도 안 하고 넘어가는 것**이에요. 잘못된 값이 계속 퍼져서, 한참 뒤 엉뚱한 곳에서 문제가 터지면 원인을 찾기가 몇 배 어려워져요.
+star: 테스트는 **경계값**(0, 음수, 최댓값, 빈 입력)부터.
+trap: 평범한 값 하나만 넣어 보고 테스트 끝 > 0, 음수, 최댓값, 빈 입력도 넣어 보기 > 버그는 경계에 숨어 있어요
+trap: 오류를 확인만 하고 그냥 진행 > 4가지 방법 중 하나로 처리 > 잘못된 값이 퍼져 원인을 찾기 어려워져요
+mem: 버그는 **모서리**에 살아요 (0, -1, 최대, 빈 것)
+key: 테스트는 경계값부터
+key: 테스트는 고친 버그의 재발을 막아요
 key: 오류를 조용히 넘기지 않기
 
-# p2-13 | 잘못된 입력 처리 · assert | Ch 9.5~9.6
-sum: 입력이 실패하면 **`clear()` 로 깃발 내리고 → `ignore()` 로 남은 쓰레기 치우기**. assert 는 실행 중, static_assert 는 컴파일할 때 검사.
-ana: 🚩 cin 이 실패하면 빨간 깃발을 들고 파업. clear 로 깃발을 내리고, ignore 로 바닥 쓰레기를 치워야 다시 일함.
-h: 과제 단골 패턴
+# p2-13 | 잘못된 입력 처리와 assert | Ch 9.5~9.6
+sum: 숫자를 받아야 하는데 글자가 들어오면 cin이 고장 난 상태가 돼요. **`clear()` 로 고장 표시를 지우고 → `ignore()` 로 남은 글자를 버리면** 다시 입력받을 수 있어요.
+ana: 🚩 cin은 잘못된 입력을 만나면 빨간 깃발을 들고 일을 멈춰요. clear로 깃발을 내리고, ignore로 바닥에 남은 쓰레기를 치워야 다시 일해요.
+h: 먼저 문제 상황
+p: `int x; std::cin >> x;` 에 “abc”를 입력하면 x에는 아무것도 안 들어가고 cin은 **실패 상태**가 돼요. 이 상태에서는 이후의 모든 입력을 무시해요. 게다가 “abc”는 읽히지 않고 그대로 남아 있어요.
+h: 해결 코드 (과제에 자주 나와요)
 code:
-int getInt()
+#include <iostream>
+#include <limits>     // std::numeric_limits
+
+int main()
 {
+    int x {};
     while (true)
     {
-        int x {};
+        std::cout << "정수: ";
         std::cin >> x;
-        if (!std::cin)                     // 숫자 대신 문자를 넣었다면
+        if (!std::cin)                     // 입력이 실패했다면
         {
-            std::cin.clear();              // ① 실패 깃발 내리기
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // ② 줄 버리기
-            continue;
+            std::cin.clear();              // ① 실패 상태(빨간 깃발)를 지워요
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');   // ② 그 줄에 남은 글자를 전부 버려요
+            std::cout << "숫자가 아니에요\n";
+            continue;                      // 다시 입력받기
         }
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');      // ③ 남은 것 버리기
-        return x;
+        break;                             // 제대로 들어왔으면 반복 끝
     }
+    std::cout << "입력한 수: " << x << '\n';
+    return 0;
 }
 :end
+out: 입력: abc ⏎ 42
+정수: 숫자가 아니에요
+정수: 입력한 수: 42
+:end
+tbl: 코드 조각 | 뜻
+r: `!std::cin` | “cin이 실패 상태인가?”
+r: `std::cin.clear()` | 실패 상태를 지워서 다시 입력받을 수 있게 해요
+r: `std::cin.ignore(최대 개수, '\n')` | 줄바꿈('\n')이 나올 때까지 남은 글자를 버려요
+r: `std::numeric_limits<std::streamsize>::max()` | “버릴 수 있는 최대 개수” — 사실상 “줄 끝까지 전부”
 tbl: 빼먹으면 | 생기는 일
-r: ① `clear()` | 이후 입력이 전부 무시 → **무한 루프**
-r: ② `ignore()` | 같은 쓰레기를 또 읽어 또 실패 → **무한 루프**
-r: ③ 성공 후 `ignore()` | `"12abc"` → 12 만 읽고 abc 가 다음 입력에 딸려 감
-h: assert vs static_assert
+r: `clear()` 를 빼먹음 | cin이 계속 실패 상태라 모든 입력이 무시돼요 → **무한 반복**
+r: `ignore()` 를 빼먹음 | 남은 “abc”를 다시 읽고 또 실패해요 → **무한 반복**
+r: 순서를 바꿈 (ignore 먼저) | 실패 상태에서는 ignore도 동작하지 않아요 → **무한 반복**
+h: assert 와 static_assert
+p: assert는 “여기서는 절대 이런 일이 없어야 한다”를 확인하는 장치예요. 실행 중에 검사하고, 조건이 거짓이면 즉시 멈춰요. static_assert는 같은 일을 **컴파일할 때** 해요.
 code:
-assert(b != 0 && "0 으로 나눌 수 없음");                 // 실행 중 검사
-static_assert(sizeof(int) == 4, "32비트 int 가정");    // 컴파일할 때 검사
+#include <cassert>
+#include <iostream>
+
+double divide(int a, int b)
+{
+    assert(b != 0 && "0으로 나눌 수 없어요");   // b가 0이면 여기서 멈추고 이 메시지를 보여 줘요
+    return static_cast<double>(a) / b;
+}
+
+static_assert(sizeof(int) >= 4, "int가 4바이트 이상이라고 가정한 코드예요");   // 컴파일할 때 검사
+
+int main()
+{
+    std::cout << divide(7, 2) << '\n';
+    return 0;
+}
+:end
+out: 실행 결과
+3.5
 :end
 tbl:  | assert | static_assert
-r: 언제 검사 | 실행 중 | 컴파일할 때
-r: 실패하면 | 즉시 중단 | 컴파일 오류
-r: Release (`NDEBUG`) | **사라짐** | 그대로 검사
-trap: `assert(++i < 10);` > `++i;` 를 따로 쓰고 `assert(i < 10);` > Release 에서 assert 가 통째로 사라져 ++i 도 안 됨
-trap: 사용자 입력 검증을 assert 로 > 일반 if 로 검사 > assert 는 “일어날 리 없는 일” 확인용
-star: 입력 실패 = **clear → ignore** (순서도 이대로).
+r: 언제 검사하나요 | 실행 중 | 컴파일할 때
+r: 실패하면 | 프로그램이 즉시 멈춰요 | 컴파일 오류
+r: Release 빌드 (`NDEBUG`) | **사라져요** (검사 안 함) | 그대로 검사해요
+warn: assert 괄호 안에서 값을 바꾸면 안 돼요. `assert(++i < 10);` 은 Release 빌드에서 줄 전체가 사라지니까 `++i` 도 같이 사라져요.
+star: 입력 실패 처리는 **clear → ignore** 순서예요.
+trap: 입력 실패 후 `continue` 만 함 > `clear()` 와 `ignore()` 를 먼저 > 실패 상태가 남아 무한 반복이에요
+trap: `assert(++i < 10);` > `++i;` 를 따로 쓰고 `assert(i < 10);` > Release에서 assert가 사라지며 ++i도 사라져요
+trap: 사용자 입력이 맞는지 assert로 검사 > 일반 if로 검사하고 다시 입력받기 > assert는 Release에서 사라지는 개발용 확인 장치예요
 mem: **깃발 내리고(clear) → 쓰레기 치우기(ignore)**
 key: 입력 실패 → `clear()` 후 `ignore(max, '\n')`
-key: assert 는 Release 에서 사라짐, static_assert 는 컴파일 타임
-key: assert 안에 부작용 금지
+key: assert는 실행 중 검사, Release에서 사라져요
+key: static_assert는 컴파일할 때 검사
 
 # p2-14 | 2회차 함정 총정리 | Ch 5~9
-sum: 2회차에서 실제로 자주 터지는 9가지. 시험 직전엔 **이 카드만** 다시 보기.
-ana: 📋 시험 전날 냉장고에 붙여 둘 체크리스트.
-h: 한 장 요약
+sum: 2회차에서 실제로 자주 틀리는 9가지를 한곳에 모았어요. 시험 직전에는 이 파트만 다시 봐도 돼요.
+ana: 📋 시험 전날 냉장고에 붙여 둘 체크리스트예요.
+h: 주제별 한 줄 정리
 tbl: 주제 | 기억할 한 줄
-r: 입력 | 한 줄은 `getline(cin >> ws, s)`, 실패하면 `clear` + `ignore`
-r: 문자열 | 매개변수 view, 멤버·반환 string
-r: 계산 | `7/2 == 3`, 홀수는 `% 2 != 0`, 한 식에서 두 번 변경 ❌
-r: 제어문 | 항상 중괄호, switch 엔 break
-r: 상수 | 미리 아는 값은 constexpr, 헤더는 `inline constexpr`
-r: 난수 | `<random>`, 엔진은 한 번만
-trap: `std::cin >> name` > `getline(cin >> ws, name)` > 공백에서 끊기고 나머지가 버퍼에 남음
-trap: 입력 실패 후 그대로 둠 > `clear()` + `ignore()` > 실패 상태로 남아 무한 루프
-trap: string_view 반환 > std::string 반환 > 원본이 사라져 댕글링
-trap: `i++ + ++i` > 문장을 나눔 > 계산 순서 미정 → UB
-trap: `x % 2 == 1` > `x % 2 != 0` > 음수에서 실패
-trap: switch 에서 break 누락 > break 또는 `[[fallthrough]]` > 다음 case 로 흘러내림
-trap: 헤더에 `constexpr` 상수 > `inline constexpr` > 파일마다 사본
-trap: `rand() % n` > `<random>` 분포 객체 > 분포가 치우치고 품질이 나쁨
-trap: if 본문 중괄호 생략 > 항상 중괄호 > 줄을 추가하면 조용히 범위 밖
-star: 함정 카드의 **❌ → ✅** 짝이 그대로 OX·빈칸 문제로 나오기 좋음.
+r: 입력 | 한 줄은 `getline(cin >> ws, s)`, 실패하면 `clear()` 후 `ignore()`
+r: 문자열 | 매개변수는 string_view, 돌려주거나 저장할 땐 string
+r: 계산 | `7 / 2 == 3`, 홀수는 `% 2 != 0`, 한 식에서 같은 변수를 두 번 바꾸지 않기
+r: 제어문 | if는 항상 중괄호, switch는 case마다 break
+r: 상수 | 미리 아는 값은 constexpr, 헤더 상수는 `inline constexpr`
+r: 난수 | 엔진 + 분포, 엔진은 한 번만 만들기
+p: 아래 함정 카드의 “❌ → ✅” 짝이 그대로 OX나 빈칸 문제로 나오기 좋아요.
+trap: `std::cin >> name;` 으로 공백 있는 이름 > `std::getline(std::cin >> std::ws, name);` > 공백에서 끊기고 나머지가 남아요
+trap: 입력 실패 후 그대로 둠 > `clear()` + `ignore()` > 실패 상태로 남아 무한 반복
+trap: string_view 반환 > std::string 반환 > 원래 문자열이 사라져 창문이 빈 자리를 봐요
+trap: `i++ + ++i` > 문장을 나눠 쓰기 > 계산 순서가 정해지지 않아 미정의 동작
+trap: `x % 2 == 1` > `x % 2 != 0` > 음수 홀수는 나머지가 -1
+trap: switch에서 break 누락 > case마다 break (일부러면 `[[fallthrough]];`) > 다음 case까지 실행돼요
+trap: 헤더에 `constexpr` 상수 > `inline constexpr` > 파일마다 사본이 생겨요
+trap: `rand() % 6 + 1` > `<random>` 의 엔진과 분포 > 품질이 낮고 분포가 치우쳐요
+trap: if 본문에 중괄호 생략 > 항상 중괄호 > 줄을 추가하면 조용히 if 밖이 돼요
+star: 함정 카드의 **❌ → ✅ 짝**은 그대로 시험 문제가 되기 좋아요.
 mem: **입·문·계·제·상·난** (입력·문자열·계산·제어문·상수·난수)
-key: 입력: getline + ws, 실패 시 clear + ignore
-key: UB: view 반환, 한 식에서 두 번 변경
+key: 입력: getline + ws, 실패하면 clear + ignore
+key: 미정의 동작: view 반환, 한 식에서 두 번 바꾸기
 key: 습관: 중괄호, break, inline constexpr, `<random>`
