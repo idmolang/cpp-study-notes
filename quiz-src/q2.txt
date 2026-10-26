@@ -5,9 +5,9 @@ ox ‖ const 변수의 초기값은 반드시 컴파일할 때 정해져야 한�
 mc ‖ `3.14f` 의 타입은? ‖ double ;; float ;; long double ;; int ‖ 2 ‖ f 접미사 = float. 그냥 3.14 는 double.
 mc ‖ `int month { 08 };` 이 컴파일 오류인 이유는? ‖ month 는 예약어 ;; 0 으로 시작하면 8진수인데 8진수엔 8이 없음 ;; 중괄호 때문 ;; int 범위 초과 ‖ 2 ‖ 자릿수 맞추려고 0 을 붙이면 8진수가 됨.
 @ p2-2
-mc ‖ 사용자 입력으로 정해지는 값을 담을 수 있는 것은? ‖ `constexpr int r { rows };` ;; `const int r { rows };` ;; 둘 다 ;; 둘 다 안 됨 ‖ 2 ‖ constexpr 은 컴파일할 때 값이 정해져야 함. 실행 중 값은 const.
+mc ‖ rows 는 실행 중에 사용자에게 입력받은 int 다. rows 로 초기화할 수 있는 것은? ‖ `constexpr int r { rows };` 만 ;; `const int r { rows };` 만 ;; 둘 다 됨 ;; 둘 다 안 됨 ‖ 2 ‖ constexpr 은 컴파일할 때 값이 정해져야 함. 실행 중 값은 const 로.
 ox ‖ constexpr 변수는 자동으로 const 이기도 하다. ‖ O ‖ constexpr ⊃ const.
-mc ‖ 값이 미리 정해진 상수(예: 중력 9.8)에 기본으로 쓸 것은? ‖ 그냥 변수 ;; const ;; constexpr ;; #define ‖ 3 ‖ 미리 아는 값은 constexpr 이 기본.
+mc ‖ 컴파일 전에 이미 값을 아는 상수(예: 중력 9.8)에 이 과정에서 기본으로 권장하는 것은? ‖ 그냥 변수 ;; const ;; constexpr ;; #define ‖ 3 ‖ 미리 아는 값은 constexpr 이 기본. 매크로는 타입·범위가 없어서 비권장.
 fill ‖ 배열 크기로 쓸 수 있게 빈칸을 채우면? ‖ ______ int side { 4 };⏎int arr[side * side]; ‖ `constexpr` ;; `static` ;; `extern` ;; `auto` ‖ 1 ‖ 배열 크기엔 컴파일 타임 상수가 필요.
 mc ‖ 헤더에 상수를 두고 여러 파일에서 “하나만” 공유하려면? ‖ `constexpr` ;; `inline constexpr` ;; `static constexpr` ;; `extern` 만 ‖ 2 ‖ inline 이 있어야 사본이 하나로 합쳐짐 (C++17).
 @ p2-3
@@ -25,7 +25,7 @@ mc ‖ string_view 가 실제로 가지고 있는 것은? ‖ 문자열 전체�
 @ p2-5
 ox ‖ 우선순위가 정해져 있으면 피연산자를 계산하는 순서도 정해진다. ‖ X ‖ 우선순위는 묶임만 정함. 계산 순서는 대부분 미지정.
 mc ‖ `i++ + ++i` 의 결과는? ‖ 항상 4 ;; 항상 3 ;; 미정의 동작 (UB) ;; 컴파일 오류 ‖ 3 ‖ 한 식에서 같은 변수를 두 번 바꾸면 UB.
-mc ‖ `a + b * c` 에서 먼저 묶이는 것은? ‖ a + b ;; b * c ;; 왼쪽부터 ;; 정해져 있지 않음 ‖ 2 ‖ `*` 가 `+` 보다 우선순위가 높음.
+mc ‖ `a + b * c` 에서 연산자 우선순위에 따라 먼저 하나로 묶이는 부분은? ‖ a + b ;; b * c ;; a 와 c ;; 묶이는 순서가 없음 ‖ 2 ‖ `*` 가 `+` 보다 우선순위가 높아서 a + (b * c). (무엇을 먼저 “계산”하는지는 별개 문제)
 mc ‖ 우선순위가 헷갈릴 때 가장 좋은 방법은? ‖ 표를 외운다 ;; 괄호를 친다 ;; 한 줄에 몰아 쓴다 ;; 컴파일러를 믿는다 ‖ 2 ‖ 괄호로 의도를 드러내기.
 ox ‖ `&&` 는 `||` 보다 우선순위가 높다. ‖ O ‖ 섞어 쓸 때는 괄호로 묶는 게 안전.
 @ p2-6
@@ -77,7 +77,7 @@ ox ‖ assert 는 Release 빌드(NDEBUG)에서도 그대로 검사된다. ‖ X 
 mc ‖ `assert(++i < 10);` 의 문제는? ‖ 문제없음 ;; Release 에서 assert 가 사라지며 ++i 도 사라짐 ;; 컴파일 오류 ;; 항상 실패 ‖ 2 ‖ assert 안에 부작용 금지.
 mc ‖ 컴파일할 때 검사하는 것은? ‖ assert ;; static_assert ;; if ;; cin ‖ 2 ‖ static_assert 실패 = 컴파일 오류.
 @ p2-14
-mc ‖ 헤더에 `constexpr double g { 9.8 };` 을 두면? ‖ 프로그램 전체에 하나 ;; 포함한 파일마다 사본 ;; 컴파일 오류 ;; 링크 오류 ‖ 2 ‖ `inline constexpr` 로 하나로.
+mc ‖ 헤더에 `constexpr double g { 9.8 };` 을 두고 그 헤더를 a.cpp, b.cpp 가 모두 include 하면 g 는? ‖ 프로그램 전체에 하나 ;; include 한 파일마다 따로 사본 ;; 컴파일 오류 ;; 링크 오류 ‖ 2 ‖ constexpr 전역은 내부 링키지라 파일마다 사본. 하나로 만들려면 `inline constexpr`.
 mc ‖ if 본문에 중괄호를 생략하면 생기는 함정은? ‖ 느려짐 ;; 줄을 추가하면 조용히 if 밖이 됨 ;; 컴파일 오류 ;; 없음 ‖ 2 ‖ 항상 중괄호.
 mc ‖ string_view 를 반환하면 생기는 위험은? ‖ 느려짐 ;; 원본이 사라져 댕글링 ;; 컴파일 오류 ;; 없음 ‖ 2 ‖ 반환은 std::string.
 ox ‖ break 를 빠뜨린 switch 는 컴파일러가 오류로 막아 준다. ‖ X ‖ 오류가 아님. `-Wimplicit-fallthrough` 경고를 켜야 알려 줌.

@@ -14,7 +14,7 @@ mc ‖ 부호 함정 없이 vector 를 훑는 가장 좋은 방법은? ‖ `for 
 out ‖ 출력은? ‖ std::vector<std::string> names { "홍길동" };⏎for (std::string s : names) s += "님";⏎std::cout << names[0]; ‖ 홍길동님 ;; 홍길동 ;; 님 ;; 컴파일 오류 ‖ 2 ‖ 값으로 받으면 사본만 바뀜.
 fill ‖ 원소를 직접 고치려면 빈칸은? ‖ for (______ s : names) s += "님"; ‖ `std::string` ;; `std::string&` ;; `const std::string&` ;; `std::string*` ‖ 2 ‖ 참조로 받아야 원본이 바뀜. const& 는 수정 불가.
 mc ‖ 큰 타입을 읽기만 할 때 기본 range-for 는? ‖ `for (T x : v)` ;; `for (const T& x : v)` ;; `for (T* x : v)` ;; `for (T&& x : v)` ‖ 2 ‖ 복사 없음.
-mc ‖ `v.resize(10)` 으로 늘어난 칸에는? ‖ 쓰레기 값 ;; 0 ;; 마지막 원소 복사 ;; 컴파일 오류 ‖ 2 ‖ 값 초기화 → int 는 0.
+mc ‖ 원소 3개인 `std::vector<int> v` 에 `v.resize(10);` 을 하면 새로 생긴 7칸의 값은? ‖ 쓰레기 값 ;; 0 ;; 마지막 원소 복사 ;; 컴파일 오류 ‖ 2 ‖ 늘어난 칸은 값 초기화 → int 는 0.
 mc ‖ 비었는지 확인하는 읽기 쉬운 방법은? ‖ `v.size() == 0` 만 가능 ;; `v.empty()` ;; `v == 0` ;; `!v` ‖ 2 ‖ empty() 가 의도를 바로 보여 줌.
 @ p6-4
 mc ‖ 원소 100만 개짜리 `std::vector<int>` 의 sizeof 는? (64비트, 일반 구현) ‖ 4,000,000 ;; 24 ;; 8 ;; 원소 수에 따라 다름 ‖ 2 ‖ 원소는 힙에, 객체 안엔 포인터 3개쯤만.
@@ -44,7 +44,7 @@ ox ‖ `"안녕"` 같은 문자열 리터럴의 정체는 const char 배열이�
 mc ‖ 3행 4열 2차원 vector 를 0 으로 만드는 코드는? ‖ `std::vector<int> g(3, 4);` ;; `std::vector<std::vector<int>> g(3, std::vector<int>(4, 0));` ;; `std::vector<int> g[3][4];` ;; `std::vector<std::vector<int>> g { 3, 4 };` ‖ 2 ‖ 바깥 3개(행), 각 행은 0 이 4칸.
 mc ‖ `grid[1][2]` 는 몇 행 몇 열? (사람 기준 1부터) ‖ 1행 2열 ;; 2행 3열 ;; 3행 2열 ;; 2행 2열 ‖ 2 ‖ 인덱스는 0부터.
 mc ‖ 열의 개수를 구하는 식은? ‖ `grid.size()` ;; `grid[0].size()` ;; `grid.cols()` ;; `sizeof(grid)` ‖ 2 ‖ `grid.size()` 는 행 수.
-mc ‖ 문자열에 가장 알맞은 것은? ‖ `char[]` ;; `std::string` ;; `std::vector<char>` ;; `const char*` ‖ 2 ‖ 길이를 알고 있고 안전.
+mc ‖ 새로 짜는 코드에서 문자열을 담을 때 가장 알맞은 것은? ‖ `char[]` ;; `std::string` ;; `std::vector<char>` ;; `const char*` ‖ 2 ‖ 길이를 알고 있고 메모리를 알아서 관리. C 문자열은 읽을 줄만.
 ox ‖ C 배열은 옛 코드나 C 라이브러리와 맞물릴 때처럼 어쩔 수 없을 때만 쓴다. ‖ O ‖ 결론표의 기준.
 @ p6-9
 mc ‖ vector 로 Roster 를 만들면 4회차 49.8 버그가 사라지는 이유는? ‖ 더 빨라서 ;; vector 가 자기 크기를 알아 개수를 따로 넘길 일이 없어서 ;; 컴파일러가 검사해서 ;; 점수가 자동 정렬돼서 ‖ 2 ‖ 개수 실수가 구조적으로 불가능.

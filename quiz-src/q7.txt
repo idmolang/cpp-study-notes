@@ -43,7 +43,7 @@ mc ‖ 권장되는 캡처 방식은? ‖ 항상 `[=]` ;; 항상 `[&]` ;; 쓰는
 @ p7-8
 mc ‖ `std::sort(v.begin(), v.end());` 가 Student vector 에서 컴파일 오류 나는 이유는? ‖ vector 가 아니라서 ;; Student 에 operator< 가 없어서 ;; 원소가 3개라서 ;; string 멤버 때문 ‖ 2 ‖ no match for 'operator<'.
 mc ‖ 점수순·이름순처럼 기준이 여러 개일 때 알맞은 것은? ‖ operator< 하나 ;; 이름 붙인 비교 함수들 ;; 매크로 ;; 전역 변수 ‖ 2 ‖ 재사용·가독성.
-mc ‖ max_element 에 내림차순 비교(a > b)를 넘기면? ‖ 최댓값 ;; 최솟값 ;; 컴파일 오류 ;; 랜덤 ‖ 2 ‖ 비교는 “a 가 작은가?”여야 함. 경고도 없음.
+mc ‖ 원소 값이 서로 다른 vector 에서 `std::max_element(v.begin(), v.end(), [](int a, int b){ return a > b; })` 가 가리키는 값은? ‖ 최댓값 ;; 최솟값 ;; 컴파일 오류 ;; 매번 다름 ‖ 2 ‖ max_element 의 비교는 “a 가 작은가?” 여야 함. 뒤집어 주면 최솟값이 나오고 경고도 없음.
 mc ‖ operator< 를 정의하면 좋은 점은? ‖ 정렬이 더 빨라짐 ;; sort 뿐 아니라 max_element·set·map 에도 그대로 쓰임 ;; 메모리 절약 ;; 없음 ‖ 2 ‖ 그 타입의 기본 순서가 생김.
 ox ‖ 템플릿 오류가 78줄이어도 “no match for” 같은 핵심 한 줄을 찾으면 된다. ‖ O ‖ 나머지는 내부 파일 경로 나열.
 @ p7-9

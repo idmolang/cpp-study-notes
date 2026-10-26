@@ -6,18 +6,18 @@ mc ‖ 3회차 struct 에 비해 class 로 더 할 수 있게 된 것은? ‖ �
 mc ‖ 이름·점수를 변수 따로 두면 생기는 문제가 아닌 것은? ‖ 한 사람 것이라는 정보가 없음 ;; 함수 인자가 계속 늘어남 ;; 항목 추가 시 여기저기 수정 ;; 컴파일이 안 됨 ‖ 4 ‖ 컴파일은 되지만 실수를 못 막는 게 문제.
 @ p4-2
 mc ‖ 클래스 정의 끝에 반드시 필요한 것은? ‖ `}` ;; `};` ;; `end` ;; `)` ‖ 2 ‖ 세미콜론을 빠뜨리면 엉뚱한 줄에서 오류.
-out ‖ 컴파일될까? ‖ class Student {⏎    std::string name {};⏎};⏎Student a {};⏎a.name = "홍길동"; ‖ 된다 ;; 안 된다 — name 이 private ;; 안 된다 — 세미콜론 ;; 된다, 경고만 ‖ 2 ‖ class 는 기본이 private. `public:` 이 필요.
+out ‖ main 에서 이렇게 쓰면 컴파일될까? ‖ class Student {⏎    std::string name {};⏎};⏎Student a {};⏎a.name = "홍길동"; ‖ 된다 ;; 안 된다 — name 이 private ;; 안 된다 — 세미콜론 ;; 된다, 경고만 ‖ 2 ‖ class 는 기본이 private. `public:` 이 필요.
 out ‖ 출력은? ‖ Student a {}, b {};⏎a.score = 90;⏎b.score = 75;⏎a.score = 95;⏎std::cout << b.score; ‖ 95 ;; 90 ;; 75 ;; 0 ‖ 3 ‖ 멤버는 객체마다 따로. a 를 바꿔도 b 는 그대로.
-mc ‖ 맞는 코드는? ‖ `Student.score = 90;` ;; `score = 90;` (main 안) ;; `a.score = 90;` ;; `Student::a = 90;` ‖ 3 ‖ 점 왼쪽엔 객체.
+mc ‖ a 가 Student 객체이고 score 가 public 멤버일 때, main 에서 맞는 코드는? ‖ `Student.score = 90;` ;; `score = 90;` ;; `a.score = 90;` ;; `Student::a = 90;` ‖ 3 ‖ 점 왼쪽엔 객체. main 에서 그냥 score 는 누구 것인지 모름.
 ox ‖ 점(.) 왼쪽에는 클래스 이름이 와도 된다. ‖ X ‖ 설계도엔 값이 없음. 객체가 와야 함.
 @ p4-3
 mc ‖ `a.print();` 에서 print 안의 `name` 은 누구의 name? ‖ 전역 name ;; a 의 name ;; 마지막에 만든 객체의 name ;; 컴파일 오류 ‖ 2 ‖ 멤버 함수를 부른 객체의 멤버.
 ox ‖ 클래스 안에서는 아래에 정의된 멤버 함수를 위에서 바로 불러도 된다. ‖ O ‖ 클래스 안에선 전방 선언 불필요.
 ox ‖ `Student::print` 와 `Course::print` 는 이름이 같아서 충돌한다. ‖ X ‖ 클래스가 다르면 남남.
 out ‖ 출력은? ‖ a.name = "홍길동";⏎b.name = "김철수";⏎b.print();   // print 는 name 을 출력 ‖ 홍길동 ;; 김철수 ;; 홍길동김철수 ;; 아무것도 ‖ 2 ‖ 같은 함수라도 부른 객체(b)에 따라 결과가 다름.
-mc ‖ 멤버 함수로 바꾸면 사라지는 것은? ‖ 반환형 ;; `s.` 같은 객체 지정 ;; 함수 이름 ;; 중괄호 ‖ 2 ‖ 누구인지는 `a.print()` 의 a 가 정함.
+mc ‖ `void print(const Student& s)` 를 클래스 안의 멤버 함수 `void print()` 로 옮기면, 본문에서 필요 없어지는 것은? ‖ 반환형 void ;; `s.name` 의 `s.` 같은 객체 지정 ;; 함수 이름 ;; 중괄호 ‖ 2 ‖ 멤버 함수 안에선 그냥 name. 누구인지는 `a.print()` 의 a 가 정함.
 @ p4-4
-mc ‖ struct 와 class 의 문법상 차이는? ‖ 멤버 함수 유무 ;; 기본 접근 지정자 (struct=public, class=private) ;; 생성자 유무 ;; 상속 불가 ‖ 2 ‖ 차이는 이것 하나, 나머지는 관습.
+mc ‖ 이 과정에서 배운 struct 와 class 의 문법상 차이는? ‖ class 만 멤버 함수를 가질 수 있음 ;; 기본 접근 지정자 (struct = public, class = private) ;; class 만 생성자를 가질 수 있음 ;; struct 는 객체를 못 만듦 ‖ 2 ‖ 나머지는 둘 다 가능. 차이는 기본 접근 지정자이고, 나머지는 관습.
 mc ‖ “점수는 0~100” 같은 규칙이 있는 타입엔 무엇이 관습적으로 알맞나? ‖ struct ;; class ;; enum ;; using ‖ 2 ‖ 지킬 규칙이 있으면 class.
 out ‖ 출력은? (scores = 90, 75, 84, 0, 0 …) ‖ std::cout << average(scores, 5); ‖ 83 ;; 49.8 ;; 컴파일 오류 ;; 0 ‖ 2 ‖ 개수를 잘못 넘김 → (90+75+84)/5 = 49.8. 경고도 없음.
 ox ‖ 배열 두 개와 count 를 따로 넘기면 컴파일러가 개수 실수를 잡아 준다. ‖ X ‖ 짝이라는 정보가 사람 머릿속에만 있음.
@@ -30,12 +30,12 @@ out ‖ 출력은? ‖ class Student {⏎public:⏎    std::string name {};⏎  
 ox ‖ 생성자는 여러 개 만들 수 있고, 인자의 개수·타입으로 골라진다. ‖ O ‖ 함수 오버로딩과 같은 원리 (3회차).
 @ p4-6
 mc ‖ 멤버 초기화 리스트를 쓰는 위치는? ‖ 본문 `{ }` 안 ;; 매개변수 목록 뒤 `:` 다음, 본문 앞 ;; 클래스 밖 ;; 반환형 앞 ‖ 2 ‖ `Student(...) : m_name { n } { }`
-mc ‖ 초기화 리스트가 꼭 필요한 멤버는? ‖ int ;; std::string ;; const 멤버 ;; static 멤버 ‖ 3 ‖ const 는 대입이 안 되니 만들 때 초기화해야 함.
+mc ‖ 보기 중에서, 생성자 본문 대입으로는 안 되고 초기화 리스트로만 값을 줄 수 있는 멤버는? ‖ `int m_score;` ;; `std::string m_name;` ;; `const int m_id;` ;; 모두 본문 대입 가능 ‖ 3 ‖ const 멤버는 만들어진 뒤 대입할 수 없어서, 만들 때(초기화 리스트) 값을 줘야 함.
 out ‖ 컴파일될까? ‖ class Student {⏎public:⏎    Student(std::string_view n, int s) : name { n }, score { s } {}⏎    std::string name {}; int score {};⏎};⏎Student a {}; ‖ 된다 ;; 안 된다 — 기본 생성자가 없음 ;; 된다, name 은 빈 문자열 ;; 안 된다 — 세미콜론 ‖ 2 ‖ 생성자를 직접 만들면 기본 생성자가 사라짐.
-fill ‖ 위 문제를 고치는 한 줄은? ‖ class Student {⏎public:⏎    ______⏎    Student(std::string_view n, int s) : name { n }, score { s } {}⏎}; ‖ `Student() = default;` ;; `void Student();` ;; `~Student();` ;; `Student = default;` ‖ 1 ‖ 기본 생성자 되살리기.
+fill ‖ 인자 2개짜리 생성자를 만든 뒤 `Student a {};` 가 컴파일 오류가 났다. 빈칸에 넣을 한 줄은? ‖ class Student {⏎public:⏎    ______⏎    Student(std::string_view n, int s) : name { n }, score { s } {}⏎    std::string name {}; int score {};⏎}; ‖ `Student() = default;` ;; `void Student();` ;; `~Student();` ;; `Student = default;` ‖ 1 ‖ 생성자를 만들면 사라지는 기본 생성자를 되살리는 문법.
 ox ‖ 본문 대입과 초기화 리스트는 결과가 같지만, 초기화 리스트가 한 단계 덜 해서 빠르다. ‖ O ‖ 처음부터 그 값으로 만듦.
 @ p4-7
-mc ‖ 바깥에서 `a.m_score = -50;` 을 막으려면 m_score 를? ‖ public 에 ;; private 에 ;; static 으로 ;; const 로 ‖ 2 ‖ private 은 바깥 접근 불가.
+mc ‖ 바깥(main)에서 `a.m_score = -50;` 은 못 하게 막고, 클래스 안의 setScore 에서는 바꿀 수 있게 하려면 m_score 를 어디에 둘까? ‖ public 에 ;; private 에 ;; const 로 만들기 ;; static 으로 만들기 ‖ 2 ‖ const 로 만들면 setScore 에서도 못 바꿈. private 은 바깥만 막고 멤버 함수는 허용.
 ox ‖ private 멤버는 같은 클래스의 멤버 함수에서도 쓸 수 없다. ‖ X ‖ 같은 클래스 멤버 함수는 자유롭게 씀.
 fill ‖ 0~100 밖이면 무시하는 setter 의 빈칸은? ‖ void setScore(int v) {⏎    if (______) return;⏎    m_score = v;⏎} ‖ `v < 0 || v > 100` ;; `v < 0 && v > 100` ;; `v >= 0 && v <= 100` ;; `v == 100` ‖ 1 ‖ && 면 절대 참이 안 되고, 3번은 반대(정상 값을 거부).
 mc ‖ `m_` 접두어의 의미는? ‖ 메서드 ;; 멤버 변수 표시 관습 ;; 메모리 ;; 매크로 ‖ 2 ‖ 지역 변수와 눈으로 구분.
@@ -51,7 +51,7 @@ out ‖ 컴파일될까? ‖ class Student {⏎    int m_score {};⏎public:⏎ 
 fill ‖ 빈칸에 들어갈 것은? ‖ int getScore() ______ { return m_score; } ‖ `const` ;; `static` ;; `void` ;; `&` ‖ 1 ‖ 괄호 닫고 바로 뒤에 const.
 ox ‖ 생성자에도 const 를 붙이는 게 좋다. ‖ X ‖ 생성자는 멤버를 채우는 게 일이라 붙이지 않음.
 mc ‖ const 멤버 함수 안에서 `m_score = 0;` 을 쓰면? ‖ 정상 동작 ;; 컴파일 오류 ;; 실행 중 오류 ;; 경고만 ‖ 2 ‖ 실수로 바꾸는 걸 컴파일러가 막아 줌.
-mc ‖ const 를 붙여야 하는 함수는? ‖ setScore ;; addBonus ;; getName ;; 생성자 ‖ 3 ‖ 멤버를 안 바꾸는 읽기 함수.
+mc ‖ 이름대로 동작하는 멤버 함수들 중, 뒤에 const 를 붙여야 하는 것은? ‖ setScore(int) ;; addBonus(int) ;; getName() ;; 생성자 ‖ 3 ‖ 멤버를 바꾸지 않는 읽기 함수에 const. 생성자엔 안 붙임.
 @ p4-10
 mc ‖ `Student c = a;` 에서 불리는 것은? ‖ 대입 연산자 ;; 복사 생성자 ;; 기본 생성자 ;; 아무것도 ‖ 2 ‖ c 가 이 줄에서 새로 태어나므로 복사 생성.
 ox ‖ 복사 생성자는 직접 만들지 않으면 쓸 수 없다. ‖ X ‖ 컴파일러가 알아서 만들어 줌.
@@ -61,6 +61,6 @@ mc ‖ std::string 멤버를 읽게만 하는 getter 의 반환형으로 알맞�
 @ p4-11
 mc ‖ 클래스 밖(.cpp)에서 멤버 함수를 정의할 때 붙이는 것은? ‖ `Student.` ;; `Student::` ;; `class` ;; `#Student` ‖ 2 ‖ `int Student::getScore() const { ... }`
 ox ‖ const 멤버 함수를 .cpp 에서 정의할 때는 const 를 다시 쓸 필요가 없다. ‖ X ‖ 정의에도 다시 적어야 함.
-mc ‖ explicit 을 빠뜨렸을 때 `printScore('A')` 가 컴파일되면 무슨 일? ‖ 컴파일 오류 ;; 'A'(65)가 Student{65} 로 몰래 변환 ;; 0점 ;; 실행 중 오류 ‖ 2 ‖ 인자 하나짜리 생성자가 암시적 변환에 쓰임.
+mc ‖ Student 에 `Student(int s)` (explicit 없음)와 함수 `void printScore(const Student&)` 가 있다. `printScore('A');` 를 쓰면? ‖ 컴파일 오류 ;; 'A'(65)가 몰래 Student{65} 로 바뀌어 65점으로 처리 ;; 0점으로 처리 ;; 실행 중 오류 ‖ 2 ‖ 인자 하나짜리 생성자가 암시적 변환에 쓰임. explicit 을 붙이면 컴파일 오류로 막힘.
 mc ‖ 4회차 함정 중 컴파일러가 못 잡고 조용히 틀리는 것은? ‖ `};` 누락 ;; `public:` 누락 ;; const 누락 ;; explicit 누락 ‖ 4 ‖ 나머지는 컴파일 오류로 잡힘.
 mc ‖ 클래스 설계 순서로 맞는 것은? ‖ 데이터 → 규칙 → 동작 ;; 규칙 → 동작 → 데이터 → 생성자 → const → 반환형 ;; 생성자 → 데이터 → 규칙 ;; 순서 없음 ‖ 2 ‖ 규·동·데·생·콘·반.
